@@ -175,6 +175,9 @@ public:
     void        SetInputText(const char* szText);
     const char* GetCommand() { return m_strCommand.c_str(); }
     void        SetCommand(const char* szCommand);
+	bool        IsChatInFront();
+	bool        BringToFront();
+	bool        SendToBack();
     CVector2D   CalcInputSize();
 
     static float GetFontHeight(float fScale = 1.0f);
@@ -244,6 +247,7 @@ protected:
 
     bool  m_bVisible;
     bool  m_bInputVisible;
+	bool  m_bPostGUI;
     int   m_iScrollingBack;                    // Non zero if currently scrolling back
     float m_fCssStyleOverrideAlpha;            // For fading out 'CssStyle' effect. (When entering text or scrolling back)
     float m_fBackgroundAlpha;

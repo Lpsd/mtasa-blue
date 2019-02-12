@@ -124,6 +124,9 @@ public:
     void EnableChatInput(char* szCommand, DWORD dwColor);
     bool IsChatInputEnabled();
     bool ClearChat();
+    bool ChatBringToFront();
+	bool ChatSendToBack();
+	bool IsChatInFront();
     void OnGameTimerUpdate();
 
     // Screenshots

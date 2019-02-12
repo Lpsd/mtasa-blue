@@ -505,6 +505,50 @@ bool CCore::ClearChat()
     return false;
 }
 
+bool CCore::ChatBringToFront()
+{
+	if (m_pLocalGUI)
+	{
+		CChat* pChat = m_pLocalGUI->GetChat();
+
+		if (pChat)
+		{
+			pChat->BringToFront();
+		}
+		return true;
+	}
+	return false;
+}
+
+bool CCore::ChatSendToBack()
+{
+	if (m_pLocalGUI)
+	{
+		CChat* pChat = m_pLocalGUI->GetChat();
+
+		if (pChat)
+		{
+			pChat->SendToBack();
+			return true;
+		}
+	}
+	return false;
+}
+
+bool CCore::IsChatInFront()
+{
+	if (m_pLocalGUI)
+	{
+		CChat* pChat = m_pLocalGUI->GetChat();
+
+        if (pChat) 
+		{
+			return pChat->IsChatInFront();
+		}
+	}
+	return false;
+}
+
 void CCore::TakeScreenShot()
 {
     bScreenShot = true;

@@ -3168,7 +3168,18 @@ bool CSettings::OnTabChanged(CGUIElement* pElement)
         // Load browser lists when tab is selected for the first time
         m_bBrowserListsLoadEnabled = true;
         ReloadBrowserLists();
-    }
+    } 
+
+
+	if (pElement == m_pTabInterface && g_pCore->IsChatVisible())
+	{
+		g_pCore->ChatBringToFront();
+	}
+	else if (pElement != m_pTabInterface && g_pCore->IsChatVisible() && g_pCore->IsChatInFront())
+	{
+		g_pCore->ChatSendToBack();
+	}
+
     return true;
 }
 

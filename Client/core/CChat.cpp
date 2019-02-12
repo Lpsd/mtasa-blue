@@ -60,6 +60,7 @@ CChat::CChat(CGUI* pManager, const CVector2D& vecPosition)
     m_ePositionHorizontal = Chat::Position::Horizontal::LEFT;
     m_ePositionVertical = Chat::Position::Vertical::TOP;
     m_eTextAlign = Chat::Text::Align::LEFT;
+	m_bPostGUI = false;
 
     // Background area
     m_pBackground = m_pManager->CreateStaticImage();
@@ -112,7 +113,6 @@ void CChat::LoadCVars()
 {
     unsigned int Font;
     float        fWidth = 1;
-
     CVARS_GET("chat_color", m_Color);
     if (m_bCanChangeWidth)
         SetColor(m_Color);
@@ -238,7 +238,17 @@ void CChat::Draw(bool bUseCacheTexture, bool bAllowOutline)
 
     // Draw the cache texture
     pGraphics->SetBlendMode(EBlendMode::ADD);
-    pGraphics->DrawTexture(m_pCacheTexture, chatTopLeft.fX, chatTopLeft.fY);
+
+    //Draw chatbox preview above main menu if we're in the "Interface" user settings tab
+    //if (m_bPostGUI)
+    //{ [THIS SHIT DONT WORK]
+    //    pGraphics->DrawTextureQueued(chatTopLeft.fX, chatTopLeft.fY, chatSize.fX, 0, 0, 0, 0, 0, 0, m_pCacheTexture, 0, 0, 0, 0, true);
+    //}
+    //else 
+    //{
+        pGraphics->DrawTexture(m_pCacheTexture, chatTopLeft.fX, chatTopLeft.fY);
+    //}
+    
     pGraphics->SetBlendMode(EBlendMode::BLEND);
 }
 
@@ -996,6 +1006,23 @@ void CChat::DrawTextString(const char* szText, CRect2D DrawArea, float fZ, CRect
                                                DT_LEFT | DT_TOP | DT_NOCLIP, g_pChat->m_pDXFont, bOutline);
         }
     }
+}
+
+bool CChat::IsChatInFront()
+{
+	return m_bPostGUI;
+}
+
+bool CChat::BringToFront()
+{
+	m_bPostGUI = true;
+	return true;
+}
+
+bool CChat::SendToBack()
+{
+	m_bPostGUI = false;
+	return true;
 }
 
 CChatLine::CChatLine()
