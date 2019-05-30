@@ -44,6 +44,7 @@
 #include "CVoiceRecorder.h"
 #include "CSingularFileDownloadManager.h"
 #include "CObjectRespawner.h"
+#include <../core/CSettings.h>
 
 #define HeliKill_List_Clear_Rate 500
 #define MIN_PUSH_ANTISPAM_RATE 1500
@@ -52,6 +53,7 @@
 class CClientModelCacheManager;
 class CDebugHookManager;
 class CResourceFileDownloadManager;
+class CSettings;
 
 struct SVehExtrapolateSettings
 {

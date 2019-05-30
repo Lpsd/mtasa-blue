@@ -41,6 +41,9 @@ bool                g_bBulletFireVectorsValid;
 CVector             g_vecBulletFireStartPosition;
 CVector             g_vecBulletFireEndPosition;
 
+// Client settings
+CSettings g_pSettings;
+
 #define DEFAULT_GRAVITY              0.008f
 #define DEFAULT_GAME_SPEED           1.0f
 #define DEFAULT_BLUR_LEVEL           36
@@ -1130,6 +1133,12 @@ void CClientGame::DoPulses()
         // Call onClientRender LUA event
         CLuaArguments Arguments;
         m_pRootEntity->CallEvent("onClientRender", Arguments, false);
+
+        // Process chatbox settings change, call event if changed
+        if (g_pSettings.ProcessChatboxSettingsChange())
+        {
+            m_pRootEntity->CallEvent("onClientChatboxLayoutChange", Arguments, false);
+        }
 
         // Disallow scripted dxSetRenderTarget for old scripts
         g_pCore->GetGraphics()->GetRenderItemManager()->EnableSetRenderTargetOldVer(false);
@@ -2901,6 +2910,8 @@ void CClientGame::AddBuiltInEvents()
     m_Events.AddEvent("onClientWeaponFire", "ped, x, y, z", NULL, false);
 
     m_Events.AddEvent("onClientWorldSound", "group, index, x, y, z", nullptr, false);
+
+    m_Events.AddEvent("onClientChatboxLayoutChange", "", nullptr, false);
 }
 
 void CClientGame::DrawFPS()

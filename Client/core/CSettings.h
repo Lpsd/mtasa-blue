@@ -120,6 +120,7 @@ public:
 
     void SetSelectedIndex(unsigned int uiIndex);
 
+    bool ProcessChatboxSettingsChange();
 protected:
     const static int SecKeyNum = 3;            // Number of secondary keys
 
@@ -327,6 +328,7 @@ protected:
     CGUIButton*   m_pButtonBrowserWhitelistRemove;
     bool          m_bBrowserListsChanged;
     bool          m_bBrowserListsLoadEnabled;
+    bool          m_bChatboxSettingsChanged;
 
     bool OnJoypadTextChanged(CGUIElement* pElement);
     bool OnAxisSelectClick(CGUIElement* pElement);
