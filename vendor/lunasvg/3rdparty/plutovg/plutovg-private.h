@@ -101,11 +101,13 @@ typedef struct {
 
 typedef struct plutovg_state {
     plutovg_rle_t* clippath;
+    plutovg_font_t* font;
     plutovg_paint_t* source;
     plutovg_matrix_t matrix;
     plutovg_fill_rule_t winding;
     plutovg_stroke_data_t stroke;
     plutovg_operator_t op;
+    double fontsize;
     double opacity;
     struct plutovg_state* next;
 } plutovg_state_t;
@@ -141,6 +143,14 @@ void plutovg_blend(plutovg_t* pluto, const plutovg_rle_t* rle);
 void plutovg_blend_color(plutovg_t* pluto, const plutovg_rle_t* rle, const plutovg_color_t* color);
 void plutovg_blend_gradient(plutovg_t* pluto, const plutovg_rle_t* rle, const plutovg_gradient_t* gradient);
 void plutovg_blend_texture(plutovg_t* pluto, const plutovg_rle_t* rle, const plutovg_texture_t* texture);
+
+#define SQRT2 1.41421356237309504880
+#define PI 3.14159265358979323846
+#define KAPPA 0.55228474983079339840
+
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define CLAMP(v, lo, hi) ((v) < (lo) ? (lo) : (hi) < (v) ? (hi) : (v))
 
 #define plutovg_array_init(array) \
     do { \

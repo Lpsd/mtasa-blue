@@ -10,6 +10,8 @@
 
 #include "StdInc.h"
 #include <svgdocument.h>
+#include <plutosvg.h>
+#include <plutovg.h>
 
 using namespace lunasvg;
 
@@ -65,20 +67,33 @@ void CClientVectorGraphic::UpdateTexture()
     uint width = m_pVectorGraphicItem->m_uiSizeX;
     uint height = m_pVectorGraphicItem->m_uiSizeY;
 
-    Bitmap bitmap = m_pDocument->renderToBitmap(width, height, 96.0, 0x46C2D4FF);
+    //Bitmap bitmap = m_pDocument->renderToBitmap(width, height, 96.0, 0x46C2D4FF);
+
+    const char* documentData = m_pDocument->toString().c_str();
+
+    // Create a plutovg surface and load the SVG document data to it
+    plutovg_surface_t* plutoSurface = plutosvg_load_from_memory(documentData, strlen(documentData), NULL, 0, 0, 96.0);
+
+    if (!plutoSurface)
+        return;
+
+    // Get the bitmap data
+    unsigned char* bitmap = plutovg_surface_get_data(plutoSurface);
 
     // Lock surface
     D3DLOCKED_RECT LockedRect;
     surface->LockRect(&LockedRect, nullptr, 0);
 
     auto surfaceData = static_cast<byte*>(LockedRect.pBits);
-    auto sourceData = static_cast<const byte*>(bitmap.data());
+    auto sourceData = static_cast<const byte*>(bitmap);
     auto pitch = LockedRect.Pitch;
 
-    memcpy(surfaceData, sourceData, bitmap.width() * bitmap.height() * 4);
+    memcpy(surfaceData, sourceData, width * height * 4);
 
     // Unlock surface
     surface->UnlockRect();
+
+    plutovg_surface_destroy(plutoSurface);
 }
 
 void CClientVectorGraphic::ClearTexture()

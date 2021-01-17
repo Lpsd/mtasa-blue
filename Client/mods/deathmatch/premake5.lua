@@ -44,7 +44,13 @@ project "Client Deathmatch"
 			"../../../Shared/animation",
 			"../../../vendor/sparsehash/src/",
 			"../../../vendor/lunasvg/include",
-			"../../../vendor/lunasvg/contrib"
+			"../../../vendor/lunasvg/contrib",
+			"../../../vendor/lunasvg/3rdparty/plutosvg",
+			"../../../vendor/lunasvg/3rdparty/plutovg",
+			"../../../vendor/lunasvg/3rdparty/software",
+			"../../../vendor/lunasvg/3rdparty/stb",
+			"../../../vendor/lunasvg/source/geometry",
+			"../../../vendor/lunasvg/source/graphics",
 	}
 
 	files {
