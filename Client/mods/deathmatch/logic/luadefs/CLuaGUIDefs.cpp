@@ -192,6 +192,8 @@ void CLuaGUIDefs::LoadFunctions()
         {"guiComboBoxGetItemCount", GUIComboBoxGetItemCount},
         {"guiComboBoxSetOpen", GUIComboBoxSetOpen},
         {"guiComboBoxIsOpen", GUIComboBoxIsOpen},
+
+        {"guiGetRendererTexture", ArgumentParser<GUIGetRendererTexture>},
     };
 
     // Add functions
@@ -262,6 +264,8 @@ void CLuaGUIDefs::AddGuiElementClass(lua_State* luaVM)
     lua_classfunction(luaVM, "setProperty", "guiSetProperty");
     lua_classfunction(luaVM, "setPosition", "guiSetPosition");
     lua_classfunction(luaVM, "setSize", "guiSetSize");
+
+    lua_classfunction(luaVM, "getRendererTexture", "guiGetRendererTexture");
 
     lua_classvariable(luaVM, "chatBoxInputActive", NULL, "isChatBoxInputActive");
     lua_classvariable(luaVM, "consoleActive", NULL, "isConsoleActive");
@@ -4060,4 +4064,21 @@ int CLuaGUIDefs::GUIGetCursorType(lua_State* luaVM)
     auto eType = CStaticFunctionDefinitions::GUIGetCursorType();
     lua_pushstring(luaVM, EnumToString(eType));
     return 1;
+}
+
+CClientTexture* CLuaGUIDefs::GUIGetRendererTexture(lua_State* luaVM)
+{
+    CLuaMain*               pLuaMain = m_pLuaManager->GetVirtualMachine(luaVM);
+    CResource*              pParentResource = pLuaMain->GetResource();
+    IDirect3DBaseTexture9*  texture = g_pCore->GetGUI()->GetRendererTexture();
+    CPixels                 pixels;
+
+    g_pCore->GetGraphics()->GetPixelsManager()->GetTexturePixels(texture, pixels);
+    CClientTexture* pTexture = g_pClientGame->GetManager()->GetRenderElementManager()->CreateTexture("", &pixels);
+
+    if (!pTexture)
+        throw std::invalid_argument("Unknown error occurred getting CEGUI texture");
+
+    pTexture->SetParent(pParentResource->GetResourceDynamicEntity());
+    return pTexture;
 }

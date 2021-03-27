@@ -159,6 +159,8 @@ public:
     LUA_DECLARE(GUIComboBoxIsOpen);
     LUA_DECLARE(GUIGetCursorType);
 
+    static CClientTexture* GUIGetRendererTexture(lua_State* luaVM);
+
 private:
     static void AddGuiElementClass(lua_State* luaVM);
     static void AddGuiFontClass(lua_State* luaVM);

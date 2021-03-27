@@ -278,6 +278,8 @@ public:
     CGUIWindow* LoadLayout(CGUIElement* pParent, const SString& strFilename);
     bool        LoadImageset(const SString& strFilename);
 
+    IDirect3DBaseTexture9* GetRendererTexture();
+
 private:
     CGUIButton*      _CreateButton(CGUIElement_Impl* pParent = NULL, const char* szCaption = "");
     CGUICheckBox*    _CreateCheckBox(CGUIElement_Impl* pParent = NULL, const char* szCaption = "", bool bChecked = false);

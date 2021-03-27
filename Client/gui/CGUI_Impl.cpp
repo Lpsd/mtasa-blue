@@ -1695,3 +1695,11 @@ CEGUI::Window* CGUI_Impl::GetMasterWindow(CEGUI::Window* wnd)
     }
     return wnd;
 }
+
+IDirect3DBaseTexture9* CGUI_Impl::GetRendererTexture()
+{
+    IDirect3DBaseTexture9* pTexture;
+
+    m_pDevice->GetTexture(0, &pTexture);
+    return pTexture;
+}
