@@ -10,6 +10,7 @@ project "lunasvg"
 	defines { 
 		"LUNASVG_EXPORTS", 
 		"LUNASVG_SHARED", 
+        "BL_BUILD_EXPORT",
 		"_CRT_SECURE_NO_WARNINGS"
 	}
 
@@ -31,8 +32,8 @@ project "lunasvg"
 	}
 
 	includedirs { 
-		"3rdparty/plutovg", 
-		"3rdparty/software", 
+		"3rdparty/blend2d/src",
+		"3rdparty/asmjit/src",
 		"source", 
 		"include"
 	}

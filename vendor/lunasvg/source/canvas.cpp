@@ -1,156 +1,188 @@
 #include "canvas.h"
 
-#include <cmath>
+#include <blend2d.h>
 
 namespace lunasvg {
 
-static plutovg_matrix_t to_plutovg_matrix(const Transform& transform);
-static plutovg_fill_rule_t to_plutovg_fill_rule(WindRule winding);
-static plutovg_operator_t to_plutovg_operator(BlendMode mode);
-static plutovg_line_cap_t to_plutovg_line_cap(LineCap cap);
-static plutovg_line_join_t to_plutovg_line_join(LineJoin join);
-static plutovg_spread_method_t to_plutovg_spread_methood(SpreadMethod spread);
-static void to_plutovg_stops(plutovg_gradient_t* gradient, const GradientStops& stops);
-static void to_plutovg_path(plutovg_t* pluto, const Path& path);
+static BLRgba32 to_bl_color(const Color& color);
+static BLMatrix2D to_bl_matrix(const Transform& matrix);
+static BLPath to_bl_path(const Path& path);
+static BLFillRule to_bl_fill_rule(WindRule fillRule);
+static BLStrokeCap to_bl_line_cap(LineCap cap);
+static BLStrokeJoin to_bl_line_join(LineJoin join);
+static BLCompOp to_bl_comp_op(BlendMode mode);
 
-std::shared_ptr<Canvas> Canvas::create(unsigned char* data, unsigned int width, unsigned int height, unsigned int stride)
+class CanvasImpl
 {
-    return std::shared_ptr<Canvas>(new Canvas(data, static_cast<int>(width), static_cast<int>(height), static_cast<int>(stride)));
+public:
+    CanvasImpl(int width, int height);
+    CanvasImpl(unsigned char* data, int width, int height, int stride);
+    ~CanvasImpl();
+
+public:
+    BLImage image;
+    BLContext context;
+    BLStyle style;
+};
+
+CanvasImpl::CanvasImpl(int width, int height)
+{
+    image.create(width, height, BL_FORMAT_PRGB32);
+    context.begin(image);
+    context.clearAll();
 }
 
-std::shared_ptr<Canvas> Canvas::create(double x, double y, double width, double height)
+CanvasImpl::CanvasImpl(unsigned char* data, int width, int height, int stride)
 {
-    if(width <= 0 || height <= 0)
-        return std::shared_ptr<Canvas>(new Canvas(0, 0, 1, 1));
-
-    auto l = static_cast<int>(floor(x));
-    auto t = static_cast<int>(floor(y));
-    auto r = static_cast<int>(ceil(x + width));
-    auto b = static_cast<int>(ceil(y + height));
-    return std::shared_ptr<Canvas>(new Canvas(l, t, r - l, b - t));
+    image.createFromData(width, height, BL_FORMAT_PRGB32, data, stride);
+    context.begin(image);
+    context.clearAll();
 }
 
-std::shared_ptr<Canvas> Canvas::create(const Rect& box)
+CanvasImpl::~CanvasImpl()
 {
-    return create(box.x, box.y, box.w, box.h);
 }
 
-Canvas::Canvas(unsigned char* data, int width, int height, int stride)
+void Canvas::setMatrix(const Transform& matrix)
 {
-    surface = plutovg_surface_create_for_data(data, width, height, stride);
-    pluto = plutovg_create(surface);
-    plutovg_matrix_init_identity(&translation);
-    plutovg_rect_init(&rect, 0, 0, width, height);
+    d->context.setMatrix(to_bl_matrix(matrix));
 }
 
-Canvas::Canvas(int x, int y, int width, int height)
+void Canvas::setOpacity(double opacity)
 {
-    surface = plutovg_surface_create(width, height);
-    pluto = plutovg_create(surface);
-    plutovg_matrix_init_translate(&translation, -x, -y);
-    plutovg_rect_init(&rect, x, y, width, height);
-}
-
-Canvas::~Canvas()
-{
-    plutovg_surface_destroy(surface);
-    plutovg_destroy(pluto);
+    d->context.setGlobalAlpha(opacity);
 }
 
 void Canvas::setColor(const Color& color)
 {
-    plutovg_set_source_rgba(pluto, color.r, color.g, color.b, color.a);
+    d->style = to_bl_color(color);
 }
 
-void Canvas::setLinearGradient(double x1, double y1, double x2, double y2, const GradientStops& stops, SpreadMethod spread, const Transform& transform)
+void Canvas::setGradient(const LinearGradientValues& values, const Transform& matrix, SpreadMethod spread, const GradientStops& stops)
 {
-    auto gradient = plutovg_gradient_create_linear(x1, y1, x2, y2);
-    auto matrix = to_plutovg_matrix(transform);
-    to_plutovg_stops(gradient, stops);
-    plutovg_gradient_set_spread(gradient, to_plutovg_spread_methood(spread));
-    plutovg_gradient_set_matrix(gradient, &matrix);
-    plutovg_set_source_gradient(pluto, gradient);
-    plutovg_gradient_destroy(gradient);
+    BLGradient gradient;
+    gradient.setType(BL_GRADIENT_TYPE_LINEAR);
+    gradient.setValues(BLLinearGradientValues(values.x1, values.y1, values.x2, values.y2));
+    for(auto& stop : stops)
+    {
+        auto offset = std::get<0>(stop);
+        auto& color = std::get<1>(stop);
+        gradient.addStop(offset, to_bl_color(color));
+    }
+
+    gradient.setMatrix(to_bl_matrix(matrix));
+    switch(spread) {
+    case SpreadMethod::Reflect:
+        gradient.setExtendMode(BL_EXTEND_MODE_REFLECT);
+        break;
+    case SpreadMethod::Repeat:
+        gradient.setExtendMode(BL_EXTEND_MODE_REPEAT);
+        break;
+    default:
+        gradient.setExtendMode(BL_EXTEND_MODE_PAD);
+        break;
+    }
+
+    d->style = gradient;
 }
 
-void Canvas::setRadialGradient(double cx, double cy, double r, double fx, double fy, const GradientStops& stops, SpreadMethod spread, const Transform& transform)
+void Canvas::setGradient(const RadialGradientValues& values, const Transform& matrix, SpreadMethod spread, const GradientStops& stops)
 {
-    auto gradient = plutovg_gradient_create_radial(cx, cy, r, fx, fy, 0);
-    auto matrix = to_plutovg_matrix(transform);
-    to_plutovg_stops(gradient, stops);
-    plutovg_gradient_set_spread(gradient, to_plutovg_spread_methood(spread));
-    plutovg_gradient_set_matrix(gradient, &matrix);
-    plutovg_set_source_gradient(pluto, gradient);
-    plutovg_gradient_destroy(gradient);
+    BLGradient gradient;
+    gradient.setType(BL_GRADIENT_TYPE_RADIAL);
+    gradient.setValues(BLRadialGradientValues(values.cx, values.cy, values.fx, values.fy, values.r));
+    for(auto& stop : stops)
+    {
+        auto offset = std::get<0>(stop);
+        auto& color = std::get<1>(stop);
+        gradient.addStop(offset, to_bl_color(color));
+    }
+
+    gradient.setMatrix(to_bl_matrix(matrix));
+    switch(spread) {
+    case SpreadMethod::Reflect:
+        gradient.setExtendMode(BL_EXTEND_MODE_REFLECT);
+        break;
+    case SpreadMethod::Repeat:
+        gradient.setExtendMode(BL_EXTEND_MODE_REPEAT);
+        break;
+    default:
+        gradient.setExtendMode(BL_EXTEND_MODE_PAD);
+        break;
+    }
+
+    d->style = gradient;
 }
 
-void Canvas::setTexture(const Canvas* source, TextureType type, const Transform& transform)
+void Canvas::setPattern(const Canvas& tile, const Transform& matrix, TileMode mode)
 {
-    auto texture = plutovg_texture_create(source->surface);
-    auto matrix = to_plutovg_matrix(transform);
-    if(type == TextureType::Plain)
-        plutovg_texture_set_type(texture, plutovg_texture_type_plain);
-    else
-        plutovg_texture_set_type(texture, plutovg_texture_type_tiled);
+    BLPattern pattern = BLPattern(tile.d->image);
+    pattern.setMatrix(to_bl_matrix(matrix));
+    switch(mode) {
+    case TileMode::Tiled:
+        pattern.setExtendMode(BL_EXTEND_MODE_REPEAT);
+        break;
+    default:
+        pattern.setExtendMode(BL_EXTEND_MODE_PAD);
+        break;
+    }
 
-    plutovg_texture_set_matrix(texture, &matrix);
-    plutovg_set_source_texture(pluto, texture);
-    plutovg_texture_destroy(texture);
+    d->style = pattern;
 }
 
-void Canvas::fill(const Path& path, const Transform& transform, WindRule winding, BlendMode mode, double opacity)
+void Canvas::setWinding(WindRule winding)
 {
-    auto matrix = to_plutovg_matrix(transform);
-    plutovg_matrix_multiply(&matrix, &matrix, &translation);
-    to_plutovg_path(pluto, path);
-    plutovg_set_matrix(pluto, &matrix);
-    plutovg_set_fill_rule(pluto, to_plutovg_fill_rule(winding));
-    plutovg_set_opacity(pluto, opacity);
-    plutovg_set_operator(pluto, to_plutovg_operator(mode));
-    plutovg_fill(pluto);
+    d->context.setFillRule(to_bl_fill_rule(winding));
 }
 
-void Canvas::stroke(const Path& path, const Transform& transform, double width, LineCap cap, LineJoin join, double miterlimit, const DashData& dash, BlendMode mode, double opacity)
+void Canvas::setLineWidth(double width)
 {
-    auto matrix = to_plutovg_matrix(transform);
-    plutovg_matrix_multiply(&matrix, &matrix, &translation);
-    to_plutovg_path(pluto, path);
-    plutovg_set_matrix(pluto, &matrix);
-    plutovg_set_line_width(pluto, width);
-    plutovg_set_line_cap(pluto, to_plutovg_line_cap(cap));
-    plutovg_set_line_join(pluto, to_plutovg_line_join(join));
-    plutovg_set_miter_limit(pluto, miterlimit);
-    plutovg_set_dash(pluto, dash.offset, dash.array.data(), static_cast<int>(dash.array.size()));
-    plutovg_set_operator(pluto, to_plutovg_operator(mode));
-    plutovg_set_opacity(pluto, opacity);
-    plutovg_stroke(pluto);
+    d->context.setStrokeWidth(width);
 }
 
-void Canvas::blend(const Canvas* source, BlendMode mode, double opacity)
+void Canvas::setLineCap(LineCap cap)
 {
-    plutovg_set_source_surface(pluto, source->surface, source->rect.x, source->rect.y);
-    plutovg_set_operator(pluto, to_plutovg_operator(mode));
-    plutovg_set_opacity(pluto, opacity);
-    plutovg_set_matrix(pluto, &translation);
-    plutovg_paint(pluto);
+    d->context.setStrokeCaps(to_bl_line_cap(cap));
 }
 
-void Canvas::mask(const Rect& clip, const Transform& transform)
+void Canvas::setLineJoin(LineJoin join)
 {
-    auto matrix = to_plutovg_matrix(transform);
-    auto path = plutovg_path_create();
-    plutovg_path_add_rect(path, clip.x, clip.y, clip.w, clip.h);
-    plutovg_path_transform(path, &matrix);
-    plutovg_rect(pluto, rect.x, rect.y, rect.w, rect.h);
-    plutovg_add_path(pluto, path);
-    plutovg_path_destroy(path);
+    d->context.setStrokeJoin(to_bl_line_join(join));
+}
 
-    plutovg_set_source_rgba(pluto, 0, 0, 0, 0);
-    plutovg_set_fill_rule(pluto, plutovg_fill_rule_even_odd);
-    plutovg_set_operator(pluto, plutovg_operator_src);
-    plutovg_set_opacity(pluto, 1.0);
-    plutovg_set_matrix(pluto, &translation);
-    plutovg_fill(pluto);
+void Canvas::setMiterlimit(double miterlimit)
+{
+    d->context.setStrokeMiterLimit(miterlimit);
+}
+
+void Canvas::setDash(const DashData& dash)
+{
+    // Not supported
+}
+
+void Canvas::fill(const Path& path)
+{
+    d->context.save();
+    d->context.setFillStyle(d->style);
+    d->context.fillPath(to_bl_path(path));
+    d->context.restore();
+}
+
+void Canvas::stroke(const Path& path)
+{
+    d->context.save();
+    d->context.setStrokeStyle(d->style);
+    d->context.strokePath(to_bl_path(path));
+    d->context.restore();
+}
+
+void Canvas::blend(const Canvas& source, BlendMode mode, double opacity)
+{
+    d->context.save();
+    d->context.setCompOp(to_bl_comp_op(mode));
+    d->context.setGlobalAlpha(opacity);
+    d->context.blitImage(BLPoint(0, 0), source.d->image);
+    d->context.restore();
 }
 
 void Canvas::clear(unsigned int value)
@@ -160,19 +192,19 @@ void Canvas::clear(unsigned int value)
     auto b = (value >> 8) & 0xFF;
     auto a = (value >> 0) & 0xFF;
 
-    plutovg_set_source_rgba(pluto, r / 255.0, g / 255.0, b / 255.0, a / 255.0);
-    plutovg_set_opacity(pluto, 1.0);
-    plutovg_set_operator(pluto, plutovg_operator_src);
-    plutovg_paint(pluto);
+    d->context.save();
+    d->context.setFillStyle(BLRgba32(r, g, b, a));
+    d->context.fillAll();
+    d->context.restore();
 }
 
 void Canvas::rgba()
 {
-    auto data = plutovg_surface_get_data(surface);
-    auto width = plutovg_surface_get_width(surface);
-    auto height = plutovg_surface_get_height(surface);
-    auto stride = plutovg_surface_get_stride(surface);
-    for(int y = 0;y < height;y++)
+    auto data = this->data();
+    auto width = this->width();
+    auto height = this->height();
+    auto stride = this->stride();
+    for(auto y = 0;y < height;y++)
     {
         auto row = reinterpret_cast<uint32_t*>(data + stride * y);
         for(int x = 0;x < width;x++)
@@ -199,11 +231,11 @@ void Canvas::rgba()
 
 void Canvas::luminance()
 {
-    auto data = plutovg_surface_get_data(surface);
-    auto width = plutovg_surface_get_width(surface);
-    auto height = plutovg_surface_get_height(surface);
-    auto stride = plutovg_surface_get_stride(surface);
-    for(int y = 0;y < height;y++)
+    auto data = this->data();
+    auto width = this->width();
+    auto height = this->height();
+    auto stride = this->stride();
+    for(auto y = 0;y < height;y++)
     {
         auto row = reinterpret_cast<uint32_t*>(data + stride * y);
         for(int x = 0;x < width;x++)
@@ -219,96 +251,123 @@ void Canvas::luminance()
     }
 }
 
+unsigned char* Canvas::data() const
+{
+    BLImageData imaged;
+    d->image.getData(&imaged);
+
+    return static_cast<std::uint8_t*>(imaged.pixelData);
+}
+
 unsigned int Canvas::width() const
 {
-    return static_cast<unsigned int>(plutovg_surface_get_width(surface));
+    return std::uint32_t(d->image.width());
 }
 
 unsigned int Canvas::height() const
 {
-    return static_cast<unsigned int>(plutovg_surface_get_height(surface));
+    return std::uint32_t(d->image.height());
 }
 
 unsigned int Canvas::stride() const
 {
-    return static_cast<unsigned int>(plutovg_surface_get_stride(surface));
+    BLImageData imaged;
+    d->image.getData(&imaged);
+
+    return std::uint32_t(imaged.stride);
 }
 
-unsigned char* Canvas::data() const
+std::shared_ptr<Canvas> Canvas::create(unsigned int width, unsigned int height)
 {
-    return plutovg_surface_get_data(surface);
+    return std::shared_ptr<Canvas>(new Canvas(width, height));
 }
 
-Rect Canvas::box() const
+std::shared_ptr<Canvas> Canvas::create(unsigned char* data, unsigned int width, unsigned int height, unsigned int stride)
 {
-    return Rect{rect.x, rect.y, rect.w, rect.h};
+    return std::shared_ptr<Canvas>(new Canvas(data, width, height, stride));
 }
 
-plutovg_matrix_t to_plutovg_matrix(const Transform& transform)
+Canvas::~Canvas()
 {
-    plutovg_matrix_t matrix;
-    plutovg_matrix_init(&matrix, transform.m00, transform.m10, transform.m01, transform.m11, transform.m02, transform.m12);
-    return matrix;
 }
 
-plutovg_fill_rule_t to_plutovg_fill_rule(WindRule winding)
+Canvas::Canvas(unsigned int width, unsigned int height)
+    : d(new CanvasImpl(static_cast<int>(width), static_cast<int>(height)))
 {
-    return winding == WindRule::EvenOdd ? plutovg_fill_rule_even_odd : plutovg_fill_rule_non_zero;
 }
 
-plutovg_operator_t to_plutovg_operator(BlendMode mode)
+Canvas::Canvas(unsigned char* data, unsigned int width, unsigned int height, unsigned int stride)
+    : d(new CanvasImpl(data, static_cast<int>(width), static_cast<int>(height), static_cast<int>(stride)))
 {
-    return mode == BlendMode::Src ? plutovg_operator_src : mode == BlendMode::Src_Over ? plutovg_operator_src_over : mode == BlendMode::Dst_In ? plutovg_operator_dst_in : plutovg_operator_dst_out;
 }
 
-plutovg_line_cap_t to_plutovg_line_cap(LineCap cap)
+LinearGradientValues::LinearGradientValues(double x1, double y1, double x2, double y2)
+    : x1(x1), y1(y1), x2(x2), y2(y2)
 {
-    return cap == LineCap::Butt ? plutovg_line_cap_butt : cap == LineCap::Round ? plutovg_line_cap_round : plutovg_line_cap_square;
 }
 
-plutovg_line_join_t to_plutovg_line_join(LineJoin join)
+RadialGradientValues::RadialGradientValues(double cx, double cy, double r, double fx, double fy)
+    : cx(cx), cy(cy), r(r), fx(fx), fy(fy)
 {
-    return join == LineJoin::Miter ? plutovg_line_join_miter : join == LineJoin::Round ? plutovg_line_join_round : plutovg_line_join_bevel;
 }
 
-static plutovg_spread_method_t to_plutovg_spread_methood(SpreadMethod spread)
+BLPath to_bl_path(const Path& path)
 {
-    return spread == SpreadMethod::Pad ? plutovg_spread_method_pad : spread == SpreadMethod::Reflect ? plutovg_spread_method_reflect : plutovg_spread_method_repeat;
-}
+    BLPath result;
 
-static void to_plutovg_stops(plutovg_gradient_t* gradient, const GradientStops& stops)
-{
-    for(auto& stop : stops)
-    {
-        auto offset = std::get<0>(stop);
-        auto& color = std::get<1>(stop);
-        plutovg_gradient_add_stop_rgba(gradient, offset, color.r, color.g, color.b, color.a);
-    }
-}
-
-void to_plutovg_path(plutovg_t* pluto, const Path& path)
-{
     PathIterator it(path);
     std::array<Point, 3> p;
     while(!it.isDone())
     {
         switch(it.currentSegment(p)) {
         case PathCommand::MoveTo:
-            plutovg_move_to(pluto, p[0].x, p[0].y);
+            result.moveTo(p[0].x, p[0].y);
             break;
         case PathCommand::LineTo:
-            plutovg_line_to(pluto, p[0].x, p[0].y);
+            result.lineTo(p[0].x, p[0].y);
             break;
         case PathCommand::CubicTo:
-            plutovg_cubic_to(pluto, p[0].x, p[0].y, p[1].x, p[1].y, p[2].x, p[2].y);
+            result.cubicTo(p[0].x, p[0].y, p[1].x, p[1].y, p[2].x, p[2].y);
             break;
         case PathCommand::Close:
-            plutovg_close_path(pluto);
+            result.close();
             break;
         }
 
         it.next();
     }
+
+    return result;
+}
+
+BLMatrix2D to_bl_matrix(const Transform& matrix)
+{
+    return BLMatrix2D(matrix.m00, matrix.m10, matrix.m01, matrix.m11, matrix.m02, matrix.m12);
+}
+
+BLRgba32 to_bl_color(const Color& color)
+{
+    return BLRgba32(color.r * 255, color.g * 255, color.b * 255, color.a * 255);
+}
+
+BLStrokeCap to_bl_line_cap(LineCap cap)
+{
+    return cap == LineCap::Butt ? BL_STROKE_CAP_BUTT : cap == LineCap::Round ? BL_STROKE_CAP_ROUND : BL_STROKE_CAP_SQUARE;
+}
+
+BLStrokeJoin to_bl_line_join(LineJoin join)
+{
+    return join == LineJoin::Miter ? BL_STROKE_JOIN_MITER_BEVEL : join == LineJoin::Round ? BL_STROKE_JOIN_ROUND : BL_STROKE_JOIN_BEVEL;
+}
+
+BLFillRule to_bl_fill_rule(WindRule fillRule)
+{
+    return fillRule == WindRule::EvenOdd ? BL_FILL_RULE_EVEN_ODD : BL_FILL_RULE_NON_ZERO;
+}
+
+BLCompOp to_bl_comp_op(BlendMode mode)
+{
+    return mode == BlendMode::Dst_In ? BL_COMP_OP_DST_IN : BL_COMP_OP_SRC_OVER;
 }
 
 } // namespace lunasvg

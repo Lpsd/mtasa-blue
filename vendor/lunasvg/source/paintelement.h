@@ -13,7 +13,6 @@ class PaintElement : public StyledElement
 public:
     PaintElement(ElementId id);
 
-    bool isPaint() const { return true; }
     virtual std::unique_ptr<LayoutObject> getPainter(LayoutContext* context) const = 0;
 };
 

@@ -47,8 +47,8 @@ void UseElement::transferWidthAndHeight(Element* element) const
     auto& width = get(PropertyId::Width);
     auto& height = get(PropertyId::Height);
 
-    element->set(PropertyId::Width, width, 0x0);
-    element->set(PropertyId::Height, height, 0x0);
+    element->insert(PropertyId::Width, width);
+    element->insert(PropertyId::Height, height);
 }
 
 void UseElement::layout(LayoutContext* context, LayoutContainer* current) const
@@ -57,10 +57,9 @@ void UseElement::layout(LayoutContext* context, LayoutContainer* current) const
         return;
 
     auto ref = context->getElementById(href());
-    if(ref == nullptr || context->hasReference(ref) || (current->id == LayoutId::ClipPath && !ref->isGeometry()))
+    if(ref == nullptr)
         return;
 
-    LayoutBreaker layoutBreaker(context, ref);
     auto group = std::make_unique<GElement>();
     group->parent = parent;
     group->properties = properties;
@@ -75,7 +74,7 @@ void UseElement::layout(LayoutContext* context, LayoutContainer* current) const
     transform += ' ';
     transform += std::to_string(_y);
     transform += ')';
-    group->set(PropertyId::Transform, transform, 0x10);
+    group->set(PropertyId::Transform, transform);
 
     if(ref->id == ElementId::Svg || ref->id == ElementId::Symbol)
     {

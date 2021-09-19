@@ -6,13 +6,12 @@
 
 #include <list>
 #include <map>
-#include <set>
 
 namespace lunasvg {
 
 enum class LayoutId
 {
-    Symbol,
+    Root,
     Group,
     Shape,
     Mask,
@@ -99,10 +98,10 @@ public:
     const LayoutClipPath* clipper;
 };
 
-class LayoutSymbol : public LayoutContainer
+class LayoutRoot : public LayoutContainer
 {
 public:
-    LayoutSymbol();
+    LayoutRoot();
 
     void render(RenderState& state) const;
     Rect map(const Rect& rect) const;
@@ -111,7 +110,6 @@ public:
     double width;
     double height;
     Transform transform;
-    Rect clip;
     double opacity;
     const LayoutMask* masker;
     const LayoutClipPath* clipper;
@@ -138,7 +136,6 @@ public:
     LayoutMarker();
 
     Transform markerTransform(const Point& origin, double angle, double strokeWidth) const;
-    Rect markerBoundingBox(const Point& origin, double angle, double strokeWidth) const;
     void renderMarker(RenderState& state, const Point& origin, double angle, double strokeWidth) const;
 
 public:
@@ -147,7 +144,6 @@ public:
     Transform transform;
     Angle orient;
     MarkerUnits units;
-    Rect clip;
     double opacity;
     const LayoutMask* masker;
     const LayoutClipPath* clipper;
@@ -305,7 +301,7 @@ public:
     const LayoutMask* masker;
     const LayoutClipPath* clipper;
 
-private:
+protected:
     mutable Rect m_fillBoundingBox{Rect::Invalid};
     mutable Rect m_strokeBoundingBox{Rect::Invalid};
 };
@@ -316,21 +312,13 @@ enum class RenderMode
     Clipping
 };
 
-struct BlendInfo
-{
-    const LayoutClipPath* clipper;
-    const LayoutMask* masker;
-    double opacity;
-    Rect clip;
-};
-
 class RenderState
 {
 public:
     RenderState(const LayoutObject* object, RenderMode mode);
 
-    void beginGroup(RenderState& state, const BlendInfo& info);
-    void endGroup(RenderState& state, const BlendInfo& info);
+    void beginGroup(RenderState& state, const LayoutClipPath* clipper, const LayoutMask* masker, double opacity);
+    void endGroup(RenderState& state, const LayoutClipPath* clipper, const LayoutMask* masker, double opacity);
 
     const LayoutObject* object() const { return m_object;}
     RenderMode mode() const { return m_mode; }
@@ -352,7 +340,7 @@ class GeometryElement;
 class LayoutContext
 {
 public:
-    LayoutContext(const ParseDocument* document, LayoutSymbol* root);
+    LayoutContext(const ParseDocument* document, LayoutRoot* root);
 
     Element* getElementById(const std::string& id) const;
     LayoutObject* getResourcesById(const std::string& id) const;
@@ -367,26 +355,10 @@ public:
     StrokeData strokeData(const StyledElement* element);
     MarkerData markerData(const GeometryElement* element, const Path& path);
 
-    void addReference(const Element* element);
-    void removeReference(const Element* element);
-    bool hasReference(const Element* element) const;
-
 private:
     const ParseDocument* m_document;
-    LayoutSymbol* m_root;
+    LayoutRoot* m_root;
     std::map<std::string, LayoutObject*> m_resourcesCache;
-    std::set<const Element*> m_references;
-};
-
-class LayoutBreaker
-{
-public:
-    LayoutBreaker(LayoutContext* context, const Element* element);
-    ~LayoutBreaker();
-
-private:
-    LayoutContext* m_context;
-    const Element* m_element;
 };
 
 } // namespace lunasvg

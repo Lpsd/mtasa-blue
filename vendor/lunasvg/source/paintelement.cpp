@@ -47,13 +47,11 @@ GradientStops GradientElement::buildGradientStops() const
     double prevOffset = 0.0;
     for(auto& child : children)
     {
-        if(child->isText())
-            continue;
         auto element = static_cast<Element*>(child.get());
-        if(element->id != ElementId::Stop)
+        if(child->isText() || element->id != ElementId::Stop)
             continue;
         auto stop = static_cast<StopElement*>(element);
-        auto offset = std::max(prevOffset, stop->offset());
+        auto offset = std::min(std::max(prevOffset, stop->offset()), 1.0);
         prevOffset = offset;
         gradientStops.emplace_back(offset, stop->stopColorWithOpacity());
     }
@@ -151,10 +149,12 @@ std::unique_ptr<LayoutObject> LinearGradientElement::getPainter(LayoutContext* c
     gradient->spreadMethod = attributes.spreadMethod();
     gradient->units = attributes.gradientUnits();
     gradient->stops = attributes.gradientStops();
+
     gradient->x1 = x1;
     gradient->y1 = y1;
     gradient->x2 = x2;
     gradient->y2 = y2;
+
     return std::move(gradient);
 }
 
@@ -269,6 +269,7 @@ std::unique_ptr<LayoutObject> RadialGradientElement::getPainter(LayoutContext* c
     gradient->r = lengthContext.valueForLength(attributes.r(), LengthMode::Both);
     gradient->fx = lengthContext.valueForLength(attributes.fx(), LengthMode::Width);
     gradient->fy = lengthContext.valueForLength(attributes.fy(), LengthMode::Height);
+
     return std::move(gradient);
 }
 
@@ -344,9 +345,6 @@ std::string PatternElement::href() const
 
 std::unique_ptr<LayoutObject> PatternElement::getPainter(LayoutContext* context) const
 {
-    if(context->hasReference(this))
-        return nullptr;
-
     PatternAttributes attributes;
     std::set<const PatternElement*> processedPatterns;
     const PatternElement* current = this;
@@ -390,7 +388,6 @@ std::unique_ptr<LayoutObject> PatternElement::getPainter(LayoutContext* context)
     if(element == nullptr || width.isZero() || height.isZero())
         return nullptr;
 
-    LayoutBreaker layoutBreaker(context, this);
     auto pattern = std::make_unique<LayoutPattern>();
     pattern->transform = attributes.patternTransform();
     pattern->units = attributes.patternUnits();
@@ -404,6 +401,7 @@ std::unique_ptr<LayoutObject> PatternElement::getPainter(LayoutContext* context)
     pattern->width = lengthContext.valueForLength(attributes.width(), LengthMode::Width);
     pattern->height = lengthContext.valueForLength(attributes.height(), LengthMode::Height);
     element->layoutChildren(context, pattern.get());
+
     return std::move(pattern);
 }
 

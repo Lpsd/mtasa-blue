@@ -19,12 +19,6 @@ enum class Visibility
     Hidden
 };
 
-enum class Overflow
-{
-    Visible,
-    Hidden
-};
-
 enum class LineCap
 {
     Butt,
@@ -92,7 +86,7 @@ class Paint
 public:
     Paint() = default;
     Paint(const Color& color);
-    Paint(const std::string& ref, const Color& color);
+    Paint(const std::string& ref);
 
     const Color& color() const { return m_color; }
     const std::string& ref() const { return m_ref; }
@@ -128,7 +122,7 @@ public:
     Rect& intersect(const Rect& rect);
     Rect& unite(const Rect& rect);
 
-    bool empty() const { return w <= 0.0 || h <= 0.0; }
+    bool empty() const { return w <= 0.0 && h <= 0.0; }
     bool valid() const { return w >= 0.0 && h >= 0.0; }
 
     static const Rect Empty;
@@ -327,7 +321,6 @@ public:
     PreserveAspectRatio(Align align, MeetOrSlice scale);
 
     Transform getMatrix(double width, double height, const Rect& viewBox) const;
-    Rect getClip(double width, double height, const Rect& viewBox) const;
 
     Align align() const { return m_align; }
     MeetOrSlice scale() const { return m_scale; }

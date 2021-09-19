@@ -59,30 +59,22 @@ PreserveAspectRatio MarkerElement::preserveAspectRatio() const
 
 std::unique_ptr<LayoutMarker> MarkerElement::getMarker(LayoutContext* context) const
 {
-    auto markerWidth = this->markerWidth();
-    auto markerHeight = this->markerHeight();
-    if(markerWidth.isZero() || markerHeight.isZero() || context->hasReference(this))
-        return nullptr;
-
     LengthContext lengthContext(this);
     auto _refX = lengthContext.valueForLength(refX(), LengthMode::Width);
     auto _refY = lengthContext.valueForLength(refY(), LengthMode::Height);
-    auto _markerWidth = lengthContext.valueForLength(markerWidth, LengthMode::Width);
-    auto _markerHeight = lengthContext.valueForLength(markerHeight, LengthMode::Height);
+    auto _markerWidth = lengthContext.valueForLength(markerWidth(), LengthMode::Width);
+    auto _markerHeight = lengthContext.valueForLength(markerHeight(), LengthMode::Height);
 
-    auto viewBox = this->viewBox();
     auto preserveAspectRatio = this->preserveAspectRatio();
-    auto viewTransform = preserveAspectRatio.getMatrix(_markerWidth, _markerHeight, viewBox);
+    auto viewTransform = preserveAspectRatio.getMatrix(_markerWidth, _markerHeight, viewBox());
     viewTransform.map(_refX, _refY, &_refX, &_refY);
 
-    LayoutBreaker layoutBreaker(context, this);
     auto marker = std::make_unique<LayoutMarker>();
     marker->refX = _refX;
     marker->refY = _refY;
     marker->transform = viewTransform;
     marker->orient = orient();
     marker->units = markerUnits();
-    marker->clip = isOverflowHidden() ? preserveAspectRatio.getClip(_markerWidth, _markerHeight, viewBox) : Rect::Invalid;
     marker->opacity = opacity();
     marker->masker = context->getMasker(mask());
     marker->clipper = context->getClipper(clip_path());

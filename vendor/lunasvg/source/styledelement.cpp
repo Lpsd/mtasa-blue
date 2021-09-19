@@ -128,12 +128,6 @@ Visibility StyledElement::visibility() const
     return Parser::parseVisibility(value);
 }
 
-Overflow StyledElement::overflow() const
-{
-    auto& value = get(PropertyId::Overflow);
-    return Parser::parseOverflow(value, parent == nullptr ? Overflow::Visible : Overflow::Hidden);
-}
-
 std::string StyledElement::clip_path() const
 {
     auto& value = get(PropertyId::Clip_Path);
@@ -167,11 +161,6 @@ std::string StyledElement::marker_end() const
 bool StyledElement::isDisplayNone() const
 {
     return display() == Display::None;
-}
-
-bool StyledElement::isOverflowHidden() const
-{
-    return overflow() == Overflow::Hidden;
 }
 
 } // namespace lunasvg
