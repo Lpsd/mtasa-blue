@@ -154,7 +154,7 @@ public:
     void        SetOfflineMod(bool bOffline);
     void        ForceCursorVisible(bool bVisible, bool bToggleControls = true);
     void        SetMessageProcessor(pfnProcessMessage pfnMessageProcessor);
-    void        ShowMessageBox(const char* szTitle, const char* szText, unsigned int uiFlags, GUI_CALLBACK* ResponseHandler = NULL);
+    void        ShowMessageBox(const char* szTitle, const char* szText, unsigned int uiFlags, GUI_CALLBACK* ResponseHandler = NULL); /* TODO AFTER CEGUI API REWRITE */
     void        RemoveMessageBox(bool bNextFrame = false);
     void        ShowErrorMessageBox(const SString& strTitle, SString strMessage, const SString& strTroubleLink = "");
     void        ShowNetErrorMessageBox(const SString& strTitle, SString strMessage, SString strTroubleLink = "", bool bLinkRequiresErrorCode = false);
@@ -176,9 +176,6 @@ public:
     void DestroyXML();
     void DeinitGUI();
     void DestroyGUI();
-
-    // Temporary to get if using new CEGUI
-    bool IsUsingNewCEGUI();
 
     // Web
     bool IsWebCoreLoaded() { return m_pWebCore != nullptr; }
@@ -345,7 +342,7 @@ private:
     bool              m_bCursorToggleControls;
     pfnProcessMessage m_pfnMessageProcessor;
 
-    CGUIMessageBox* m_pMessageBox;
+    //CGUIMessageBox* m_pMessageBox; /* TODO AFTER CEGUI API REWRITE */
 
     // screen res
     DEVMODE m_Current;

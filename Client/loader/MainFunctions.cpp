@@ -884,7 +884,6 @@ void CheckDataFiles()
     SString strMtaDir = PathJoin(strMTASAPath, "mta");
     if (strGTAPath.CompareI(strMtaDir) == false)
     {
-        FileDelete(PathJoin(strGTAPath, "CEGUI.log"));
         FileDelete(PathJoin(strGTAPath, "logfile.txt"));
         FileDelete(PathJoin(strGTAPath, "shutdown.log"));
     }
