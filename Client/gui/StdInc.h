@@ -7,11 +7,7 @@
 #include <string>
 #include <vector>
 
-#include <CEGUI/CEGUI.h>
-
 #include <d3dx9.h>
-#include <CEGUI/RendererModules/Direct3D9/Renderer.h>
-#include <CEGUI/RendererModules/Direct3D9/Texture.h>
 
 #include "SharedUtil.h"
 #include "CRect2D.h"

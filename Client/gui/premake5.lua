@@ -11,7 +11,6 @@ project "GUI"
 		includedirs {
             "../../Shared/sdk",
 			"../sdk",
-			"../../vendor/cegui-0.8.7/include",
 			"../../vendor/sparsehash/src/",
 			"../../vendor/freetype/include",
 		}
@@ -24,11 +23,6 @@ project "GUI"
 	}
 
 	links {
-		"CEGUI-0.8.7",
-		"CEGUICoreWindowRendererSet",
-		"CEGUISILLYImageCodec",
-		"CEGUIDirect3D9Renderer",
-		"CEGUITinyXMLParser",
 		"d3dx9.lib",
 		"d3d9.lib",
 		"dxerr.lib"

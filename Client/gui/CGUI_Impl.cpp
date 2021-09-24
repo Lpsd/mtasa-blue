@@ -15,5 +15,5 @@ using std::list;
 
 CGUI_Impl::CGUI_Impl(IDirect3DDevice9* pDevice)
 {
-    m_pRenderer = &CEGUI::Direct3D9Renderer::bootstrapSystem(pDevice, 208, CalcMTASAPath("MTA").data());
+    m_pDevice = pDevice;
 }

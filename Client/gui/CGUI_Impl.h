@@ -15,11 +15,6 @@
 #include <list>
 #include <windows.h>
 
-namespace CEGUI {
-    class Direct3D9Renderer;
-    class System;
-};
-
 class CGUI_Impl : public CGUI
 {
 public:
@@ -28,7 +23,4 @@ public:
 private:
 
     IDirect3DDevice9* m_pDevice;
-
-    CEGUI::Direct3D9Renderer*    m_pRenderer;
-    CEGUI::System*               m_pSystem;
 };
