@@ -29,6 +29,7 @@
 #include <core/CLocalizationInterface.h>
 #include <core/CTrayIconInterface.h>
 #include <core/CDiscordManagerInterface.h>
+#include <core/CDrawContainerManagerInterface.h>
 #include <core/CCoreInterface.h>
 #include <core/CExceptionInformation.h>
 #include <xml/CXML.h>
@@ -84,6 +85,7 @@
 #include <CClientWater.h>
 #include <CClientWeapon.h>
 #include <CClientRenderElement.h>
+#include <CClientDrawContainer.h>
 #include <CClientDxFont.h>
 #include <CClientGuiFont.h>
 #include <CClientMaterial.h>
@@ -120,6 +122,7 @@
 #include <luadefs/CLuaColShapeDefs.h>
 #include <luadefs/CLuaCompatibilityDefs.h>
 #include <luadefs/CLuaDrawingDefs.h>
+#include <luadefs/CLuaDrawContainerDefs.h>
 #include <luadefs/CLuaEffectDefs.h>
 #include <luadefs/CLuaElementDefs.h>
 #include <luadefs/CLuaEngineDefs.h>

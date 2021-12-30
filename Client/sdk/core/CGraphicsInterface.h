@@ -14,6 +14,8 @@
 #include "CVector.h"
 #include <d3d9.h>
 
+#include "CDrawContainerManagerInterface.h"
+
 // Vertex type used by the primitives batchers
 struct PrimitiveVertice
 {
@@ -177,9 +179,10 @@ public:
     virtual bool IsValidPrimitiveSize(int iNumVertives, D3DPRIMITIVETYPE eType) = 0;
 
     // Subsystems
-    virtual CRenderItemManagerInterface* GetRenderItemManager() = 0;
-    virtual CScreenGrabberInterface*     GetScreenGrabber() = 0;
-    virtual CPixelsManagerInterface*     GetPixelsManager() = 0;
+    virtual CRenderItemManagerInterface*    GetRenderItemManager() = 0;
+    virtual CScreenGrabberInterface*        GetScreenGrabber() = 0;
+    virtual CPixelsManagerInterface*        GetPixelsManager() = 0;
+    virtual CDrawContainerManagerInterface* GetDrawContainerManager() = 0;
 
     // Transition between GTA and MTA controlled rendering
     virtual void EnteringMTARenderZone() = 0;

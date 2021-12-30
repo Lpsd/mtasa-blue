@@ -18,6 +18,7 @@ class CGraphics;
 #include "CGUI.h"
 #include "CSingleton.h"
 #include "CRenderItemManager.h"
+#include "CDrawContainerManager.h"
 
 #define DUMMY_PROGRESS_INITIAL_DELAY        1000    // Game stall time before spinner is displayed
 #define DUMMY_PROGRESS_MIN_DISPLAY_TIME     1000    // Minimum time spinner is drawn (to prevent flicker)
@@ -166,9 +167,10 @@ public:
     void OnChangingRenderTarget(uint uiNewViewportSizeX, uint uiNewViewportSizeY);
 
     // Subsystems
-    CRenderItemManagerInterface* GetRenderItemManager() { return m_pRenderItemManager; }
-    CScreenGrabberInterface*     GetScreenGrabber() { return m_pScreenGrabber; }
-    CPixelsManagerInterface*     GetPixelsManager() { return m_pPixelsManager; }
+    CRenderItemManagerInterface*    GetRenderItemManager() { return m_pRenderItemManager; }
+    CScreenGrabberInterface*        GetScreenGrabber() { return m_pScreenGrabber; }
+    CPixelsManagerInterface*        GetPixelsManager() { return m_pPixelsManager; }
+    CDrawContainerManagerInterface* GetDrawContainerManager() { return m_pDrawContainerManager; }
 
     // Transition between GTA and MTA controlled rendering
     virtual void EnteringMTARenderZone();
@@ -236,6 +238,7 @@ private:
     CMaterialPrimitive3DBatcher* m_pMaterialPrimitive3DBatcherPreGUI = nullptr;
     CMaterialPrimitive3DBatcher* m_pMaterialPrimitive3DBatcherPostGUI = nullptr;
     CAspectRatioConverter*       m_pAspectRatioConverter = nullptr;
+    CDrawContainerManager*       m_pDrawContainerManager = nullptr;
 
     // Fonts
     ID3DXFont* m_pDXFonts[NUM_FONTS];

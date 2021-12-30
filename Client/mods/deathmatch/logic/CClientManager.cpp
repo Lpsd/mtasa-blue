@@ -54,6 +54,7 @@ CClientManager::CClientManager()
     m_pPointLightsManager = new CClientPointLightsManager(this);
     m_pModelManager = new CClientModelManager();
     m_pPacketRecorder = new CClientPacketRecorder(this);
+    m_pDrawContainerManager = new CClientDrawContainerManager(this);
 
     m_bBeingDeleted = false;
     m_bGameUnloadedFlag = false;
@@ -214,6 +215,7 @@ void CClientManager::DoPulse(bool bDoStandardPulses, bool bDoVehicleManagerPulse
             m_pColManager->DoPulse();
             m_pGUIManager->DoPulse();
             m_pWeaponManager->DoPulse();
+            m_pDrawContainerManager->DoPulse();
         }
         else
         {

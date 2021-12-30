@@ -1215,6 +1215,8 @@ unsigned int CClientEntity::GetTypeID(const char* szTypeName)
         return CCLIENTPOINTLIGHTS;
     else if (strcmp(szTypeName, "svg") == 0)
         return CCLIENTVECTORGRAPHIC;
+    else if (strcmp(szTypeName, "drawcontainer") == 0)
+        return CCLIENTDRAWCONTAINER;
     else
         return CCLIENTUNKNOWN;
 }

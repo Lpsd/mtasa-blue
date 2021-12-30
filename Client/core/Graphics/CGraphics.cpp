@@ -68,6 +68,7 @@ CGraphics::CGraphics(CLocalGUI* pGUI)
     m_pPixelsManager = NewPixelsManager();
     m_LastLostDeviceTimer.SetMaxIncrement(250);
     m_pAspectRatioConverter = new CAspectRatioConverter();
+    m_pDrawContainerManager = new CDrawContainerManager();
 }
 
 CGraphics::~CGraphics()
@@ -94,6 +95,7 @@ CGraphics::~CGraphics()
     SAFE_DELETE(m_pScreenGrabber);
     SAFE_DELETE(m_pPixelsManager);
     SAFE_DELETE(m_pAspectRatioConverter);
+    SAFE_DELETE(m_pDrawContainerManager);
 }
 
 void CGraphics::DrawString(int uiLeft, int uiTop, int uiRight, int uiBottom, unsigned long ulColor, const char* szText, float fScaleX, float fScaleY,
