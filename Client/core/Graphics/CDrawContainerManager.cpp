@@ -27,6 +27,8 @@ CDrawContainer* CDrawContainerManager::Create(DrawContainerType type)
             return new CDrawContainer();
         case DrawContainerType::RECT:
             return new CDrawContainerRect();
+        case DrawContainerType::LINE3D:
+            return new CDrawContainerLine3D();
     }
 
     return nullptr;

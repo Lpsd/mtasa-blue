@@ -9,19 +9,19 @@
 
 #include "StdInc.h"
 
-CDrawContainerRect::CDrawContainerRect()
+CDrawContainerLine3D::CDrawContainerLine3D()
 {
-    SetType(DrawContainerType::RECT);
+    SetType(DrawContainerType::LINE3D);
 
     printf("created RECT draw container");
 }
 
-CDrawContainerRect::~CDrawContainerRect()
+CDrawContainerLine3D::~CDrawContainerLine3D()
 {
 
 }
 
-void CDrawContainerRect::OnPulse()
+void CDrawContainerLine3D::OnPulse()
 {
-    g_pGraphics->DrawRectangle(m_position.fX, m_position.fY, m_size.fX, m_size.fY, m_color);
+    g_pGraphics->DrawLine3D(m_position, m_endPosition, m_color, m_size.fX);
 }

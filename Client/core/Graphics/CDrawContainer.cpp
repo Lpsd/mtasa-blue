@@ -21,7 +21,7 @@ CDrawContainer::~CDrawContainer()
 
 void CDrawContainer::OnPulse()
 {
-    printf(SString("CDrawContainer::OnPulse %i \n", static_cast<int>(GetTickCount32())).c_str());
+
 }
 
 void CDrawContainer::SetType(DrawContainerType type)

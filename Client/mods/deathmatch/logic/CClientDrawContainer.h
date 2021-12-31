@@ -26,6 +26,8 @@ public:
     CResource* GetResource() const { return m_pResource; }
     void       SetResource(CResource* pResource) { m_pResource = pResource; }
 
+    CDrawContainer* GetDrawContainer() const { return m_pDrawContainer; }
+
     DrawContainerType GetContainerType() const;
     eClientEntityType GetType() const { return CCLIENTDRAWCONTAINER; }
 

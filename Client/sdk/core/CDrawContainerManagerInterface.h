@@ -12,8 +12,7 @@
 
 #include <../Client/core/Graphics/CDrawContainer.h>
 #include <../Client/core/Graphics/CDrawContainer.Rect.h>
-
-const std::array<DrawContainerType, 1> DrawContainerTypes = {DrawContainerType::RECT};
+#include <../Client/core/Graphics/CDrawContainer.Line3D.h>
 
 class CDrawContainerManagerInterface
 {
