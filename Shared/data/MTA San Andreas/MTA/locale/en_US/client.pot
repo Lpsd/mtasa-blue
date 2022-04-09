@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: MTA San Andreas 1.x\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-04-02 16:58+0000\n"
+"POT-Creation-Date: 2022-04-09 14:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -92,7 +92,7 @@ msgstr ""
 msgid "Unknown command or cvar: "
 msgstr ""
 
-#: Client\core\CConnectManager.cpp:80
+#: Client\core\CConnectManager.cpp:79
 msgid "Connecting failed. Invalid nick provided!"
 msgstr ""
 
@@ -100,14 +100,14 @@ msgstr ""
 #. Show failed message and abort the attempt
 #. Show timeout message and disconnect
 #. Display an error, reset the error status and exit
-#: Client\core\CConnectManager.cpp:81 Client\core\CConnectManager.cpp:117
-#: Client\core\CConnectManager.cpp:133 Client\core\CConnectManager.cpp:269
-#: Client\core\CConnectManager.cpp:327 Client\core\CConnectManager.cpp:410
-#: Client\core\CConnectManager.cpp:417 Client\core\CConnectManager.cpp:427
-#: Client\core\CCore.cpp:1200 Client\core\CCore.cpp:1213
+#: Client\core\CConnectManager.cpp:80 Client\core\CConnectManager.cpp:111
+#: Client\core\CConnectManager.cpp:127 Client\core\CConnectManager.cpp:263
+#: Client\core\CConnectManager.cpp:321 Client\core\CConnectManager.cpp:404
+#: Client\core\CConnectManager.cpp:411 Client\core\CConnectManager.cpp:421
+#: Client\core\CCore.cpp:1190 Client\core\CCore.cpp:1203
 #: Client\core\CGUI.cpp:87 Client\core\CSettings.cpp:2888
 #: Client\core\CSettings.cpp:4062 Client\core\CSettings.cpp:4090
-#: Client\core\CSettings.cpp:4621 Client\core\DXHook\CDirect3DHook9.cpp:127
+#: Client\core\CSettings.cpp:4621 Client\core\DXHook\CDirect3DHook9.cpp:126
 #: Client\core\ServerBrowser\CServerBrowser.cpp:1273
 #: Client\core\ServerBrowser\CServerBrowser.cpp:1295
 #: Client\core\ServerBrowser\CServerBrowser.cpp:1352
@@ -134,78 +134,78 @@ msgstr ""
 msgid "Error"
 msgstr ""
 
-#: Client\core\CConnectManager.cpp:116
+#: Client\core\CConnectManager.cpp:110
 msgid "Connecting failed. Invalid host provided!"
 msgstr ""
 
-#: Client\core\CConnectManager.cpp:132
+#: Client\core\CConnectManager.cpp:126
 #, c-format
 msgid "Connecting to %s at port %u failed!"
 msgstr ""
 
 #. Display the status box
-#: Client\core\CConnectManager.cpp:153
+#: Client\core\CConnectManager.cpp:147
 #, c-format
 msgid "Connecting to %s:%u ..."
 msgstr ""
 
 #. Display the status box
-#: Client\core\CConnectManager.cpp:154
+#: Client\core\CConnectManager.cpp:148
 #: Client\mods\deathmatch\logic\CClientGame.cpp:584
 msgid "CONNECTING"
 msgstr ""
 
-#: Client\core\CConnectManager.cpp:269
+#: Client\core\CConnectManager.cpp:263
 #: Client\mods\deathmatch\logic\CClientGame.cpp:1163
 msgid "Connection timed out"
 msgstr ""
 
-#: Client\core\CConnectManager.cpp:283 Client\core\CConnectManager.cpp:287
+#: Client\core\CConnectManager.cpp:277 Client\core\CConnectManager.cpp:281
 #: Client\mods\deathmatch\logic\CClientGame.cpp:1208
 msgid "Disconnected: unknown protocol error"
 msgstr ""
 
-#: Client\core\CConnectManager.cpp:291
+#: Client\core\CConnectManager.cpp:285
 #: Client\mods\deathmatch\logic\CClientGame.cpp:1212
 msgid "Disconnected: disconnected remotely"
 msgstr ""
 
-#: Client\core\CConnectManager.cpp:295
+#: Client\core\CConnectManager.cpp:289
 #: Client\mods\deathmatch\logic\CClientGame.cpp:1216
 msgid "Disconnected: connection lost remotely"
 msgstr ""
 
-#: Client\core\CConnectManager.cpp:299
+#: Client\core\CConnectManager.cpp:293
 #: Client\mods\deathmatch\logic\CClientGame.cpp:1220
 msgid "Disconnected: you are banned from this server"
 msgstr ""
 
-#: Client\core\CConnectManager.cpp:306
+#: Client\core\CConnectManager.cpp:300
 #: Client\mods\deathmatch\logic\CClientGame.cpp:1228
 msgid "Disconnected: disconnected from the server"
 msgstr ""
 
-#: Client\core\CConnectManager.cpp:310
+#: Client\core\CConnectManager.cpp:304
 #: Client\mods\deathmatch\logic\CClientGame.cpp:1232
 msgid "Disconnected: connection to the server was lost"
 msgstr ""
 
-#: Client\core\CConnectManager.cpp:317
+#: Client\core\CConnectManager.cpp:311
 #: Client\mods\deathmatch\logic\CClientGame.cpp:1240
 msgid "Disconnected: connection was refused"
 msgstr ""
 
 #. Failed loading the mod
-#: Client\core\CConnectManager.cpp:409
+#: Client\core\CConnectManager.cpp:403
 #, c-format
 msgid "No such mod installed (%s)"
 msgstr ""
 
-#: Client\core\CConnectManager.cpp:417
+#: Client\core\CConnectManager.cpp:411
 msgid "Bad server response (2)"
 msgstr ""
 
-#: Client\core\CConnectManager.cpp:427
+#: Client\core\CConnectManager.cpp:421
 msgid "Bad server response (1)"
 msgstr ""
 
@@ -214,116 +214,116 @@ msgstr ""
 msgid "CONSOLE"
 msgstr ""
 
-#: Client\core\CCore.cpp:727 Client\loader\CInstallManager.cpp:756
+#: Client\core\CCore.cpp:718 Client\loader\CInstallManager.cpp:756
 #, c-format
 msgid "MTA:SA cannot continue because drive %s does not have enough space."
 msgstr ""
 
-#: Client\core\CCore.cpp:729 Shared\mods\deathmatch\logic\Utils.cpp:102
+#: Client\core\CCore.cpp:720 Shared\mods\deathmatch\logic\Utils.cpp:102
 msgid "Fatal error"
 msgstr ""
 
-#: Client\core\CCore.cpp:855
+#: Client\core\CCore.cpp:845
 msgid "TO FIX, REMOVE THIS FILE:"
 msgstr ""
 
-#: Client\core\CCore.cpp:887
+#: Client\core\CCore.cpp:877
 #, c-format
 msgid "%s module is incorrect!"
 msgstr ""
 
-#: Client\core\CCore.cpp:1200
+#: Client\core\CCore.cpp:1190
 msgid "Error executing URL"
 msgstr ""
 
-#: Client\core\CCore.cpp:1212
+#: Client\core\CCore.cpp:1202
 #, c-format
 msgid "Error running mod specified in command line ('%s')"
 msgstr ""
 
 #. m_pCommands->Add ( "e", CCommandFuncs::Editor );
 #. m_pCommands->Add ( "clear", CCommandFuncs::Clear );
-#: Client\core\CCore.cpp:1297
+#: Client\core\CCore.cpp:1287
 msgid "this help screen"
 msgstr ""
 
-#: Client\core\CCore.cpp:1298 Client\core\CCore.cpp:1299
+#: Client\core\CCore.cpp:1288 Client\core\CCore.cpp:1289
 msgid "exits the application"
 msgstr ""
 
-#: Client\core\CCore.cpp:1300
+#: Client\core\CCore.cpp:1290
 msgid "shows the version"
 msgstr ""
 
-#: Client\core\CCore.cpp:1301
+#: Client\core\CCore.cpp:1291
 msgid "shows the time"
 msgstr ""
 
-#: Client\core\CCore.cpp:1302
+#: Client\core\CCore.cpp:1292
 msgid "shows the hud"
 msgstr ""
 
-#: Client\core\CCore.cpp:1303
+#: Client\core\CCore.cpp:1293
 msgid "shows all the binds"
 msgstr ""
 
-#: Client\core\CCore.cpp:1304
+#: Client\core\CCore.cpp:1294
 msgid "shows your serial"
 msgstr ""
 
-#: Client\core\CCore.cpp:1313
+#: Client\core\CCore.cpp:1303
 msgid "connects to a server (host port nick pass)"
 msgstr ""
 
-#: Client\core\CCore.cpp:1314
+#: Client\core\CCore.cpp:1304
 msgid "connects to a previous server"
 msgstr ""
 
-#: Client\core\CCore.cpp:1315
+#: Client\core\CCore.cpp:1305
 msgid "binds a key (key control)"
 msgstr ""
 
-#: Client\core\CCore.cpp:1316
+#: Client\core\CCore.cpp:1306
 msgid "unbinds a key (key)"
 msgstr ""
 
-#: Client\core\CCore.cpp:1317
+#: Client\core\CCore.cpp:1307
 msgid "copies the default gta controls"
 msgstr ""
 
-#: Client\core\CCore.cpp:1318
+#: Client\core\CCore.cpp:1308
 msgid "outputs a screenshot"
 msgstr ""
 
-#: Client\core\CCore.cpp:1319
+#: Client\core\CCore.cpp:1309
 msgid "immediately saves the config"
 msgstr ""
 
-#: Client\core\CCore.cpp:1321
+#: Client\core\CCore.cpp:1311
 msgid "clears the debug view"
 msgstr ""
 
-#: Client\core\CCore.cpp:1322
+#: Client\core\CCore.cpp:1312
 msgid "scrolls the chatbox upwards"
 msgstr ""
 
-#: Client\core\CCore.cpp:1323
+#: Client\core\CCore.cpp:1313
 msgid "scrolls the chatbox downwards"
 msgstr ""
 
-#: Client\core\CCore.cpp:1324
+#: Client\core\CCore.cpp:1314
 msgid "scrolls the debug view upwards"
 msgstr ""
 
-#: Client\core\CCore.cpp:1325
+#: Client\core\CCore.cpp:1315
 msgid "scrolls the debug view downwards"
 msgstr ""
 
-#: Client\core\CCore.cpp:1328
+#: Client\core\CCore.cpp:1318
 msgid "shows the memory statistics"
 msgstr ""
 
-#: Client\core\CCore.cpp:1329
+#: Client\core\CCore.cpp:1319
 msgid "shows the frame timing graph"
 msgstr ""
 
@@ -570,23 +570,23 @@ msgid ""
 "Upgrade Windows to play on the latest servers."
 msgstr ""
 
-#: Client\core\CMainMenu.cpp:1148
+#: Client\core\CMainMenu.cpp:1141
 msgid ""
 "This will disconnect you from the current server.\n"
 "\n"
 "Are you sure you want to disconnect?"
 msgstr ""
 
-#: Client\core\CMainMenu.cpp:1152
+#: Client\core\CMainMenu.cpp:1145
 msgid "DISCONNECT WARNING"
 msgstr ""
 
-#: Client\core\CMainMenu.cpp:1154 Client\core\CQuestionBox.cpp:194
+#: Client\core\CMainMenu.cpp:1147 Client\core\CQuestionBox.cpp:194
 #: Client\core\CSettings.cpp:1357 Client\core\CSettings.cpp:1381
 #: Client\core\CSettings.cpp:4382 Client\core\CSettings.cpp:4449
-#: Client\core\CSettings.cpp:4498 Client\core\CVersionUpdater.cpp:1569
-#: Client\core\CVersionUpdater.cpp:1587 Client\core\CVersionUpdater.cpp:1856
-#: Client\core\CVersionUpdater.cpp:1875
+#: Client\core\CSettings.cpp:4498 Client\core\CVersionUpdater.cpp:1568
+#: Client\core\CVersionUpdater.cpp:1586 Client\core\CVersionUpdater.cpp:1855
+#: Client\core\CVersionUpdater.cpp:1874
 #: Client\core\ServerBrowser\CServerInfo.cpp:479 Client\loader\Dialogs.cpp:32
 msgid "No"
 msgstr ""
@@ -597,12 +597,12 @@ msgstr ""
 #.
 #.
 #. /////////////////////////////////////////////////////////////////////////
-#: Client\core\CMainMenu.cpp:1155 Client\core\CQuestionBox.cpp:195
+#: Client\core\CMainMenu.cpp:1148 Client\core\CQuestionBox.cpp:195
 #: Client\core\CSettings.cpp:1358 Client\core\CSettings.cpp:1382
 #: Client\core\CSettings.cpp:4383 Client\core\CSettings.cpp:4450
-#: Client\core\CSettings.cpp:4499 Client\core\CVersionUpdater.cpp:1570
-#: Client\core\CVersionUpdater.cpp:1588 Client\core\CVersionUpdater.cpp:1857
-#: Client\core\CVersionUpdater.cpp:1876
+#: Client\core\CSettings.cpp:4499 Client\core\CVersionUpdater.cpp:1569
+#: Client\core\CVersionUpdater.cpp:1587 Client\core\CVersionUpdater.cpp:1856
+#: Client\core\CVersionUpdater.cpp:1875
 #: Client\core\ServerBrowser\CServerInfo.cpp:479
 #: Client\gui\CGUIMessageBox_Impl.cpp:72 Client\loader\Dialogs.cpp:31
 msgid "Yes"
@@ -667,19 +667,19 @@ msgstr ""
 #. Create buttons
 #. OK button
 #: Client\core\CSettings.cpp:126 Client\core\CSettings.cpp:4642
-#: Client\core\CVersionUpdater.cpp:1605 Client\core\CVersionUpdater.cpp:1821
-#: Client\core\CVersionUpdater.cpp:1914 Client\core\CVersionUpdater.cpp:1936
-#: Client\core\CVersionUpdater.cpp:1954 Client\core\CVersionUpdater.cpp:1966
-#: Client\core\CVersionUpdater.cpp:2118 Client\core\CVersionUpdater.cpp:2127
-#: Client\core\CVersionUpdater.cpp:2136 Client\core\CVersionUpdater.cpp:2150
+#: Client\core\CVersionUpdater.cpp:1604 Client\core\CVersionUpdater.cpp:1820
+#: Client\core\CVersionUpdater.cpp:1913 Client\core\CVersionUpdater.cpp:1935
+#: Client\core\CVersionUpdater.cpp:1953 Client\core\CVersionUpdater.cpp:1965
+#: Client\core\CVersionUpdater.cpp:2117 Client\core\CVersionUpdater.cpp:2126
+#: Client\core\CVersionUpdater.cpp:2135 Client\core\CVersionUpdater.cpp:2149
 #: Client\gui\CGUIMessageBox_Impl.cpp:64 Client\loader\Dialogs.cpp:33
 msgid "OK"
 msgstr ""
 
 #. Cancel button
 #: Client\core\CSettings.cpp:131 Client\core\CSettings.cpp:4641
-#: Client\core\CVersionUpdater.cpp:1788 Client\core\CVersionUpdater.cpp:1804
-#: Client\core\CVersionUpdater.cpp:1839 Client\gui\CGUIMessageBox_Impl.cpp:68
+#: Client\core\CVersionUpdater.cpp:1787 Client\core\CVersionUpdater.cpp:1803
+#: Client\core\CVersionUpdater.cpp:1838 Client\gui\CGUIMessageBox_Impl.cpp:68
 #: Client\loader\Dialogs.cpp:36
 #: Client\mods\deathmatch\logic\CLocalServer.cpp:123
 msgid "Cancel"
@@ -1513,7 +1513,7 @@ msgid ""
 "Are you sure you want to use them?"
 msgstr ""
 
-#: Client\core\CSettings.cpp:4447 Client\core\CVersionUpdater.cpp:2079
+#: Client\core\CSettings.cpp:4447 Client\core\CVersionUpdater.cpp:2078
 msgid "CUSTOMIZED GTA:SA FILES"
 msgstr ""
 
@@ -1600,21 +1600,21 @@ msgstr ""
 msgid "Mouse movement fix - May need PC restart"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:624
+#: Client\core\CVersionUpdater.cpp:623
 msgid "Busy"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:624
+#: Client\core\CVersionUpdater.cpp:623
 msgid "Can't check for updates right now"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1565 Client\core\CVersionUpdater.cpp:1585
-#: Client\core\CVersionUpdater.cpp:1603
+#: Client\core\CVersionUpdater.cpp:1564 Client\core\CVersionUpdater.cpp:1584
+#: Client\core\CVersionUpdater.cpp:1602
 #, c-format
 msgid "MTA:SA %s required"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1566
+#: Client\core\CVersionUpdater.cpp:1565
 #, c-format
 msgid ""
 "An updated version of MTA:SA %s is required to join the selected server.\n"
@@ -1622,113 +1622,113 @@ msgid ""
 "Do you want to download and install MTA:SA %s ?"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1586
+#: Client\core\CVersionUpdater.cpp:1585
 #, c-format
 msgid "Do you want to launch MTA:SA %s and connect to this server ?"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1604
+#: Client\core\CVersionUpdater.cpp:1603
 msgid ""
 "It is not possible to connect at this time.\n"
 "\n"
 "Please try later."
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1786
+#: Client\core\CVersionUpdater.cpp:1785
 msgid "Connecting"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1787 Client\core\CVersionUpdater.cpp:1803
+#: Client\core\CVersionUpdater.cpp:1786 Client\core\CVersionUpdater.cpp:1802
 msgid "Please wait..."
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1802
+#: Client\core\CVersionUpdater.cpp:1801
 msgid "CHECKING"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1819 Client\core\CVersionUpdater.cpp:1912
+#: Client\core\CVersionUpdater.cpp:1818 Client\core\CVersionUpdater.cpp:1911
 msgid "UPDATE CHECK"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1820
+#: Client\core\CVersionUpdater.cpp:1819
 msgid "No update needed"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1837
+#: Client\core\CVersionUpdater.cpp:1836
 msgid "DOWNLOADING"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1838
+#: Client\core\CVersionUpdater.cpp:1837
 msgid "waiting..."
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1854
+#: Client\core\CVersionUpdater.cpp:1853
 msgid "MANDATORY UPDATE"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1855
+#: Client\core\CVersionUpdater.cpp:1854
 msgid ""
 "To join this server, you must update MTA.\n"
 "\n"
 " Do you want to update now ?"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1873
+#: Client\core\CVersionUpdater.cpp:1872
 msgid "OPTIONAL UPDATE"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1874
+#: Client\core\CVersionUpdater.cpp:1873
 msgid ""
 "Server says an update is recommended, but not essential.\n"
 "\n"
 " Do you want to update now ?"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1913
+#: Client\core\CVersionUpdater.cpp:1912
 msgid ""
 "Update not currently avalable.\n"
 "\n"
 "Please check www.mtasa.com"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1934 Client\core\CVersionUpdater.cpp:2116
+#: Client\core\CVersionUpdater.cpp:1933 Client\core\CVersionUpdater.cpp:2115
 msgid "ERROR SAVING"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1935 Client\core\CVersionUpdater.cpp:2117
+#: Client\core\CVersionUpdater.cpp:1934 Client\core\CVersionUpdater.cpp:2116
 msgid "Unable to create the file."
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1943 Client\core\CVersionUpdater.cpp:1952
-#: Client\core\CVersionUpdater.cpp:2125 Client\core\CVersionUpdater.cpp:2134
+#: Client\core\CVersionUpdater.cpp:1942 Client\core\CVersionUpdater.cpp:1951
+#: Client\core\CVersionUpdater.cpp:2124 Client\core\CVersionUpdater.cpp:2133
 msgid "ERROR DOWNLOADING"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1944 Client\core\CVersionUpdater.cpp:2126
+#: Client\core\CVersionUpdater.cpp:1943 Client\core\CVersionUpdater.cpp:2125
 msgid "The downloaded file appears to be incorrect."
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1953 Client\core\CVersionUpdater.cpp:2135
+#: Client\core\CVersionUpdater.cpp:1952 Client\core\CVersionUpdater.cpp:2134
 msgid "For some reason."
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1964 Client\core\CVersionUpdater.cpp:2148
+#: Client\core\CVersionUpdater.cpp:1963 Client\core\CVersionUpdater.cpp:2147
 msgid "DOWNLOAD COMPLETE"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:1988
+#: Client\core\CVersionUpdater.cpp:1987
 msgid " - Unknown problem in _DialogUpdateResult"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:2086 Client\core\CVersionUpdater.cpp:2096
+#: Client\core\CVersionUpdater.cpp:2085 Client\core\CVersionUpdater.cpp:2095
 msgid "Ok"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:2094
+#: Client\core\CVersionUpdater.cpp:2093
 msgid "ERROR"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:2095
+#: Client\core\CVersionUpdater.cpp:2094
 msgid ""
 "Some MTA:SA data files are missing.\n"
 "\n"
@@ -1736,27 +1736,17 @@ msgid ""
 "Please reinstall MTA:SA"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:2722
+#: Client\core\CVersionUpdater.cpp:2721
 #, c-format
 msgid "%3d %% completed"
 msgstr ""
 
-#: Client\core\CVersionUpdater.cpp:2724
+#: Client\core\CVersionUpdater.cpp:2723
 #, c-format
 msgid ""
 "\n"
 "\n"
 "Waiting for response  -  %-3d"
-msgstr ""
-
-#: Client\core\CVersionUpdater.cpp:3399
-msgid ""
-"We've reset your update preferences back to Default, please go change your "
-"settings again if you want Nightly updates.\n"
-msgstr ""
-
-#: Client\core\CVersionUpdater.cpp:3400
-msgid "VERSION UPDATE INFORMATION"
 msgstr ""
 
 #: Client\core\DXHook\CDirect3DEvents9.cpp:230
@@ -1768,7 +1758,7 @@ msgstr ""
 msgid "Screenshot failed"
 msgstr ""
 
-#: Client\core\DXHook\CDirect3DHook9.cpp:124
+#: Client\core\DXHook\CDirect3DHook9.cpp:123
 msgid ""
 "Could not initialize Direct3D9.\n"
 "\n"
