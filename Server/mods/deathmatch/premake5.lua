@@ -26,6 +26,7 @@ project "Deathmatch"
 			"../../../Shared/animation",
 			"../../../Shared/publicsdk/include",
 			"../../../vendor/sparsehash/src/",
+            "../../../vendor/lanes/src",
 			"logic",
 			"utils",
 			"."

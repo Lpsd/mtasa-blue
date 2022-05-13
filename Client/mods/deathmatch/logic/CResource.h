@@ -12,14 +12,15 @@
 #pragma once
 
 #include "lua/CLuaManager.h"
+#include "lua/CLuaLanes.h"
 #include "CClientEntity.h"
 #include "CResourceConfigItem.h"
 #include "CResourceFile.h"
 #include "CElementGroup.h"
 #include <list>
 
-#define MAX_RESOURCE_NAME_LENGTH    255
-#define MAX_FUNCTION_NAME_LENGTH    50
+#define MAX_RESOURCE_NAME_LENGTH 255
+#define MAX_FUNCTION_NAME_LENGTH 50
 
 struct SNoClientCacheScript
 {
@@ -98,6 +99,8 @@ public:
     int                GetDownloadPriorityGroup() { return m_iDownloadPriorityGroup; }
     void               SetDownloadPriorityGroup(int iDownloadPriorityGroup) { m_iDownloadPriorityGroup = iDownloadPriorityGroup; }
 
+    CLuaLanes* GetLanes() { return m_pLanes; }
+
 private:
     unsigned short       m_usNetID;
     uint                 m_uiScriptID;
@@ -135,4 +138,6 @@ private:
     CFastHashSet<SString>                 m_exportedFunctions;
     CElementGroup*                        m_pDefaultElementGroup;            // stores elements created by scripts in this resource
     std::list<SNoClientCacheScript>       m_NoClientCacheScriptList;
+
+    CLuaLanes* m_pLanes;
 };
