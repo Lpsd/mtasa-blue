@@ -99,7 +99,8 @@ public:
     int                GetDownloadPriorityGroup() { return m_iDownloadPriorityGroup; }
     void               SetDownloadPriorityGroup(int iDownloadPriorityGroup) { m_iDownloadPriorityGroup = iDownloadPriorityGroup; }
 
-    CLuaLanes* GetLanes() { return m_pLanes; }
+    CLuaLanes*   GetLanes() { return m_pLanes; }
+    CLuaManager* GetLuaManager() { return m_pLuaManager; }
 
 private:
     unsigned short       m_usNetID;

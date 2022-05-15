@@ -10,6 +10,7 @@
 #include "StdInc.h"
 #include "CLuaLanes.h"
 #include "lua/CLuaMain.h"
+#include "lua/CLuaManager.h"
 
 extern "C"
 {
@@ -20,9 +21,10 @@ extern "C"
 /* CLuaLanes - per-resource manager */
 /************************************/
 
-CLuaLanes::CLuaLanes(CLuaMain* luaMain)
+CLuaLanes::CLuaLanes(CResource* resource)
 {
-    m_luaMain = luaMain;
+    CLuaManager* manager = resource->GetLuaManager();
+    m_luaMain = manager->CreateVirtualMachine(resource, resource->IsOOPEnabled());
 }
 
 CLuaLanes::~CLuaLanes()
@@ -74,4 +76,8 @@ void CLuaLane::EmbedLanes()
     luaL_openlibs(luaVM);
     luaopen_lanes_embedded(luaVM, RunLanes, (void*)m_laneManager->GetLuaMain());
     lua_pop(luaVM, 1);
+
+    // Test
+    luaL_dostring(luaVM, "return 'test from lanes'");
+    const char* str = lua_tostring(luaVM, -1);
 }

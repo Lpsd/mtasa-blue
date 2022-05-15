@@ -35,6 +35,7 @@ class CAccount;
 class CLuaMain;
 class CResourceManager;
 class CChecksum;
+class CLuaManager;
 
 struct SVersion
 {
@@ -307,6 +308,7 @@ public:
     const CMtaVersion& GetMinClientFromMetaXml() const noexcept { return m_strMinClientFromMetaXml; }
 
     bool IsOOPEnabledInMetaXml() const noexcept { return m_bOOPEnabledInMetaXml; }
+    bool IsOOPEnabled() const noexcept { return m_bOOPEnabledInMetaXml; }
 
     bool CheckFunctionRightCache(lua_CFunction f, bool* pbOutAllowed);
     void UpdateFunctionRightCache(lua_CFunction f, bool bAllowed);
@@ -318,6 +320,8 @@ public:
     void SetUsingDbConnectMysql(bool bUsingDbConnectMysql) { m_bUsingDbConnectMysql = bUsingDbConnectMysql; }
     bool IsUsingDbConnectMysql();
     bool IsFileDbConnectMysqlProtected(const SString& strFilename, bool bReadOnly);
+
+    CLuaManager* GetLuaManager();
 
 public:
     static std::list<CResource*> m_StartedResources;

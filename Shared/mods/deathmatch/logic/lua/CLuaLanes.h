@@ -18,7 +18,7 @@ class CLuaLane;
 class CLuaLanes
 {
 public:
-    CLuaLanes(CLuaMain* luaMain);
+    CLuaLanes(CResource* resource);
     ~CLuaLanes();
 
     CLuaLane* CreateLane();

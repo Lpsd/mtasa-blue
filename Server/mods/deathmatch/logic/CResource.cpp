@@ -1117,6 +1117,11 @@ bool CResource::Stop(bool bManualStop)
     return true;
 }
 
+CLuaManager* CResource::GetLuaManager()
+{
+    return g_pGame->GetLuaManager();
+}
+
 bool CResource::CreateVM(bool bEnableOOP)
 {
     if (!m_pVM)
