@@ -1877,9 +1877,9 @@ LUAG_FUNC( configure)
     DEBUGSPEW_CODE( fprintf( stderr, INDENT_BEGIN "%p: lanes.configure() BEGIN\n" INDENT_END, L));
     DEBUGSPEW_CODE( if( U) ++ U->debugspew_indent_depth);
 
-    if( U == NULL)
+    if (U == NULL || U->timer_deep == NULL)
     {
-        U = universe_create( L);                                                           // settings universe
+        U = (U == NULL) ? universe_create( L) : U;                                                           // settings universe
         DEBUGSPEW_CODE( ++ U->debugspew_indent_depth);
         lua_newtable( L);                                                                  // settings universe mt
         lua_getfield( L, 1, "shutdown_timeout");                                           // settings universe mt shutdown_timeout
@@ -2130,7 +2130,7 @@ static int default_luaopen_lanes( lua_State* L)
 void LANES_API luaopen_lanes_embedded(lua_State* L, lua_CFunction _luaopen_lanes, void* mtasaowner)
 {
 	// MTA addition, store mtasaowner in Universe
-    Universe* U = universe_get(L);
+    Universe* U = universe_create(L);
     U->mtasaowner = mtasaowner;
 	
     STACK_CHECK( L, 0);
