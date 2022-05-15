@@ -93,6 +93,9 @@ struct s_Universe
     // After a lane has removed itself from the chain, it still performs some processing.
     // The terminal desinit sequence should wait for all such processing to terminate before force-killing threads
     int volatile selfdestructing_count;
+
+    // MTA addition
+    void* mtasaowner;
 };
 typedef struct s_Universe Universe;
 

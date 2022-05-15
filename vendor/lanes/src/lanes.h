@@ -23,6 +23,6 @@
 extern int LANES_API luaopen_lanes_core( lua_State* L);
 
 // Call this to work with embedded Lanes instead of calling luaopen_lanes_core()
-extern void LANES_API luaopen_lanes_embedded( lua_State* L, lua_CFunction _luaopen_lanes);
+extern void LANES_API luaopen_lanes_embedded(lua_State* L, lua_CFunction _luaopen_lanes, void* mtasaowner);
 
 #endif // __lanes_h__

@@ -12,17 +12,22 @@
 #include "lua/LuaCommon.h"
 #include <vector>
 
+class CLuaMain;
+class CLuaLane;
+
 class CLuaLanes
 {
 public:
-    CLuaLanes(lua_State* luaVM);
+    CLuaLanes(CLuaMain* luaMain);
     ~CLuaLanes();
 
-    CLuaLane*  CreateLane();
-    lua_State* GetLuaVM() { return m_luaVM; };
+    CLuaLane* CreateLane();
+
+    CLuaMain*  GetLuaMain() { return m_luaMain; }
+    lua_State* GetLuaVM();
 
 private:
-    lua_State*             m_luaVM;
+    CLuaMain*              m_luaMain;
     std::vector<CLuaLane*> m_lanes = {};
 };
 
@@ -33,7 +38,7 @@ public:
     ~CLuaLane();
 
     static int RunLanes(lua_State* luaVM);
-    void EmbedLanes();
+    void       EmbedLanes();
 
 private:
     CLuaLanes* m_laneManager;

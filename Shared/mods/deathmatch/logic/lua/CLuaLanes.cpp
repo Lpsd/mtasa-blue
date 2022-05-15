@@ -9,18 +9,29 @@
 
 #include "StdInc.h"
 #include "CLuaLanes.h"
+#include "lua/CLuaMain.h"
+
+extern "C"
+{
 #include "lanes.h"
+}
 
 /************************************/
 /* CLuaLanes - per-resource manager */
 /************************************/
 
-CLuaLanes::CLuaLanes(lua_State* luaVM)
+CLuaLanes::CLuaLanes(CLuaMain* luaMain)
 {
+    m_luaMain = luaMain;
 }
 
 CLuaLanes::~CLuaLanes()
 {
+}
+
+lua_State* CLuaLanes::GetLuaVM()
+{
+    return m_luaMain->GetVM();
 }
 
 CLuaLane* CLuaLanes::CreateLane()
@@ -47,7 +58,7 @@ CLuaLane::~CLuaLane()
 
 int CLuaLane::RunLanes(lua_State* luaVM)
 {
-    return luaL_dofile(luaVM, CalcMTASAPath("MTA/lanes.lua").data());
+    return luaL_dofile(luaVM, "mta/lanes.lua");
 }
 
 void CLuaLane::EmbedLanes()
@@ -57,7 +68,10 @@ void CLuaLane::EmbedLanes()
 
     lua_State* luaVM = m_laneManager->GetLuaVM();
 
+    if (!luaVM)
+        return;
+
     luaL_openlibs(luaVM);
-    luaopen_lanes_embedded(luaVM, RunLanes);
+    luaopen_lanes_embedded(luaVM, RunLanes, (void*)m_laneManager->GetLuaMain());
     lua_pop(luaVM, 1);
 }

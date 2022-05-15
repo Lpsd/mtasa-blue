@@ -85,7 +85,7 @@ CResource::CResource(unsigned short usNetID, const char* szResourceName, CClient
         m_pLuaVM->SetScriptName(szResourceName);
         m_pLuaVM->LoadEmbeddedScripts();
 
-        m_pLanes = new CLuaLanes(m_pLuaVM->GetVM());
+        m_pLanes = new CLuaLanes(m_pLuaVM);
     }
 }
 

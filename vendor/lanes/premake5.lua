@@ -23,7 +23,7 @@ project "lanes"
 	}
 
     postbuildcommands {
-        "{COPY} \"src/lanes.lua\" \"" .. buildpath(".") .. "mta\\lanes.lua\"",
+        "copy \"%{wks.location}..\\vendor\\lanes\\src\\lanes.lua\" \"" .. buildpath(".") .. "mta\\lanes.lua\"",
     }
 
     filter "system:linux"

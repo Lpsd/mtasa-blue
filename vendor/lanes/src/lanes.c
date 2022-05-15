@@ -2127,8 +2127,12 @@ static int default_luaopen_lanes( lua_State* L)
 }
 
 // call this instead of luaopen_lanes_core() when embedding Lua and Lanes in a custom application
-void LANES_API luaopen_lanes_embedded( lua_State* L, lua_CFunction _luaopen_lanes)
+void LANES_API luaopen_lanes_embedded(lua_State* L, lua_CFunction _luaopen_lanes, void* mtasaowner)
 {
+	// MTA addition, store mtasaowner in Universe
+    Universe* U = universe_get(L);
+    U->mtasaowner = mtasaowner;
+	
     STACK_CHECK( L, 0);
     // pre-require lanes.core so that when lanes.lua calls require "lanes.core" it finds it is already loaded
     luaL_requiref( L, "lanes.core", luaopen_lanes_core, 0);                                       // ... lanes.core
