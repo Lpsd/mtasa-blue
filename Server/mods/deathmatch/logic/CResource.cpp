@@ -845,6 +845,9 @@ bool CResource::Start(std::list<CResource*>* pDependents, bool bManualStart, con
     // Create the virtual machine for this resource
     CreateVM(m_bOOPEnabledInMetaXml);
 
+    // Create lanes manager
+    m_pLuaLanes = new CLuaLanes(this);
+
     // We're now active
     CLogger::LogPrintf(LOGLEVEL_LOW, "Starting %s\n", m_strResourceName.c_str());
 

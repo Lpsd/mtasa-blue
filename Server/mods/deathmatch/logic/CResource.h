@@ -22,6 +22,7 @@
 #include <vector>
 #include <ehs/ehs.h>
 #include <time.h>
+#include "lua/CLuaLanes.h"
 
 #define MAX_AUTHOR_LENGTH           255
 #define MAX_RESOURCE_NAME_LENGTH    255
@@ -321,6 +322,7 @@ public:
     bool IsUsingDbConnectMysql();
     bool IsFileDbConnectMysqlProtected(const SString& strFilename, bool bReadOnly);
 
+    CLuaLanes*   GetLuaLanes() { return m_pLuaLanes; }
     CLuaManager* GetLuaManager();
 
 public:
@@ -435,4 +437,7 @@ private:
 
     uint                              m_uiFunctionRightCacheRevision = 0;
     CFastHashMap<lua_CFunction, bool> m_FunctionRightCacheMap;
+
+    CLuaLanes* m_pLuaLanes;
+    CLuaLane*  m_pMainLuaLane;
 };

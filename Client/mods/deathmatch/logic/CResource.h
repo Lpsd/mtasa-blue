@@ -99,7 +99,7 @@ public:
     int                GetDownloadPriorityGroup() { return m_iDownloadPriorityGroup; }
     void               SetDownloadPriorityGroup(int iDownloadPriorityGroup) { m_iDownloadPriorityGroup = iDownloadPriorityGroup; }
 
-    CLuaLanes*   GetLanes() { return m_pLanes; }
+    CLuaLanes*   GetLuaLanes() { return m_pLuaLanes; }
     CLuaManager* GetLuaManager() { return m_pLuaManager; }
 
 private:
@@ -140,5 +140,6 @@ private:
     CElementGroup*                        m_pDefaultElementGroup;            // stores elements created by scripts in this resource
     std::list<SNoClientCacheScript>       m_NoClientCacheScriptList;
 
-    CLuaLanes* m_pLanes;
+    CLuaLanes* m_pLuaLanes;
+    CLuaLane*  m_pMainLuaLane;
 };
