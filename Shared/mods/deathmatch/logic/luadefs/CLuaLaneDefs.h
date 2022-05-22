@@ -8,7 +8,7 @@
  *****************************************************************************/
 
 #pragma once
-#include "CLuaDefs.h"
+#include "luadefs/CLuaDefs.h"
 
 class CLuaLaneDefs : public CLuaDefs
 {

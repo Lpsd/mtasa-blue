@@ -141,6 +141,7 @@
 #include <luadefs/CLuaWaterDefs.h>
 #include <luadefs/CLuaWeaponDefs.h>
 #include <luadefs/CLuaWorldDefs.h>
+#include <luadefs/CLuaLaneDefs.h>
 #include <CRemoteCalls.h>
 
 // Shared includes
