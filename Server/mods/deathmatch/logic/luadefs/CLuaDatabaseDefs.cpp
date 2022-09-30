@@ -233,6 +233,7 @@ int CLuaDatabaseDefs::DbConnect(lua_State* luaVM)
     SString strUsername;
     SString strPassword;
     SString strOptions;
+    SString strSSL;
 
     CScriptArgReader argStream(luaVM);
     argStream.ReadString(strType);
@@ -240,6 +241,7 @@ int CLuaDatabaseDefs::DbConnect(lua_State* luaVM)
     argStream.ReadString(strUsername, "");
     argStream.ReadString(strPassword, "");
     argStream.ReadString(strOptions, "");
+    argStream.ReadString(strSSL, "");
 
     if (!argStream.HasErrors())
     {
@@ -296,8 +298,40 @@ int CLuaDatabaseDefs::DbConnect(lua_State* luaVM)
                 SetOption<CDbOptionsMap>(strOptions, "log", bLoggingEnabled);
                 SetOption<CDbOptionsMap>(strOptions, "tag", strLogTag);
                 SetOption<CDbOptionsMap>(strOptions, "queue", strQueueName);
+
+
+                // Get SSL options
+                if (!strSSL.empty())
+                {
+                    SString strCA;
+                    SString strKey;
+                    SString strCert;
+                    SString strCipher;
+
+                    GetOption<CDbOptionsMap>(strSSL, "ca", strCA, "");
+                    GetOption<CDbOptionsMap>(strSSL, "key", strKey, "");
+                    GetOption<CDbOptionsMap>(strSSL, "cert", strCert, "");
+                    GetOption<CDbOptionsMap>(strSSL, "cipher", strCipher, "");
+
+                    SString strAbsCA;
+                    SString strAbsKey;
+                    SString strAbsCert;
+
+                    // Parse paths
+                    CResource* pPathResource = pThisResource;
+
+                    if (!strCA.empty())
+                        CResourceManager::ParseResourcePathInput(strCA, pPathResource, &strAbsCA);
+                    if (!strKey.empty())
+                        CResourceManager::ParseResourcePathInput(strKey, pPathResource, &strAbsKey);
+                    if (!strCert.empty())
+                        CResourceManager::ParseResourcePathInput(strCert, pPathResource, &strAbsCert);
+
+                    strSSL = strSSL.Format("ca=%s;key=%s;cert=%s;cipher=%s", strAbsCA.c_str(), strAbsKey.c_str(), strAbsCert.c_str(), strCipher.c_str());
+                }
+
                 // Do connect
-                SConnectionHandle connection = g_pGame->GetDatabaseManager()->Connect(strType, strHost, strUsername, strPassword, strOptions);
+                SConnectionHandle connection = g_pGame->GetDatabaseManager()->Connect(strType, strHost, strUsername, strPassword, strOptions, strSSL);
                 if (connection == INVALID_DB_HANDLE)
                 {
                     argStream.SetCustomError(g_pGame->GetDatabaseManager()->GetLastErrorMessage());

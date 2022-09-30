@@ -154,7 +154,7 @@ public:
 
     virtual void              DoPulse() = 0;
     virtual SConnectionHandle Connect(const SString& strType, const SString& strHost, const SString& strUsername = "", const SString& strPassword = "",
-                                      const SString& strOptions = "") = 0;
+                                      const SString& strOptions = "", const SString& strSSL = "") = 0;
     virtual bool              Disconnect(SConnectionHandle hConnection) = 0;
     virtual SString           PrepareString(SConnectionHandle hConnection, const SString& strQuery, CLuaArguments* pArgs = nullptr) = 0;
     virtual SString           PrepareStringf(SConnectionHandle hConnection, const char* szQuery, ...) = 0;

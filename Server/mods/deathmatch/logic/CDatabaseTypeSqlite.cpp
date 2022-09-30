@@ -29,7 +29,8 @@ public:
 
     // CDatabaseType
     virtual SString              GetDataSourceTag();
-    virtual CDatabaseConnection* Connect(const SString& strHost, const SString& strUsername, const SString& strPassword, const SString& strDriverOptions);
+    virtual CDatabaseConnection* Connect(const SString& strHost, const SString& strUsername, const SString& strPassword, const SString& strDriverOptions,
+                                         const SString& strSSL);
     virtual void                 NotifyConnectionDeleted(CDatabaseConnection* pConnection);
     virtual void                 NotifyConnectionChanged(CDatabaseConnection* pConnection);
 
@@ -125,7 +126,8 @@ void CDatabaseTypeSqlite::NotifyConnectionChanged(CDatabaseConnection* pConnecti
 //          share=1     // Share this connection with anything else (defaults to share=1)
 //
 ///////////////////////////////////////////////////////////////
-CDatabaseConnection* CDatabaseTypeSqlite::Connect(const SString& strHost, const SString& strUsername, const SString& strPassword, const SString& strOptions)
+CDatabaseConnection* CDatabaseTypeSqlite::Connect(const SString& strHost, const SString& strUsername, const SString& strPassword, const SString& strOptions,
+                                                  const SString& strSSL)
 {
     // Parse file path
     SString strPath = strHost;

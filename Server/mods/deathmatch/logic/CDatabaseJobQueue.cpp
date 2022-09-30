@@ -639,7 +639,7 @@ void CDatabaseJobQueueImpl::ProcessConnect(CDbJobData* pJobData)
     }
 
     // Get type manager to return a CDatabaseConnection*
-    CDatabaseConnection* pConnection = pTypeManager->Connect(parts[1], parts[2], parts[3], parts[4]);
+    CDatabaseConnection* pConnection = pTypeManager->Connect(parts[1], parts[2], parts[3], parts[4], parts[5]);
     if (!pConnection)
     {
         pJobData->result.status = EJobResult::FAIL;

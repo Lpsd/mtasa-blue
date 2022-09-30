@@ -38,7 +38,7 @@ public:
     // CDatabaseManager
     virtual void              DoPulse();
     virtual SConnectionHandle Connect(const SString& strType, const SString& strHost, const SString& strUsername, const SString& strPassword,
-                                      const SString& strOptions);
+                                      const SString& strOptions, const SString& strSSL);
     virtual bool              Disconnect(SConnectionHandle hConnection);
     virtual SString           PrepareString(SConnectionHandle hConnection, const SString& strQuery, CLuaArguments* pArgs = nullptr);
     virtual SString           PrepareStringf(SConnectionHandle hConnection, const char* szQuery, ...);
@@ -136,11 +136,11 @@ void CDatabaseManagerImpl::DoPulse()
 //
 ///////////////////////////////////////////////////////////////
 SConnectionHandle CDatabaseManagerImpl::Connect(const SString& strType, const SString& strHost, const SString& strUsername, const SString& strPassword,
-                                                const SString& strOptions)
+                                                const SString& strOptions, const SString& strSSL)
 {
     ClearLastErrorMessage();
 
-    SString strCombo = strType + "\1" + strHost + "\1" + strUsername + "\1" + strPassword + "\1" + strOptions;
+    SString strCombo = strType + "\1" + strHost + "\1" + strUsername + "\1" + strPassword + "\1" + strOptions + "\1" + strSSL;
 
     // Start connect
     CDbJobData* pJobData = m_JobQueue->AddCommand(EJobCommand::CONNECT, 0, strCombo);

@@ -31,7 +31,8 @@ public:
     virtual ~CDatabaseType() {}
 
     virtual SString              GetDataSourceTag() = 0;
-    virtual CDatabaseConnection* Connect(const SString& strHost, const SString& strUsername, const SString& strPassword, const SString& strDriverOptions) = 0;
+    virtual CDatabaseConnection* Connect(const SString& strHost, const SString& strUsername, const SString& strPassword, const SString& strDriverOptions,
+                                         const SString& strSSL) = 0;
     virtual void                 NotifyConnectionDeleted(CDatabaseConnection* pConnection) = 0;
     virtual void                 NotifyConnectionChanged(CDatabaseConnection* pConnection) = 0;
 };
@@ -75,4 +76,4 @@ CDatabaseConnection* NewDatabaseConnectionSqlite(CDatabaseType* pManager, const 
 //
 CDatabaseType* NewDatabaseTypeMySql();
 typedef CDatabaseConnection*(NewDatabaseConnectionMySql_t)(CDatabaseType* pManager, const SString& strHost, const SString& strUsername,
-                                                           const SString& strPassword, const SString& strOptions);
+                                                           const SString& strPassword, const SString& strOptions, const SString& strSSL);

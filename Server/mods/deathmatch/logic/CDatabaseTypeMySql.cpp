@@ -33,13 +33,14 @@ public:
 
     // CDatabaseType
     virtual SString              GetDataSourceTag();
-    virtual CDatabaseConnection* Connect(const SString& strHost, const SString& strUsername, const SString& strPassword, const SString& strDriverOptions);
+    virtual CDatabaseConnection* Connect(const SString& strHost, const SString& strUsername, const SString& strPassword, const SString& strDriverOptions,
+                                         const SString& strSSL);
     virtual void                 NotifyConnectionDeleted(CDatabaseConnection* pConnection);
     virtual void                 NotifyConnectionChanged(CDatabaseConnection* pConnection);
 
     // CDatabaseTypeMySql
     CDatabaseConnection* CallNewDatabaseConnectionMySql(CDatabaseType* pManager, const SString& strHost, const SString& strUsername, const SString& strPassword,
-                                                        const SString& strOptions);
+                                                        const SString& strOptions, const SString& strSSL);
     void                 UpdateStats();
 
     CDynamicLibrary                         m_DbconmyLib;
@@ -135,7 +136,8 @@ void CDatabaseTypeMySql::NotifyConnectionChanged(CDatabaseConnection* pConnectio
 //          share=1     // Share this connection with anything else (defaults to share=1)
 //
 ///////////////////////////////////////////////////////////////
-CDatabaseConnection* CDatabaseTypeMySql::Connect(const SString& strHost, const SString& strUsername, const SString& strPassword, const SString& strOptions)
+CDatabaseConnection* CDatabaseTypeMySql::Connect(const SString& strHost, const SString& strUsername, const SString& strPassword, const SString& strOptions,
+                                                 const SString& strSSL)
 {
     // Parse options
     bool bShareConnection = false;
@@ -147,7 +149,7 @@ CDatabaseConnection* CDatabaseTypeMySql::Connect(const SString& strHost, const S
     if (!bShareConnection)
     {
         // No sharing so create a new connection
-        pConnection = CallNewDatabaseConnectionMySql(this, strHost, strUsername, strPassword, strOptions);
+        pConnection = CallNewDatabaseConnectionMySql(this, strHost, strUsername, strPassword, strOptions, strSSL);
         if (pConnection)
             pConnection->m_strOtherTag = strHost + "%" + strUsername + "%" + strOptions;
     }
@@ -161,7 +163,7 @@ CDatabaseConnection* CDatabaseTypeMySql::Connect(const SString& strHost, const S
         if (!pConnection)
         {
             // No match, so create a new connection
-            pConnection = CallNewDatabaseConnectionMySql(this, strHost, strUsername, strPassword, strOptions);
+            pConnection = CallNewDatabaseConnectionMySql(this, strHost, strUsername, strPassword, strOptions, strSSL);
             if (pConnection)
                 MapSet(m_SharedConnectionMap, strShareKey, pConnection);
         }
@@ -192,7 +194,7 @@ CDatabaseConnection* CDatabaseTypeMySql::Connect(const SString& strHost, const S
 //
 ///////////////////////////////////////////////////////////////
 CDatabaseConnection* CDatabaseTypeMySql::CallNewDatabaseConnectionMySql(CDatabaseType* pManager, const SString& strHost, const SString& strUsername,
-                                                                        const SString& strPassword, const SString& strOptions)
+                                                                        const SString& strPassword, const SString& strOptions, const SString& strSSL)
 {
     if (!m_DbconmyLib.IsLoaded())
     {
@@ -205,7 +207,7 @@ CDatabaseConnection* CDatabaseTypeMySql::CallNewDatabaseConnectionMySql(CDatabas
     if (!m_pfnNewDatabaseConnection)
         return NULL;
 
-    CDatabaseConnection* pConnection = m_pfnNewDatabaseConnection(pManager, strHost, strUsername, strPassword, strOptions);
+    CDatabaseConnection* pConnection = m_pfnNewDatabaseConnection(pManager, strHost, strUsername, strPassword, strOptions, strSSL);
 
     if (pConnection)
         g_pStats->iDbConnectionCount++;

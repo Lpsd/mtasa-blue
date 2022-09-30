@@ -25,8 +25,8 @@ class CDatabaseConnectionMySql : public CDatabaseConnection
 {
 public:
     ZERO_ON_NEW
-    CDatabaseConnectionMySql(CDatabaseType* pManager, const SString& strHost, const SString& strUsername, const SString& strPassword,
-                             const SString& strOptions);
+    CDatabaseConnectionMySql(CDatabaseType* pManager, const SString& strHost, const SString& strUsername, const SString& strPassword, const SString& strOptions,
+                             const SString& strSSL);
     virtual ~CDatabaseConnectionMySql();
 
     // CDatabaseConnection
@@ -63,9 +63,9 @@ public:
 // Object creation
 ///////////////////////////////////////////////////////////////
 MTAEXPORT CDatabaseConnection* NewDatabaseConnectionMySql(CDatabaseType* pManager, const SString& strHost, const SString& strUsername,
-                                                          const SString& strPassword, const SString& strOptions)
+                                                          const SString& strPassword, const SString& strOptions, const SString& strSSL)
 {
-    return new CDatabaseConnectionMySql(pManager, strHost, strUsername, strPassword, strOptions);
+    return new CDatabaseConnectionMySql(pManager, strHost, strUsername, strPassword, strOptions, strSSL);
 }
 
 ///////////////////////////////////////////////////////////////
@@ -76,7 +76,7 @@ MTAEXPORT CDatabaseConnection* NewDatabaseConnectionMySql(CDatabaseType* pManage
 //
 ///////////////////////////////////////////////////////////////
 CDatabaseConnectionMySql::CDatabaseConnectionMySql(CDatabaseType* pManager, const SString& strHost, const SString& strUsername, const SString& strPassword,
-                                                   const SString& strOptions)
+                                                   const SString& strOptions, const SString& strSSL)
     : m_iRefCount(1), m_pManager(pManager)
 {
     // Parse options string
@@ -102,17 +102,33 @@ CDatabaseConnectionMySql::CDatabaseConnectionMySql(CDatabaseType* pManager, cons
     argMap.Get("unix_socket", strUnixSocket, "");
     argMap.Get("charset", strCharset, "");
 
+    // Parse SSL string
+    CArgMap sslMap("=", ";");
+    SString strCA;
+    SString strKey;
+    SString strCert;
+    SString strCipher;
+    sslMap.SetFromString(strSSL);
+    sslMap.Get("ca", strCA, "");
+    sslMap.Get("key", strKey, "");
+    sslMap.Get("cert", strCert, "");
+    sslMap.Get("cipher", strCipher, "");
+
     m_handle = mysql_init(NULL);
     if (m_handle)
     {
         bool reconnect = m_bAutomaticReconnect;
         mysql_options(m_handle, MYSQL_OPT_RECONNECT, &reconnect);
+
+        if (!strCA.empty() && !strKey.empty() && !strCert.empty())
+            mysql_ssl_set(m_handle, strKey, strCert, strCA, NULL, strCipher);
+            
         if (!strCharset.empty())
             mysql_options(m_handle, MYSQL_SET_CHARSET_NAME, strCharset);
         if (m_bMultipleStatements)
             ulClientFlags |= CLIENT_MULTI_STATEMENTS;
 
-        if (mysql_real_connect(m_handle, strHostname, strUsername, strPassword, strDatabaseName, iPort, strUnixSocket, ulClientFlags))
+        if (mysql_real_connect(m_handle, strHostname, strUsername, strPassword, strDatabaseName, iPort, strUnixSocket, ulClientFlags)) // add null-terminated byte for SSL compatibility
             m_bOpened = true;
         else
         {
