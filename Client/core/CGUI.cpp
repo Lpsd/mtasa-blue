@@ -24,7 +24,7 @@ CLocalGUI* CSingleton<CLocalGUI>::m_pSingleton = NULL;
 #endif
 #define GET_WHEEL_DELTA_WPARAM(wParam)  ((short)HIWORD(wParam))
 
-const char* const DEFAULT_SKIN_NAME = "Default";            // TODO: Change to whatever the default skin is if it changes
+const char* const DEFAULT_SKIN_NAME = "Default 2023";            // TODO: Change to whatever the default skin is if it changes
 
 CLocalGUI::CLocalGUI()
 {
@@ -391,7 +391,7 @@ void CLocalGUI::SetConsoleVisible(bool bVisible)
         CGUI* pGUI = CCore::GetSingleton().GetGUI();
         if (bVisible)
             pGUI->SetCursorAlpha(1.0f);
-        else
+        else if (!g_pCore->IsMenuVisible())
             pGUI->SetCursorAlpha(pGUI->GetCurrentServerCursorAlpha());
     }
 }
@@ -438,9 +438,7 @@ void CLocalGUI::SetMainMenuVisible(bool bVisible)
             pGUI->SelectInputHandlers(INPUT_MOD);
         }
 
-        if (bVisible)
-            pGUI->SetCursorAlpha(1.0f);
-        else
+        if (!bVisible)
             pGUI->SetCursorAlpha(pGUI->GetCurrentServerCursorAlpha());
     }
 }

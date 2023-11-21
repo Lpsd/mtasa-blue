@@ -21,7 +21,7 @@ class CSettings;
 #define CHAT_PRESETS_PATH             "mta/config/chatboxpresets.xml"
 #define CHAT_PRESETS_ROOT             "chatboxpresets"
 
-//#define SHOWALLSETTINGS
+// #define SHOWALLSETTINGS
 
 struct SKeyBindSection
 {
@@ -154,12 +154,16 @@ protected:
     CGUICheckBox*  m_pCheckBoxAllowScreenUpload;
     CGUICheckBox*  m_pCheckBoxAllowExternalSounds;
     CGUICheckBox*  m_pCheckBoxCustomizedSAFiles;
+    CGUICheckBox*  m_pCheckBoxAllowDiscordRPC;
     CGUICheckBox*  m_pCheckBoxAlwaysShowTransferBox;
     CGUICheckBox*  m_pCheckBoxGrass;
     CGUICheckBox*  m_pCheckBoxHeatHaze;
     CGUICheckBox*  m_pCheckBoxTyreSmokeParticles;
     CGUICheckBox*  m_pCheckBoxHighDetailVehicles;
     CGUICheckBox*  m_pCheckBoxHighDetailPeds;
+    CGUICheckBox*  m_pCheckBoxBlur;
+    CGUICheckBox*  m_pCheckBoxCoronaReflections;
+    CGUICheckBox*  m_pCheckBoxDynamicPedShadows;
     CGUILabel*     m_pFieldOfViewLabel;
     CGUIScrollBar* m_pFieldOfView;
     CGUILabel*     m_pFieldOfViewValueLabel;
@@ -321,11 +325,13 @@ protected:
     CGUICheckBox* m_pCheckBoxRemoteJavascript;
     CGUILabel*    m_pLabelBrowserCustomBlacklist;
     CGUIEdit*     m_pEditBrowserBlacklistAdd;
+    CGUILabel*    m_pLabelBrowserBlacklistAdd;
     CGUIButton*   m_pButtonBrowserBlacklistAdd;
     CGUIGridList* m_pGridBrowserBlacklist;
     CGUIButton*   m_pButtonBrowserBlacklistRemove;
     CGUILabel*    m_pLabelBrowserCustomWhitelist;
     CGUIEdit*     m_pEditBrowserWhitelistAdd;
+    CGUILabel*    m_pLabelBrowserWhitelistAdd;
     CGUIButton*   m_pButtonBrowserWhitelistAdd;
     CGUIGridList* m_pGridBrowserWhitelist;
     CGUIButton*   m_pButtonBrowserWhitelistRemove;
@@ -366,8 +372,12 @@ protected:
     bool OnVerticalAimSensitivityChanged(CGUIElement* pElement);
     bool OnBrowserBlacklistAdd(CGUIElement* pElement);
     bool OnBrowserBlacklistRemove(CGUIElement* pElement);
+    bool OnBrowserBlacklistDomainAddFocused(CGUIElement* pElement);
+    bool OnBrowserBlacklistDomainAddDefocused(CGUIElement* pElement);
     bool OnBrowserWhitelistAdd(CGUIElement* pElement);
     bool OnBrowserWhitelistRemove(CGUIElement* pElement);
+    bool OnBrowserWhitelistDomainAddFocused(CGUIElement* pElement);
+    bool OnBrowserWhitelistDomainAddDefocused(CGUIElement* pElement);
 
     bool OnMouseDoubleClick(CGUIMouseEventArgs Args);
 
@@ -380,6 +390,7 @@ protected:
     bool OnVolumetricShadowsClick(CGUIElement* pElement);
     bool OnAllowScreenUploadClick(CGUIElement* pElement);
     bool OnAllowExternalSoundsClick(CGUIElement* pElement);
+    bool OnAllowDiscordRPC(CGUIElement* pElement);
     bool OnCustomizedSAFilesClick(CGUIElement* pElement);
     bool ShowUnsafeResolutionsClick(CGUIElement* pElement);
     bool OnWindowedClick(CGUIElement* pElement);

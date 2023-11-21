@@ -15,6 +15,7 @@ class CClientVehicle;
 
 #include <game/CPlane.h>
 #include <game/CVehicle.h>
+#include <game/CModelInfo.h>
 
 #include "CClientCommon.h"
 #include "CClientCamera.h"
@@ -25,9 +26,13 @@ class CClientVehicle;
 #include "CVehicleUpgrades.h"
 #include "CClientModel.h"
 
+class CBikeHandlingEntry;
+class CBoatHandlingEntry;
+class CClientProjectile;
+
 #define INVALID_PASSENGER_SEAT 0xFF
 #define DEFAULT_VEHICLE_HEALTH 1000
-#define MAX_VEHICLE_HEALTH 10000
+#define MAX_VEHICLE_HEALTH     10000
 
 enum eClientVehicleType
 {
@@ -43,6 +48,8 @@ enum eClientVehicleType
     CLIENTVEHICLE_BMX,
     CLIENTVEHICLE_TRAILER
 };
+
+static constexpr int NUM_VEHICLE_TYPES = 11; 
 
 enum eDelayedSyncVehicleData
 {
@@ -139,7 +146,8 @@ struct SVehicleComponentData
     bool    m_bScaleChanged;
     bool    m_bVisible;
 };
-class CClientProjectile;
+
+static std::array<std::string, NUM_VEHICLE_TYPES> g_vehicleTypePrefixes;
 
 class CClientVehicle : public CClientStreamElement
 {
@@ -183,7 +191,6 @@ public:
     virtual CSphere GetWorldBoundingSphere();
 
     void GetMoveSpeed(CVector& vecMoveSpeed) const;
-    void GetMoveSpeedMeters(CVector& vecMoveSpeed) const;
     void SetMoveSpeed(const CVector& vecMoveSpeed);
     void GetTurnSpeed(CVector& vecTurnSpeed) const;
     void SetTurnSpeed(const CVector& vecTurnSpeed);
@@ -317,9 +324,7 @@ public:
 
     void FuckCarCompletely(bool bKeepWheels);
 
-    unsigned long GetMemoryValue(unsigned long ulOffset);
-    unsigned long GetGameBaseAddress();
-    void          WorldIgnore(bool bWorldIgnore);
+    void WorldIgnore(bool bWorldIgnore);
 
     bool IsVirtual() { return m_pVehicle == NULL; };
 
@@ -570,10 +575,6 @@ protected:
     CClientVehiclePtr            m_pPreviousLink;
     CClientVehiclePtr            m_pNextLink;
     CMatrix                      m_Matrix;
-    CMatrix                      m_MatrixLast;
-    CMatrix                      m_MatrixPure;
-    CVector                      m_vecMoveSpeedInterpolate;
-    CVector                      m_vecMoveSpeedMeters;
     CVector                      m_vecMoveSpeed;
     CVector                      m_vecTurnSpeed;
     float                        m_fHealth;

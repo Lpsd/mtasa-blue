@@ -28,7 +28,6 @@
 // SDK includes
 #include <core/CLocalizationInterface.h>
 #include <core/CTrayIconInterface.h>
-#include <core/CDiscordManagerInterface.h>
 #include <core/CCoreInterface.h>
 #include <core/CExceptionInformation.h>
 #include <xml/CXML.h>
@@ -80,6 +79,7 @@
 #include <CClientStreamSectorRow.h>
 #include <CClientTask.h>
 #include <CClientTXD.h>
+#include <CClientIMG.h>
 #include <CClientIFP.h>
 #include <CClientWater.h>
 #include <CClientWeapon.h>
@@ -120,6 +120,7 @@
 #include <luadefs/CLuaColShapeDefs.h>
 #include <luadefs/CLuaCompatibilityDefs.h>
 #include <luadefs/CLuaDrawingDefs.h>
+#include <luadefs/CLuaDiscordDefs.h>
 #include <luadefs/CLuaEffectDefs.h>
 #include <luadefs/CLuaElementDefs.h>
 #include <luadefs/CLuaEngineDefs.h>

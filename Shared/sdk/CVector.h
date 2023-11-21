@@ -15,6 +15,8 @@
 
 #include "CVector4D.h"
 
+class CVector2D;
+
 /**
  * CVector Structure used to store a 3D vertex.
  */
@@ -22,6 +24,7 @@ class CVector
 {
 private:
     static constexpr float FLOAT_EPSILON = 0.0001f;
+
 public:
     float fX = 0.0f;
     float fY = 0.0f;
@@ -29,19 +32,9 @@ public:
 
     constexpr CVector() = default;
 
-    constexpr CVector(float x, float y, float z) :
-        fX(x),
-        fY(y),
-        fZ(z)
-    {
-    }
+    constexpr CVector(float x, float y, float z) : fX(x), fY(y), fZ(z) {}
 
-    constexpr CVector(const CVector4D& vec) noexcept :
-        fX(vec.fX),
-        fY(vec.fY),
-        fZ(vec.fZ)
-    {
-    }
+    constexpr CVector(const CVector4D& vec) noexcept : fX(vec.fX), fY(vec.fY), fZ(vec.fZ) {}
 
     constexpr CVector& operator=(const CVector4D& vec) noexcept
     {
@@ -50,7 +43,6 @@ public:
         fZ = vec.fZ;
         return *this;
     }
-
 
     constexpr CVector Clone() const { return *this; }
 
@@ -70,13 +62,13 @@ public:
             return 0;
     }
 
-    inline float Length() const { return sqrt((fX * fX) + (fY * fY) + (fZ * fZ)); }
+    float Length() const { return sqrt((fX * fX) + (fY * fY) + (fZ * fZ)); }
 
     // LengthSquared returns Length() without sqrt applied (i.e. returns x*x* + y*y + z*z).
     // This can be useful if you only want to compare lengths.
-    inline float LengthSquared() const { return (fX * fX) + (fY * fY) + (fZ * fZ); }
+    float LengthSquared() const { return (fX * fX) + (fY * fY) + (fZ * fZ); }
 
-    inline float DotProduct(const CVector* param) const { return fX * param->fX + fY * param->fY + fZ * param->fZ; }
+    float DotProduct(const CVector* param) const { return fX * param->fX + fY * param->fY + fZ * param->fZ; }
 
     void CrossProduct(const CVector* param)
     {
@@ -129,12 +121,13 @@ public:
         }
 
         *fOutDist = 0.0f;
-        return fabs(vecNormal.DotProduct(this) - vecNormal.DotProduct(&vecPosition)) < 1e-3f;;
+        return fabs(vecNormal.DotProduct(this) - vecNormal.DotProduct(&vecPosition)) < 1e-3f;
+        ;
     }
 
     bool IntersectsSegmentPlane(const CVector& vecSegment, const CVector& vecNormal, const CVector& vecPosition, CVector* outVec) const noexcept
     {
-        float fDist;
+        float   fDist;
         CVector vecRay = vecSegment;
         vecRay.Normalize();
         bool bIntersects = IntesectsLinePlane(vecRay, vecNormal, vecPosition, &fDist);
@@ -146,14 +139,15 @@ public:
     }
 
     // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-    bool IntersectsSegmentTriangle(const CVector& vecSegment, const CVector& vecVert1, const CVector& vecVert2, const CVector& vecVert3, CVector* outVec) const noexcept
+    bool IntersectsSegmentTriangle(const CVector& dir, const CVector& vecVert1, const CVector& vecVert2, const CVector& vecVert3,
+                                   CVector* outVec, CVector* outHitBary = nullptr) const noexcept
     {
         constexpr float fEpsilon = 1e-6f;
 
         CVector vecEdge1, vecEdge2, h, s;
-        float a, f, u, v;
+        float   a, f, u, v;
 
-        CVector vecRay = vecSegment;
+        CVector vecRay = dir;
         vecRay.Normalize();
         h = vecRay;
 
@@ -185,26 +179,27 @@ public:
         }
 
         float t = f * vecEdge2.DotProduct(&sCrossE1);
-        if (t > fEpsilon && t <= vecSegment.Length())
+        if (t > fEpsilon && t <= dir.Length())
         {
             *outVec = *this + vecRay * t;
+            if (outHitBary) { // Calculate all barycentric coords if necessary
+                *outHitBary = { 1.f - u - v, u, v }; // For vertices A, B, C [I assume?]
+            }
             return true;
         }
+
         return false;
     }
 
     constexpr CVector operator+(const CVector& vecRight) const noexcept { return CVector(fX + vecRight.fX, fY + vecRight.fY, fZ + vecRight.fZ); }
 
-
     constexpr CVector operator-(const CVector& vecRight) const noexcept { return CVector(fX - vecRight.fX, fY - vecRight.fY, fZ - vecRight.fZ); }
 
     constexpr CVector operator-() const noexcept { return CVector(-fX, -fY, -fZ); }
 
-
     constexpr CVector operator*(const CVector& vecRight) const noexcept { return CVector(fX * vecRight.fX, fY * vecRight.fY, fZ * vecRight.fZ); }
 
     constexpr CVector operator*(const float fRight) const noexcept { return CVector(fX * fRight, fY * fRight, fZ * fRight); }
-
 
     constexpr CVector operator/(const CVector& vecRight) const noexcept { return CVector(fX / vecRight.fX, fY / vecRight.fY, fZ / vecRight.fZ); }
 
@@ -266,11 +261,12 @@ public:
         fZ /= vecRight.fZ;
     }
 
-
-    inline bool operator==(const CVector& param) const noexcept
+    bool operator==(const CVector& param) const noexcept
     {
         return ((fabs(fX - param.fX) < FLOAT_EPSILON) && (fabs(fY - param.fY) < FLOAT_EPSILON) && (fabs(fZ - param.fZ) < FLOAT_EPSILON));
     }
 
-    inline bool operator!=(const CVector& param) const noexcept { return !(*this == param); }
+    bool operator!=(const CVector& param) const noexcept { return !(*this == param); }
+
+    float operator[](size_t i) const noexcept { return ((float*)this)[i]; }
 };
