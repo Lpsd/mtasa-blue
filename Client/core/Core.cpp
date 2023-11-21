@@ -33,7 +33,6 @@ BOOL WINAPI DllMain(HINSTANCE dll, DWORD reason, LPVOID)
 {
     if (reason == DLL_PROCESS_ATTACH)
     {
-        WriteDebugEvent(SString("DLL_PROCESS_ATTACH %08x", pvNothing));
         if (IsGTAProcess())
         {
             /* [GUINew] Custom Error Logging */

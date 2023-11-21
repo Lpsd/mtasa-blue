@@ -1028,6 +1028,7 @@ void CCore::InitGUI(IDirect3DDevice9* pDevice)
 void CCore::CreateGUI()
 {
     CVARS_GET("use_new_cegui", m_bUsingNewCEGUI);
+    m_bUsingNewCEGUI = true;
 
     if (IsUsingNewCEGUI())
         LoadModule(m_GUIModule, "GUINew", "cgui_new");
@@ -1037,7 +1038,7 @@ void CCore::CreateGUI()
 
 bool CCore::IsUsingNewCEGUI()
 {
-    return m_bUsingNewCEGUI;
+    return true;
 }
 
 void CCore::DestroyGUI()

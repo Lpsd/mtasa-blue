@@ -553,10 +553,15 @@ bool CGUI_Impl::IsCursorEnabled()
 
 void CGUI_Impl::SetCursorAlpha(float fAlpha, bool bOnlyCurrentServer)
 {
-    //m_pMouseCursor->setAlpha(fAlpha);
+    //m_pMouseCursor->setAlpha(fAlpha)
 
     if (bOnlyCurrentServer)
-        m_fCurrentServerCursorAlpha = fAlpha;
+        SetCurrentServerCursorAlpha(fAlpha);
+}
+
+void CGUI_Impl::SetCurrentServerCursorAlpha(float fAlpha)
+{
+    m_fCurrentServerCursorAlpha = fAlpha;
 }
 
 float CGUI_Impl::GetCurrentServerCursorAlpha()

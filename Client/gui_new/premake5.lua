@@ -52,8 +52,8 @@ project "GUI New"
 	filter "system:not windows"
         flags { "ExcludeFromBuild" }
         
-    configuration "windows"
+	filter {"system:windows"}
         buildoptions { "-Zm180" }
 
-	configuration "Debug"
+	filter {"configurations:Debug"}
 		links { "dbghelp" }
