@@ -140,6 +140,7 @@ workspace "MTASA"
 		include "Client/game_sa"
 		include "Client/sdk"
 		include "Client/gui"
+		include "Client/gui_new"
 		include "Client/launch"
 		include "Client/loader"
 		include "Client/loader-proxy"
@@ -164,6 +165,7 @@ workspace "MTASA"
 		include "vendor/libspeex"
 		include "vendor/detours"
 		include "vendor/lunasvg"
+		include "vendor/cegui-0.8.7"
 	end
 
 	filter {}
