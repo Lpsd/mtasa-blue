@@ -54,6 +54,7 @@ void CLuaVehicleDefs::LoadFunctions()
         {"getVehicleNameFromModel", GetVehicleNameFromModel},
         {"getVehicleAdjustableProperty", GetVehicleAdjustableProperty},
         {"getHelicopterRotorSpeed", GetHelicopterRotorSpeed},
+        {"getVehicleRotorSpeed", ArgumentParser<GetVehicleRotorSpeed>},
         {"getVehicleEngineState", GetVehicleEngineState},
         {"isTrainDerailed", IsTrainDerailed},
         {"isTrainDerailable", IsTrainDerailable},
@@ -90,6 +91,7 @@ void CLuaVehicleDefs::LoadFunctions()
         {"getVehicleWheelScale", ArgumentParser<GetVehicleWheelScale>},
         {"getVehicleModelWheelSize", ArgumentParser<GetVehicleModelWheelSize>},
         {"getVehicleWheelFrictionState", ArgumentParser<GetVehicleWheelFrictionState>},
+        {"getVehicleEntryPoints", ArgumentParser<GetVehicleEntryPoints>},
 
         // Vehicle set funcs
         {"createVehicle", CreateVehicle},
@@ -118,6 +120,8 @@ void CLuaVehicleDefs::LoadFunctions()
         {"setVehicleFrozen", SetVehicleFrozen},
         {"setVehicleAdjustableProperty", SetVehicleAdjustableProperty},
         {"setHelicopterRotorSpeed", SetHelicopterRotorSpeed},
+        {"setVehicleRotorSpeed", ArgumentParser<SetVehicleRotorSpeed>},
+        {"setVehicleWheelsRotation", ArgumentParser<SetVehicleWheelsRotation>},
         {"setTrainDerailed", SetTrainDerailed},
         {"setTrainDerailable", SetTrainDerailable},
         {"setTrainDirection", SetTrainDirection},
@@ -238,6 +242,7 @@ void CLuaVehicleDefs::AddClass(lua_State* luaVM)
     lua_classfunction(luaVM, "getWheelScale", "getVehicleWheelScale");
     lua_classfunction(luaVM, "getModelWheelSize", "getVehicleModelWheelSize");
     lua_classfunction(luaVM, "getWheelFrictionState", "getVehicleWheelFrictionState");
+    lua_classfunction(luaVM, "getEntryPoints", ArgumentParser<OOP_GetVehicleEntryPoints>);
 
     lua_classfunction(luaVM, "setComponentVisible", "setVehicleComponentVisible");
     lua_classfunction(luaVM, "setSirensOn", "setVehicleSirensOn");
@@ -1293,6 +1298,17 @@ int CLuaVehicleDefs::GetHelicopterRotorSpeed(lua_State* luaVM)
     return 1;
 }
 
+std::variant<bool, float> CLuaVehicleDefs::GetVehicleRotorSpeed(CClientVehicle* pVehicle)
+{
+    float fSpeed;
+    if (pVehicle->GetRotorSpeed(fSpeed))
+    {
+        return fSpeed;
+    }
+    else
+        return false;
+}
+
 int CLuaVehicleDefs::IsTrainDerailed(lua_State* luaVM)
 {
     CClientVehicle*  pVehicle = NULL;
@@ -2204,6 +2220,16 @@ int CLuaVehicleDefs::SetHelicopterRotorSpeed(lua_State* luaVM)
     return 1;
 }
 
+bool CLuaVehicleDefs::SetVehicleRotorSpeed(CClientVehicle* pVehicle, float fSpeed)
+{
+    return pVehicle->SetRotorSpeed(fSpeed);
+}
+
+bool CLuaVehicleDefs::SetVehicleWheelsRotation(CClientVehicle* pVehicle, float fRotation) noexcept
+{
+    return pVehicle->SetWheelsRotation(fRotation, fRotation, fRotation, fRotation);
+}
+
 int CLuaVehicleDefs::SetTrainDerailed(lua_State* luaVM)
 {
     CClientVehicle*  pVehicle = NULL;
@@ -2623,12 +2649,69 @@ int CLuaVehicleDefs::SetVehicleHandling(lua_State* luaVM)
 
 int CLuaVehicleDefs::GetVehicleHandling(lua_State* luaVM)
 {
+    // table getVehicleHandling ( element theVehicle, [ string property ] )
     CClientVehicle*  pVehicle = NULL;
     CScriptArgReader argStream(luaVM);
     argStream.ReadUserData(pVehicle);
 
     if (!argStream.HasErrors())
     {
+        if (argStream.NextIsString())
+        {
+            SString strProperty;
+            argStream.ReadString(strProperty);
+
+            eHandlingProperty eProperty = g_pGame->GetHandlingManager()->GetPropertyEnumFromName(strProperty);
+            if (eProperty == HANDLING_MAX)
+            {
+                argStream.SetCustomError("Invalid property");
+                m_pScriptDebugging->LogCustom(luaVM, argStream.GetFullErrorMessage());
+                lua_pushboolean(luaVM, false);
+                return 1;
+            }
+
+            float         fValue = 0.0f;
+            CVector       vecValue = CVector(0.0f, 0.0f, 0.0f);
+            SString       strValue = "";
+            unsigned int  uiValue = 0;
+            unsigned char ucValue = 0;
+            if (CStaticFunctionDefinitions::GetVehicleHandling(pVehicle, eProperty, fValue))
+            {
+                lua_pushnumber(luaVM, fValue);
+            }
+            else if (CStaticFunctionDefinitions::GetVehicleHandling(pVehicle, eProperty, uiValue))
+            {
+                lua_pushnumber(luaVM, uiValue);
+            }
+            else if (CStaticFunctionDefinitions::GetVehicleHandling(pVehicle, eProperty, ucValue))
+            {
+                lua_pushnumber(luaVM, ucValue);
+            }
+            else if (CStaticFunctionDefinitions::GetVehicleHandling(pVehicle, eProperty, strValue))
+            {
+                lua_pushstring(luaVM, strValue);
+            }
+            else if (CStaticFunctionDefinitions::GetVehicleHandling(pVehicle, eProperty, vecValue))
+            {
+                lua_createtable(luaVM, 3, 0);
+                lua_pushnumber(luaVM, 1);
+                lua_pushnumber(luaVM, vecValue.fX);
+                lua_settable(luaVM, -3);
+                lua_pushnumber(luaVM, 2);
+                lua_pushnumber(luaVM, vecValue.fY);
+                lua_settable(luaVM, -3);
+                lua_pushnumber(luaVM, 3);
+                lua_pushnumber(luaVM, vecValue.fZ);
+                lua_settable(luaVM, -3);
+            }
+            else
+            {
+                argStream.SetCustomError("Invalid property");
+                m_pScriptDebugging->LogCustom(luaVM, argStream.GetFullErrorMessage());
+                lua_pushboolean(luaVM, false);
+            }
+            return 1;
+        }
         CHandlingEntry* pEntry = pVehicle->GetHandlingData();
 
         lua_newtable(luaVM);
@@ -4149,4 +4232,44 @@ bool CLuaVehicleDefs::ResetVehicleDummyPositions(CClientVehicle* vehicle)
 bool CLuaVehicleDefs::BlowVehicle(CClientEntity* entity, std::optional<bool> withExplosion)
 {
     return CStaticFunctionDefinitions::BlowVehicle(*entity, withExplosion);
+}
+
+std::variant<bool, std::array<std::array<float, 3>, 4>> CLuaVehicleDefs::GetVehicleEntryPoints(CClientVehicle* vehicle)
+{
+    auto entryPointVectors = OOP_GetVehicleEntryPoints(vehicle);
+
+    if (std::holds_alternative<bool>(entryPointVectors))
+    {
+        return false;
+    }
+
+    std::array<std::array<float, 3>, 4> entryPoints;
+    std::array<CVector, 4>              vectorArray = std::get<std::array<CVector, 4>>(entryPointVectors);
+
+    std::uint32_t i = 0;
+    for (auto& entryPoint : entryPoints)
+    {
+        entryPoints[i] = {vectorArray[i].fX, vectorArray[i].fY, vectorArray[i].fZ};
+        i++;
+    }
+
+    return entryPoints;
+}
+
+std::variant<bool, std::array<CVector, 4>> CLuaVehicleDefs::OOP_GetVehicleEntryPoints(CClientVehicle* vehicle)
+{
+    if (CClientVehicleManager::GetMaxPassengerCount(vehicle->GetModel()) == 255)
+    {
+        return false;
+    }
+
+    std::array<CVector, 4> entryPoints;
+
+    std::uint32_t i = 0;
+    for (auto& entryPoint : entryPoints)
+    {
+        entryPoint = vehicle->GetEntryPoint(i++);
+    }
+
+    return entryPoints;
 }

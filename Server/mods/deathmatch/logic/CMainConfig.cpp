@@ -847,12 +847,11 @@ bool CMainConfig::AddMissingSettings()
     if (!g_pGame->IsUsingMtaServerConf())
         return false;
 
-    // Load template
-    const char* szTemplateText =
-        #include MTA_SERVER_CONF_TEMPLATE
-        ;
-    SString strTemplateFilename = PathJoin(g_pServerInterface->GetServerModPath(), "resource-cache", "conf.template");
-    FileSave(strTemplateFilename, szTemplateText);
+    SString strTemplateFilename = PathJoin(g_pServerInterface->GetServerModPath(), "mtaserver.conf.template");
+
+    if (!FileExists(strTemplateFilename))
+        return false;
+
     CXMLFile* pFileTemplate = g_pServerInterface->GetXML()->CreateXML(strTemplateFilename);
     CXMLNode* pRootNodeTemplate = pFileTemplate && pFileTemplate->Parse() ? pFileTemplate->GetRootNode() : nullptr;
     if (!pRootNodeTemplate)
@@ -1104,7 +1103,7 @@ bool CMainConfig::GetSettingTable(const SString& strName, const char** szAttribN
                 resultLine.PushString(pAttribute->GetValue());
             }
 
-            if (resultLine.Count() != 0)
+            if (resultLine.IsNotEmpty())
             {
                 outTable->PushNumber(uiLuaIndex++);
                 outTable->PushTable(&resultLine);
@@ -1112,7 +1111,7 @@ bool CMainConfig::GetSettingTable(const SString& strName, const char** szAttribN
         }
     } while (pNode);
 
-    return outTable->Count() != 0;
+    return outTable->IsNotEmpty();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1456,6 +1455,7 @@ const std::vector<SIntSetting>& CMainConfig::GetIntSettingList()
         {true, true, 10, 50, 1000, "update_cycle_messages_limit", &m_iUpdateCycleMessagesLimit, &CMainConfig::ApplyNetOptions},
         {true, true, 50, 100, 400, "ped_syncer_distance", &g_TickRateSettings.iPedSyncerDistance, &CMainConfig::OnTickRateChange},
         {true, true, 50, 130, 400, "unoccupied_vehicle_syncer_distance", &g_TickRateSettings.iUnoccupiedVehicleSyncerDistance, &CMainConfig::OnTickRateChange},
+        {true, true, 0, 30, 130, "vehicle_contact_sync_radius", &g_TickRateSettings.iVehicleContactSyncRadius, &CMainConfig::OnTickRateChange},
         {false, false, 0, 1, 2, "compact_internal_databases", &m_iCompactInternalDatabases, NULL},
         {true, true, 0, 1, 2, "minclientversion_auto_update", &m_iMinClientVersionAutoUpdate, NULL},
         {true, true, 0, 0, 100, "server_logic_fps_limit", &m_iServerLogicFpsLimit, NULL},
@@ -1463,6 +1463,8 @@ const std::vector<SIntSetting>& CMainConfig::GetIntSettingList()
         {true, true, 0, 1, 1, "filter_duplicate_log_lines", &m_bFilterDuplicateLogLinesEnabled, NULL},
         {false, false, 0, 1, 1, "database_credentials_protection", &m_bDatabaseCredentialsProtectionEnabled, NULL},
         {false, false, 0, 0, 1, "fakelag", &m_bFakeLagCommandEnabled, NULL},
+        {true, true, 50, 1000, 5000, "player_triggered_event_interval", &m_iPlayerTriggeredEventIntervalMs, &CMainConfig::OnPlayerTriggeredEventIntervalChange},
+        {true, true, 1, 100, 1000, "max_player_triggered_events_per_interval", &m_iMaxPlayerTriggeredEventsPerInterval, &CMainConfig::OnPlayerTriggeredEventIntervalChange},
     };
 
     static std::vector<SIntSetting> settingsList;
@@ -1505,4 +1507,15 @@ void CGame::ApplyAseSetting()
         if (!m_pLanBroadcast)
             m_pLanBroadcast = m_pASE->InitLan();
     }
+}
+
+void CMainConfig::OnPlayerTriggeredEventIntervalChange()
+{
+    g_pGame->ApplyPlayerTriggeredEventIntervalChange();
+}
+
+void CGame::ApplyPlayerTriggeredEventIntervalChange()
+{
+    m_iClientTriggeredEventsIntervalMs = m_pMainConfig->GetPlayerTriggeredEventInterval();
+    m_iMaxClientTriggeredEventsPerInterval = m_pMainConfig->GetMaxPlayerTriggeredEventsPerInterval();
 }

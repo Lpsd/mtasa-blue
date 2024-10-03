@@ -209,6 +209,8 @@ class CPedWeaponAudioEntitySAInterface
 public:
 };
 
+class CVehicleSAInterface;
+
 class CPedSAInterface : public CPhysicalSAInterface            // +1420  = current vehicle   312 first byte
 {
 public:
@@ -239,11 +241,17 @@ public:
     float               fCurrentRotation;
     float               fTargetRotation;
     float               fRotationSpeed;
-    BYTE                bPad8[4];
+    float               fMoveAnim;
     CEntitySAInterface* pContactEntity;
-    BYTE                bPad3[32];
-    CEntitySAInterface* CurrentObjective;            // current vehicle    1420
-    BYTE                bPad2[8];                    // 1424
+    CVector             unk_56C;
+    CVector             unk_578;
+
+    CEntitySAInterface*  pLastContactEntity;
+    CVehicleSAInterface* pLastVehicle;
+    CVehicleSAInterface* pVehicle;
+
+    int                 unk_590;
+    int                 unk_594;
     BYTE                bPedType;                    // ped type? 0 = player, >1 = ped?  // 1432
     BYTE                bPad9[7];
     CWeaponSAInterface  Weapons[WEAPONSLOT_MAX];
@@ -264,29 +272,29 @@ class CPedSA : public virtual CPed, public virtual CPhysicalSA
     friend class CPoolsSA;
 
 private:
-    CWeaponSA*          m_pWeapons[WEAPONSLOT_MAX];
-    CPedIKSA*           m_pPedIK;
-    CPedIntelligenceSA* m_pPedIntelligence;
-    CPedSAInterface*    m_pPedInterface;
-    CPedSoundSA*        m_pPedSound;
-    CPedSoundSA*        m_pDefaultPedSound;
+    CWeaponSA*          m_pWeapons[WEAPONSLOT_MAX]{};
+    CPedIKSA*           m_pPedIK{};
+    CPedIntelligenceSA* m_pPedIntelligence{};
+    CPedSAInterface*    m_pPedInterface{};
+    CPedSoundSA*        m_pPedSound{};
+
+    short m_sDefaultVoiceType;
+    short m_sDefaultVoiceID;
 
     DWORD         m_dwType;
     unsigned char m_ucOccupiedSeat;
 
 protected:
-    int m_iCustomMoveAnim;
+    int m_iCustomMoveAnim{ 0 };
 
 public:
-    CPedSA();
-    CPedSA(CPedSAInterface* pedInterface);
+    CPedSA(CPedSAInterface* pedInterface = nullptr) noexcept;
     ~CPedSA();
 
     void             SetInterface(CEntitySAInterface* intInterface);
     CPedSAInterface* GetPedInterface() { return (CPedSAInterface*)GetInterface(); }
     void             Init();
     void             SetModelIndex(DWORD dwModelIndex);
-    void             RemoveGeometryRef();
     void             AttachPedToEntity(DWORD dwEntityInterface, CVector* vector, unsigned short sDirection, float fRotationLimit, eWeaponType weaponType,
                                        bool bChangeCamera);
     void             DetachPedFromEntity();
@@ -399,4 +407,6 @@ public:
     void*                   GetPedNodeInterface(std::int32_t nodeId) { return reinterpret_cast<CPedSAInterface*>(m_pInterface)->pedNodes[nodeId]; }
     std::unique_ptr<CPedIK> GetPedIK() { return std::make_unique<CPedIKSA>(GetPedIKInterface()); }
     static void             StaticSetHooks();
+
+    void GetAttachedSatchels(std::vector<SSatchelsData> &satchelsList) const override;
 };

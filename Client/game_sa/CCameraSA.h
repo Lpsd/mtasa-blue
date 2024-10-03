@@ -27,6 +27,7 @@
 #define FUNC_GetFading                      0x50ADE0
 #define FUNC_Fade                           0x50AC20
 #define FUNC_SetFadeColour                  0x50BF00
+#define FUNC_ShakeCam                       0x50A9F0
 
 #define VAR_CameraRotation                  0xB6F178 // used for controling where the player faces
 #define VAR_VehicleCameraView               0xB6F0DC
@@ -308,7 +309,7 @@ public:
     float   m_fAttachedCamAngle;            // for giving the attached camera a tilt.
 
     // RenderWare camera pointer
-    DWORD* m_pRwCamera;            // was RwCamera *
+    RwCamera* m_pRwCamera;
     /// stuff for cut scenes
     CEntitySAInterface* pTargetEntity;
     CEntitySAInterface* pAttachedEntity;
@@ -427,6 +428,6 @@ public:
     void      SetShakeForce(float fShakeForce);
     float     GetShakeForce();
 
-private:
-    static unsigned long FUNC_RwFrameGetLTM;
+    void ShakeCamera(float radius, float x, float y, float z) noexcept override;
+    void ResetShakeCamera() noexcept override;
 };

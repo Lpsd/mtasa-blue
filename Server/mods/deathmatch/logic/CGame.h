@@ -134,6 +134,17 @@ class CWeaponDamageCheckPacket;
 
 typedef SFixedArray<bool, MAX_GARAGES> SGarageStates;
 
+struct ResetWorldPropsInfo
+{
+    bool resetSpecialProperties{};
+    bool resetWorldProperties{};
+    bool resetWeatherProperties{};
+    bool resetLODs{};
+    bool resetSounds{};
+    bool resetGlitches{};
+    bool resetJetpackWeapons{};
+};
+
 // CSendList - Can be used like a std::list of players for sending packets.
 //             Used to construct an optimized list of players for CGame::Broadcast
 class CSendList : public std::multimap<ushort, CPlayer*>
@@ -432,6 +443,8 @@ public:
     int  GetMoonSize() { return m_iMoonSize; }
     void SetMoonSize(int iMoonSize) { m_iMoonSize = iMoonSize; }
 
+    void ResetWorldProperties(const ResetWorldPropsInfo& resetPropsInfo);
+
     void PrintLogOutputFromNetModule();
     void StartOpenPortsTest();
 
@@ -457,6 +470,7 @@ public:
     bool        IsBelowMinimumClient(const CMtaVersion& strVersion);
     bool        IsBelowRecommendedClient(const CMtaVersion& strVersion);
     void        ApplyAseSetting();
+    void        ApplyPlayerTriggeredEventIntervalChange();
     bool        IsUsingMtaServerConf() { return m_bUsingMtaServerConf; }
 
     void SetDevelopmentMode(bool enabled) { m_DevelopmentModeEnabled = enabled; }
@@ -507,6 +521,9 @@ private:
     void Packet_PlayerResourceStart(class CPlayerResourceStartPacket& Packet);
 
     static void PlayerCompleteConnect(CPlayer* pPlayer);
+
+    void ProcessClientTriggeredEventSpam();
+    void RegisterClientTriggeredEventUsage(CPlayer* pPlayer);
 
     // Technically, this could be put somewhere else.  It's a callback function
     // which the voice server library will call to send out data.
@@ -658,4 +675,15 @@ private:
 
     bool m_DevelopmentModeEnabled;
     bool m_showClientTransferBox = true;
+
+    int m_iMaxClientTriggeredEventsPerInterval = 100;
+    int m_iClientTriggeredEventsIntervalMs = 1000;
+
+    struct ClientTriggeredEventsInfo
+    {
+        long long m_llTicks = 0;
+        uint32_t  m_uiCounter = 0;
+    };
+
+    std::map<CPlayer*, ClientTriggeredEventsInfo> m_mapClientTriggeredEvents;
 };

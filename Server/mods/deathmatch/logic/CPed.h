@@ -168,6 +168,7 @@ public:
     void           SetWeaponAmmoInClip(unsigned short uscAmmoInClip, unsigned char ucSlot = 0xFF);
     unsigned short GetWeaponTotalAmmo(unsigned char ucSlot = 0xFF);
     void           SetWeaponTotalAmmo(unsigned short usTotalAmmo, unsigned char ucSlot = 0xFF);
+    bool           HasWeaponType(unsigned char ucWeaponType);
 
     float GetMaxHealth();
     float GetHealth() { return m_fHealth; }
@@ -187,7 +188,7 @@ public:
     static const char* GetBodyPartName(unsigned char ucID);
 
     bool HasJetPack() { return m_bHasJetPack; }
-    void SetHasJetPack(bool bHasJetPack) { m_bHasJetPack = bHasJetPack; }
+    void SetHasJetPack(bool bHasJetPack);
 
     bool IsInWater() { return m_bInWater; }
     void SetInWater(bool bInWater) { m_bInWater = bInWater; }

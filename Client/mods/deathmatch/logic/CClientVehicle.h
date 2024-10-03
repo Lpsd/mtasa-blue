@@ -286,6 +286,7 @@ public:
     int           GetWheelFrictionState(unsigned char ucWheel);
     unsigned char GetPanelStatus(unsigned char ucPanel);
     unsigned char GetLightStatus(unsigned char ucLight);
+    SString GetComponentNameForWheel(unsigned char ucWheel) const noexcept;
 
     bool AreLightsOn();
 
@@ -297,8 +298,13 @@ public:
 
     // TODO: Make the class remember on virtualization
     float GetHeliRotorSpeed();
-    void  SetHeliRotorSpeed(float fSpeed);
+    float GetPlaneRotorSpeed();
 
+    bool GetRotorSpeed(float&);
+    bool SetRotorSpeed(float);
+    bool SetWheelsRotation(float fRot1, float fRot2, float fRot3, float fRot4) noexcept;
+    void SetHeliRotorSpeed(float fSpeed);
+    void SetPlaneRotorSpeed(float fSpeed);
     bool IsHeliSearchLightVisible();
     void SetHeliSearchLightVisible(bool bVisible);
 
@@ -537,6 +543,8 @@ public:
     bool SetDummyPosition(eVehicleDummies dummy, const CVector& position);
     bool ResetDummyPositions();
 
+    CVector GetEntryPoint(std::uint32_t entryPointIndex);
+
 protected:
     void ConvertComponentRotationBase(const SString& vehicleComponent, CVector& vecInOutRotation, EComponentBaseType inputBase, EComponentBaseType outputBase);
     void ConvertComponentPositionBase(const SString& vehicleComponent, CVector& vecInOutPosition, EComponentBaseType inputBase, EComponentBaseType outputBase);
@@ -641,6 +649,7 @@ protected:
     bool                                   m_bIsOnGround;
     bool                                   m_bHeliSearchLightVisible;
     float                                  m_fHeliRotorSpeed;
+    float                                  m_fPlaneRotorSpeed;
     const CHandlingEntry*                  m_pOriginalHandlingEntry = nullptr;
     CHandlingEntry*                        m_pHandlingEntry = nullptr;
     const CFlyingHandlingEntry*            m_pOriginalFlyingHandlingEntry = nullptr;

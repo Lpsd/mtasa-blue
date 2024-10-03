@@ -144,21 +144,6 @@ static size_t chunk_skip(struct buf_chunk *chunk, size_t amount)
   return n;
 }
 
-static void chunk_shift(struct buf_chunk *chunk)
-{
-  if(chunk->r_offset) {
-    if(!chunk_is_empty(chunk)) {
-      size_t n = chunk->w_offset - chunk->r_offset;
-      memmove(chunk->x.data, chunk->x.data + chunk->r_offset, n);
-      chunk->w_offset -= chunk->r_offset;
-      chunk->r_offset = 0;
-    }
-    else {
-      chunk->r_offset = chunk->w_offset = 0;
-    }
-  }
-}
-
 static void chunk_list_free(struct buf_chunk **anchor)
 {
   struct buf_chunk *chunk;
@@ -411,7 +396,7 @@ ssize_t Curl_bufq_write(struct bufq *q,
   while(len) {
     tail = get_non_full_tail(q);
     if(!tail) {
-      if(q->chunk_count < q->max_chunks) {
+      if((q->chunk_count < q->max_chunks) || (q->opts & BUFQ_OPT_SOFT_LIMIT)) {
         *err = CURLE_OUT_OF_MEMORY;
         return -1;
       }
@@ -430,6 +415,17 @@ ssize_t Curl_bufq_write(struct bufq *q,
   }
   *err = CURLE_OK;
   return nwritten;
+}
+
+CURLcode Curl_bufq_cwrite(struct bufq *q,
+                          const char *buf, size_t len,
+                          size_t *pnwritten)
+{
+  ssize_t n;
+  CURLcode result;
+  n = Curl_bufq_write(q, (const unsigned char *)buf, len, &result);
+  *pnwritten = (n < 0)? 0 : (size_t)n;
+  return result;
 }
 
 ssize_t Curl_bufq_read(struct bufq *q, unsigned char *buf, size_t len,
@@ -453,6 +449,16 @@ ssize_t Curl_bufq_read(struct bufq *q, unsigned char *buf, size_t len,
     return -1;
   }
   return nread;
+}
+
+CURLcode Curl_bufq_cread(struct bufq *q, char *buf, size_t len,
+                         size_t *pnread)
+{
+  ssize_t n;
+  CURLcode result;
+  n = Curl_bufq_read(q, (unsigned char *)buf, len, &result);
+  *pnread = (n < 0)? 0 : (size_t)n;
+  return result;
 }
 
 bool Curl_bufq_peek(struct bufq *q,
@@ -502,13 +508,6 @@ void Curl_bufq_skip(struct bufq *q, size_t amount)
     amount -= n;
     prune_head(q);
   }
-}
-
-void Curl_bufq_skip_and_shift(struct bufq *q, size_t amount)
-{
-  Curl_bufq_skip(q, amount);
-  if(q->tail)
-    chunk_shift(q->tail);
 }
 
 ssize_t Curl_bufq_pass(struct bufq *q, Curl_bufq_writer *writer,
