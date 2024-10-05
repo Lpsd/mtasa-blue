@@ -29,11 +29,9 @@
 #ifndef _CEGUIItemListBase_h_
 #define _CEGUIItemListBase_h_
 
-#include "../Base.h"
 #include "../Window.h"
 #include "./ItemEntry.h"
-
-#include <vector>
+#include <CEGUI/WindowRendererSets/Core/ItemViewRenderer.h>
 
 
 #if defined(_MSC_VER)
@@ -84,7 +82,7 @@ public:
     \brief
         Sort modes for ItemListBase
     */
-    enum SortMode
+    enum class SortMode : int
     {
         Ascending,
         Descending,
@@ -233,7 +231,7 @@ public:
     \return
         Nothing
     */
-    virtual void initialiseComponents(void);
+    void initialiseComponents() override;
 
 
 	/*!
@@ -335,7 +333,7 @@ public:
 	\return
 	Nothing
 	*/
-	virtual	void	sizeToContent(void)		{sizeToContent_impl();}
+	virtual	void sizeToContent() { sizeToContent_impl(); }
 
 
     /*!
@@ -343,13 +341,10 @@ public:
         Triggers a ListContentsChanged event.
         These are not fired during initialisation for optimization purposes.
     */
-    virtual void endInitialisation(void);
+    void endInitialisation() override;
 
-
-    //! \copydoc Window::performChildWindowLayout(bool ,bool)
-    void performChildWindowLayout(bool nonclient_sized_hint = false,
-                                  bool client_sized_hint = false);
-
+    void onFontChanged(WindowEventArgs& e) override;
+    virtual void performChildLayout(bool client, bool nonClient) override;
 
     /*!
     \brief
@@ -374,10 +369,17 @@ public:
 
     /*!
     \brief
-        Notify this ItemListBase that the given item was just clicked.
+        Notify this ItemListBase that the given item was just activated.
         Internal function - NOT to be used from client code.
+
+    \param cumulativeSelection
+        True if this entry should cumulate to the previous selection
+
+    \param rangeSelection
+        True if this entry should do a range selection
     */
-    virtual void notifyItemClicked(ItemEntry*) {}
+    virtual void notifyItemActivated
+      (ItemEntry*, bool /*cumulativeSelection*/, bool /*rangeSelection*/) {}
 
     /*!
     \brief
@@ -420,7 +422,7 @@ public:
         This parameter defaults to true and should generally not be
         used in client code.
     */
-    void sortList(bool relayout=true);
+    void sortList();
 
 	/*************************************************************************
 		Construction and Destruction
@@ -453,17 +455,6 @@ protected:
 		Nothing
 	*/
 	virtual void	sizeToContent_impl(void);
-
-
-	/*!
-	\brief
-		Returns the Size in unclipped pixels of the content attached to this ItemListBase that is attached to it.
-
-	\return
-		Size object describing in unclipped pixels the size of the content ItemEntries attached to this menu.
-	*/
-	virtual Sizef getContentSize() const = 0;
-
 
 	/*!
 	\brief
@@ -504,7 +495,7 @@ protected:
 	bool	resetList_impl(void);
 
     // validate window renderer
-    virtual bool validateWindowRenderer(const WindowRenderer* renderer) const;
+    bool validateWindowRenderer(const WindowRenderer* renderer) const override;
 
     /*!
     \brief
@@ -533,14 +524,6 @@ protected:
     */
     virtual void onSortModeChanged(WindowEventArgs& e);
 
-	/*************************************************************************
-		Overridden Event handlers
-	*************************************************************************/
-    virtual void onParentSized(ElementEventArgs& e);
-	//virtual void    onChildRemoved(WindowEventArgs& e);
-    //virtual void    onDestructionStarted(WindowEventArgs& e);
-
-
     /*!
     \brief
         Handler to manage items being removed from the content pane.
@@ -555,8 +538,7 @@ protected:
 	/*************************************************************************
 		Implementation Data
 	*************************************************************************/
-	typedef	std::vector<ItemEntry*
-        CEGUI_VECTOR_ALLOC(ItemEntry*)> ItemEntryList;
+	typedef	std::vector<ItemEntry*> ItemEntryList;
 	ItemEntryList	d_listItems;		//!< list of items in the list.
 
     //!< True if this ItemListBase widget should automatically resize to fit its content. False if not.
@@ -584,7 +566,7 @@ private:
 	/*!
 	\copydoc Element::addChild_impl
 	*/
-	virtual void addChild_impl(Element* element);
+    void addChild_impl(Element* element) override;
 };
 
 
@@ -608,37 +590,36 @@ public:
     {
         if (str == "Ascending")
         {
-            return ItemListBase::Ascending;
+            return ItemListBase::SortMode::Ascending;
         }
-        else if (str == "Descending")
+
+        if (str == "Descending")
         {
-            return ItemListBase::Descending;
+            return ItemListBase::SortMode::Descending;
         }
-        else
-        {
-            return ItemListBase::UserSort;
-        }
+        
+        return ItemListBase::SortMode::UserSort;
     }
 
     static string_return_type toString(pass_type val)
     {
-        if (val == ItemListBase::UserSort)
+        if (val == ItemListBase::SortMode::UserSort)
         {
             return "UserSort";
         }
-        else if (val == ItemListBase::Ascending)
+        
+        if (val == ItemListBase::SortMode::Ascending)
         {
             return "Ascending";
         }
-        else if (val == ItemListBase::Descending)
+
+        if (val == ItemListBase::SortMode::Descending)
         {
             return "Descending";
         }
-        else
-        {
-            assert(false && "Invalid sort mode");
-            return "Ascending";
-        }
+
+        assert(false && "Invalid sort mode");
+        return "Ascending";
     }
 };
 

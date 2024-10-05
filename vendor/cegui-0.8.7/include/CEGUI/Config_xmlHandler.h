@@ -27,10 +27,8 @@
 #ifndef _CEGUIConfig_xmlHandler_h_
 #define _CEGUIConfig_xmlHandler_h_
 
-#include "CEGUI/Base.h"
-#include "CEGUI/String.h"
-#include "CEGUI/Logger.h"
 #include "CEGUI/XMLHandler.h"
+#include "CEGUI/String.h"
 #include <vector>
 
 #if defined (_MSC_VER)
@@ -38,9 +36,10 @@
 #   pragma warning(disable : 4251)
 #endif
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
+enum class LoggingLevel : int;
+
 //! Handler class used to parse the Configuration XML file.
 class Config_xmlHandler : public XMLHandler
 {
@@ -57,7 +56,7 @@ public:
     static const String XMLParserElement;
     static const String ImageCodecElement;
     static const String DefaultFontElement;
-    static const String DefaultMouseCursorElement;
+    static const String DefaultCursorElement;
     static const String DefaultTooltipElement;
     // xml attribute names
     static const String FilenameAttribute;
@@ -91,8 +90,8 @@ public:
     void loadAutoResources() const;
     //! initialise the system default font according to the config.
     void initialiseDefaultFont() const;
-    //! initialise the system default mouse cursor image according to the config.
-    void initialiseDefaultMouseCursor() const;
+    //! initialise the system default cursor image according to the config.
+    void initialiseDefaultCursor() const;
     //! initialise the system default tooltip according to the config.
     void initialiseDefaulTooltip() const;
     //! execute the init script as specified in the config.
@@ -101,24 +100,24 @@ public:
     const String& getTerminateScriptName() const;
 
     // XMLHandler overrides
-    const String& getSchemaName() const;
-    const String& getDefaultResourceGroup() const;
+    const String& getSchemaName() const override;
+    const String& getDefaultResourceGroup() const override;
 
-    void elementStart(const String& element, const XMLAttributes& attributes);
-    void elementEnd(const String& element);
+    void elementStart(const String& element, const XMLAttributes& attributes) override;
+    void elementEnd(const String& element) override;
 
 private:
     //! enumeration of resource types.
-    enum ResourceType
+    enum class ResourceType : int
     {
-        RT_IMAGESET,
-        RT_FONT,
-        RT_SCHEME,
-        RT_LOOKNFEEL,
-        RT_LAYOUT,
-        RT_SCRIPT,
-        RT_XMLSCHEMA,
-        RT_DEFAULT
+        Imageset,
+        Font,
+        Scheme,
+        LookNFeel,
+        Layout,
+        Script,
+        XmlSchema,
+        Default
     };
 
     //! struct to track a resource group directory specification.
@@ -131,6 +130,8 @@ private:
     //! struct to track a default resource group specification.
     struct DefaultResourceGroup
     {
+        DefaultResourceGroup() : type(ResourceType::Default) {}
+
         ResourceType type;
         String group;
     };
@@ -138,6 +139,8 @@ private:
     //! struct to track a set of resources to be auto-loaded.
     struct AutoLoadResource
     {
+        AutoLoadResource() : type(ResourceType::Default) {}
+
         String type_string;
         ResourceType type;
         String group;
@@ -155,7 +158,7 @@ private:
     void handleImageCodecElement(const XMLAttributes& attr);
     void handleDefaultTooltipElement(const XMLAttributes& attr);
     void handleDefaultFontElement(const XMLAttributes& attr);
-    void handleDefaultMouseCursorElement(const XMLAttributes& attr);
+    void handleDefaultCursorElement(const XMLAttributes& attr);
 
     //! helper to convert resource type string to something more useful.
     ResourceType stringToResourceType(const String& type) const;
@@ -165,14 +168,11 @@ private:
     void autoLoadImagesets(const String& pattern, const String& group) const;
 
     //! type of collection holding resource group directory specifications.
-    typedef std::vector<ResourceDirectory
-        CEGUI_VECTOR_ALLOC(ResourceDirectory)> ResourceDirVector;
+    typedef std::vector<ResourceDirectory> ResourceDirVector;
     //! type of collection holding default resource group specifications.
-    typedef std::vector<DefaultResourceGroup
-        CEGUI_VECTOR_ALLOC(DefaultResourceGroup)> DefaultGroupVector;
+    typedef std::vector<DefaultResourceGroup> DefaultGroupVector;
     //! type of collection holding specifications of resources to auto-load.
-    typedef std::vector<AutoLoadResource
-        CEGUI_VECTOR_ALLOC(AutoLoadResource)> AutoResourceVector;
+    typedef std::vector<AutoLoadResource> AutoResourceVector;
     //! The name to use for the CEGUI log file.
     String d_logFileName;
     //! The logging level to be set.
@@ -183,15 +183,15 @@ private:
     String d_imageCodecName;
     //! The name of the default font to be set.
     String d_defaultFont;
-    //! The name of the default mouse cursor image to use.
-    String d_defaultMouseImage;
+    //! The name of the default cursor image to use.
+    String d_defaultPointerImage;
     //! The name of the default tooltip window type.
     String d_defaultTooltipType;
     //! name of the initialisation script.
     String d_scriptingInitScript;
     //! name of the termination script.
     String d_scriptingTerminateScript;
-    //! Collection of resouce group directories to be set.
+    //! Collection of resource group directories to be set.
     ResourceDirVector d_resourceDirectories;
     //! Collection of default resource groups to be set.
     DefaultGroupVector d_defaultResourceGroups;

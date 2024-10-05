@@ -29,47 +29,46 @@
 #include "CEGUI/Exceptions.h"
 #include "CEGUI/Logger.h"
 #include "CEGUI/PropertyHelper.h"
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 
 #if defined( __WIN32__ ) || defined( _WIN32)
 #   include <windows.h>
-#endif
-
-#if defined(_MSC_VER)
-#   include <dbghelp.h>
 #elif defined(__ANDROID__)
 #   include <android/log.h>
+#endif
+
+#if defined(_DEBUG) || defined(DEBUG)
+#if defined(_MSC_VER)
+#   pragma warning(push)
+#   pragma warning(disable : 4091)
+#   include <dbghelp.h>
+#   pragma warning(pop)
 #elif     (defined(__linux__) && !defined(__ANDROID__)) \
       ||  defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) \
       ||  defined(__HAIKU__)
 #   include <execinfo.h>
 #   include <dlfcn.h>
 #   include <cxxabi.h>
-#   include <cstdlib>
+#   include <cstddef>
+#endif
 #endif
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
-
 bool Exception::d_stdErrEnabled(true);
 
 //----------------------------------------------------------------------------//
 static void dumpBacktrace(size_t frames)
 {
-
-#if defined(__ANDROID__)
-
-    // Not implemented yet.
-    CEGUI_UNUSED(frames);
-
-#else
-
 #if defined(_DEBUG) || defined(DEBUG)
 #if defined(_MSC_VER)
     SymSetOptions(SYMOPT_DEFERRED_LOADS | SYMOPT_INCLUDE_32BIT_MODULES);
 
-    if (!SymInitialize(GetCurrentProcess(), 0, TRUE))
+    HANDLE process = GetCurrentProcess();
+
+    if (!SymInitialize(process, nullptr, TRUE))
         return;
 
     HANDLE thread = GetCurrentThread();
@@ -102,21 +101,30 @@ static void dumpBacktrace(size_t frames)
     symbol->MaxNameLen = sizeof(symbol_buffer) - sizeof(SYMBOL_INFO);
 
     Logger& logger(Logger::getSingleton());
-    logger.logEvent("========== Start of Backtrace ==========", Errors);
+    logger.logEvent("========== Start of Backtrace ==========", LoggingLevel::Error);
 
     size_t frame_no = 0;
-    while (StackWalk64(machine_arch, GetCurrentProcess(), thread, &stackframe,
-                       &context, 0, SymFunctionTableAccess64, SymGetModuleBase64, 0) &&
+    while (StackWalk64(machine_arch, process, thread, &stackframe,
+                       &context, nullptr, SymFunctionTableAccess64, SymGetModuleBase64, nullptr) &&
            stackframe.AddrPC.Offset)
     {
         symbol->Address = stackframe.AddrPC.Offset;
         DWORD64 displacement = 0;
-        char signature[256];
+
+        std::stringstream sstream;
+        sstream << "#" << frame_no << " ";
 
         if (SymFromAddr(GetCurrentProcess(), symbol->Address, &displacement, symbol))
+        {
+            char signature[256];
             UnDecorateSymbolName(symbol->Name, signature, sizeof(signature), UNDNAME_COMPLETE);
+            sstream << signature;
+        }
         else
-            sprintf_s(signature, sizeof(signature), "%p", ULongToPtr(symbol->Address));
+        {
+            const void* addressPtr = (void*)(ULONG_PTR)(symbol->Address);
+            sstream << addressPtr;
+        }
  
         IMAGEHLP_MODULE64 modinfo;
         modinfo.SizeOfStruct = sizeof(modinfo);
@@ -124,12 +132,11 @@ static void dumpBacktrace(size_t frames)
         const BOOL have_image_name =
             SymGetModuleInfo64(GetCurrentProcess(), symbol->Address, &modinfo);
 
-        char outstr[512];
-        sprintf_s(outstr, sizeof(outstr), "#%d %s +%#llx (%s)",
-                  frame_no, signature, displacement,
-                  (have_image_name ? modinfo.LoadedImageName : "????"));
+        sstream << std::hex << std::setfill('0') << std::setw(16) << displacement << std::dec;
+        sstream << " (" << have_image_name ? modinfo.LoadedImageName : "????";
+        sstream << ")";
 
-        logger.logEvent(outstr, Errors);
+        logger.logEvent(CEGUI::String(sstream.str()), LoggingLevel::Error);
 
         if (++frame_no >= frames)
             break;
@@ -138,7 +145,7 @@ static void dumpBacktrace(size_t frames)
             break;
     }
 
-    logger.logEvent("==========  End of Backtrace  ==========", Errors);
+    logger.logEvent("==========  End of Backtrace  ==========", LoggingLevel::Error);
 
     SymCleanup(GetCurrentProcess());
 #elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__HAIKU__)
@@ -147,16 +154,21 @@ static void dumpBacktrace(size_t frames)
 
     Logger& logger(Logger::getSingleton());
 
-    logger.logEvent("========== Start of Backtrace ==========", Errors);
+    logger.logEvent("========== Start of Backtrace ==========", LoggingLevel::Error);
 
     for (int i = 0; i < received; ++i)
     {
-        char outstr[512];
+        std::string outstr;
         Dl_info info;
         if (dladdr(buffer[i], &info))
         {
             if (!info.dli_sname)
-                snprintf(outstr, 512, "#%d %p (%s)", i, buffer[i], info.dli_fname);
+            {
+                std::stringstream sstream;
+                sstream << "#" << i << " " << static_cast<const void*>(buffer[i]) << " ("
+                        << info.dli_fname << ")";
+                outstr = sstream.str();
+            }
             else
             {
                 ptrdiff_t offset = static_cast<char*>(buffer[i]) -
@@ -164,18 +176,27 @@ static void dumpBacktrace(size_t frames)
 
                 int demangle_result = 0;
                 char* demangle_name = abi::__cxa_demangle(info.dli_sname, 0, 0, &demangle_result);
-                snprintf(outstr, 512, "#%d %s +%#tx (%s)",
-                         i, demangle_name ? demangle_name : info.dli_sname, offset, info.dli_fname);
+
+                std::stringstream sstream;
+                sstream << "#" << i << " " << (demangle_name ? demangle_name : info.dli_sname) <<
+                    " +" << std::hex << std::uppercase << std::showbase << offset << " (" <<
+                    info.dli_fname << ")";
+                outstr = sstream.str();
+
                 std::free(demangle_name);
             }
         }
         else
-            snprintf(outstr, 512, "#%d --- error ---", i);
+        {
+            std::stringstream sstream;
+            sstream << "#" << i << " --- error ---";
+            outstr = sstream.str();
+        }
 
-        logger.logEvent(outstr, Errors);
+        logger.logEvent(outstr, LoggingLevel::Error);
     }
 
-    logger.logEvent("==========  End of Backtrace  ==========", Errors);
+    logger.logEvent("==========  End of Backtrace  ==========", LoggingLevel::Error);
 
 #else
 
@@ -186,8 +207,6 @@ static void dumpBacktrace(size_t frames)
 #else
 
     CEGUI_UNUSED(frames);
-
-#endif
 
 #endif
 }
@@ -201,13 +220,13 @@ Exception::Exception(const String& message, const String& name,
     d_line(line),
     d_function(function),
     d_what(name + " in function '" + function +
-           "' (" + filename + ":" + PropertyHelper<int>::toString(line) + ") : " +
+           "' (" + filename + ":" + PropertyHelper<std::int32_t>::toString(line) + ") : " +
            message)
 {
     // Log exception if possible
     if (Logger* const logger = Logger::getSingletonPtr())
     {
-        logger->logEvent(d_what, Errors);
+        logger->logEvent(d_what, LoggingLevel::Error);
         dumpBacktrace(64);
     }
 
@@ -215,7 +234,7 @@ Exception::Exception(const String& message, const String& name,
     {
         // output to stderr unless it's explicitly disabled
         // nobody seems to look in their log file!
-        std::cerr << what() << std::endl;
+        std::cerr << Exception::what() << std::endl;
     }
 #ifdef __ANDROID__
     __android_log_print(ANDROID_LOG_ERROR, "CEGUIBase", "Exception thrown: %s", what());
@@ -223,14 +242,19 @@ Exception::Exception(const String& message, const String& name,
 }
 
 //----------------------------------------------------------------------------//
-Exception::~Exception(void) throw()
+Exception::~Exception()  noexcept
 {
 }
 
 //----------------------------------------------------------------------------//
-const char* Exception::what() const throw()
+const char* Exception::what() const noexcept
 {
+#if (CEGUI_STRING_CLASS == CEGUI_STRING_CLASS_ASCII) || (CEGUI_STRING_CLASS == CEGUI_STRING_CLASS_UTF_8)
     return d_what.c_str();
+#elif CEGUI_STRING_CLASS == CEGUI_STRING_CLASS_UTF_32
+    d_whatStdStr = String::convertUtf32ToUtf8(d_what.getString());
+    return d_whatStdStr.c_str();
+#endif
 }
 
 //----------------------------------------------------------------------------//

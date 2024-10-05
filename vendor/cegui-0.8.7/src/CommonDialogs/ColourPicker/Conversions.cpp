@@ -146,9 +146,9 @@ RGB_Colour ColourPickerConversions::toRGB(float L, float a, float b)
     float vz = vy - b / 200.0f;
 
     {
-        float vx3 = pow(vx, 3);
-        float vy3 = pow(vy, 3);
-        float vz3 = pow(vz, 3);
+        const float vx3 = std::pow(vx, 3.f);
+        const float vy3 = std::pow(vy, 3.f);
+        const float vz3 = std::pow(vz, 3.f);
 
         if (vy3 > LAB_COMPARE_VALUE_CONST)
             vy = vy3;
@@ -274,7 +274,7 @@ RGB_Colour ColourPickerConversions::toRGB(const HSV_Colour& colour)
     float g = 0.0f;
     float b = 0.0f;
 
-    int i = (int)(colour.H * 6.0f);
+    int i = static_cast<int>(colour.H * 6.0f);
     float f = colour.H * 6 - i;
     float p = colour.V * (1 - colour.S);
     float q = colour.V * (1 - f * colour.S);
@@ -360,7 +360,7 @@ HSV_Colour ColourPickerConversions::toHSV(RGB_Colour colour)
         max_comp = g;
     }
 
-    float min_comp = ceguimin(ceguimin(r, g), b);
+    float min_comp = std::min(std::min(r, g), b);
     float h;
     float s;
     float v = max_comp;
@@ -375,13 +375,17 @@ HSV_Colour ColourPickerConversions::toHSV(RGB_Colour colour)
     else
     {
         if (maxCompRed)
+        {
             h = (g - b) / diff + (g < b ? 6.0f : 0.0f);
-
-        if (maxCompGreen)
+        }
+        else if (maxCompGreen)
+        {
             h = (b - r) / diff + 2.0f;
-
+        }
         else
+        {
             h = (r - g) / diff + 4.0f;
+        }
 
         h /= 6.0f;
     }

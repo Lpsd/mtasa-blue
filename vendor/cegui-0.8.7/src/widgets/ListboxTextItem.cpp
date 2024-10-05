@@ -1,8 +1,8 @@
 /***********************************************************************
-	created:	12/6/2004
-	author:		Paul D Turner
-	
-	purpose:	Implementation of List box text items
+    created:    12/6/2004
+    author:        Paul D Turner
+    
+    purpose:    Implementation of List box text items
 *************************************************************************/
 /***************************************************************************
  *   Copyright (C) 2004 - 2006 Paul D Turner & The CEGUI Development Team
@@ -27,194 +27,140 @@
  *   OTHER DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
 #include "CEGUI/widgets/ListboxTextItem.h"
+#include "CEGUI/System.h"
 #include "CEGUI/FontManager.h"
-#include "CEGUI/Font.h"
+#include "CEGUI/text/Font.h"
 #include "CEGUI/Window.h"
-#include "CEGUI/Image.h"
-#include "CEGUI/CoordConverter.h"
+#include "CEGUI/text/TextParser.h"
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
+const Colour ListboxTextItem::DefaultTextColour = 0xFFFFFFFF;
+
 //----------------------------------------------------------------------------//
-BasicRenderedStringParser ListboxTextItem::d_stringParser;
-DefaultRenderedStringParser ListboxTextItem::d_noTagsStringParser;
-
-/*************************************************************************
-	Constants
-*************************************************************************/
-const Colour	ListboxTextItem::DefaultTextColour		= 0xFFFFFFFF;
-
-
-/*************************************************************************
-	Constructor
-*************************************************************************/
-ListboxTextItem::ListboxTextItem(const String& text, uint item_id, void* item_data, bool disabled, bool auto_delete) :
-	ListboxItem(text, item_id, item_data, disabled, auto_delete),
-	d_textCols(DefaultTextColour, DefaultTextColour, DefaultTextColour, DefaultTextColour),
-	d_font(0),
-    d_renderedStringValid(false),
-    d_textParsingEnabled(true)
+ListboxTextItem::ListboxTextItem(const String& text, unsigned int item_id, void* item_data, bool disabled, bool auto_delete) :
+    ListboxItem(text, item_id, item_data, disabled, auto_delete),
+    d_textCols(DefaultTextColour, DefaultTextColour, DefaultTextColour, DefaultTextColour)
 {
 }
 
-
-/*************************************************************************
-	Return a pointer to the font being used by this ListboxTextItem
-*************************************************************************/
-const Font* ListboxTextItem::getFont(void) const
+//----------------------------------------------------------------------------//
+Font* ListboxTextItem::getFont() const
 {
-	// prefer out own font
-	if (d_font)
-	{
-		return d_font;
-	}
-	// try our owner window's font setting (may be null if owner uses no existant default font)
-	else if (d_owner)
-	{
-		return d_owner->getFont();
-	}
-    // no owner, so the default font is ambiguous (it could be of any context)
-    else
-        return 0;  
+    return d_font ? d_font : d_owner ? d_owner->getEffectiveFont() : nullptr;
 }
 
-
-/*************************************************************************
-	Set the font to be used by this ListboxTextItem
-*************************************************************************/
+//----------------------------------------------------------------------------//
 void ListboxTextItem::setFont(const String& font_name)
 {
-	setFont(&FontManager::getSingleton().get(font_name));
+    setFont(&FontManager::getSingleton().get(font_name));
 }
 
 //----------------------------------------------------------------------------//
 void ListboxTextItem::setFont(Font* font)
 {
     d_font = font;
-
-    d_renderedStringValid = false;
+    d_renderedTextValid = false;
 }
 
-
-/*************************************************************************
-	Return the rendered pixel size of this list box item.
-*************************************************************************/
-Sizef ListboxTextItem::getPixelSize(void) const
+//----------------------------------------------------------------------------//
+Sizef ListboxTextItem::getPixelSize() const
 {
-    const Font* fnt = getFont();
-
-    if (!fnt)
+    if (d_textLogical.empty() || !getFont())
         return Sizef(0, 0);
 
-    if (!d_renderedStringValid)
+    if (!d_renderedTextValid)
         parseTextString();
 
-    Sizef sz(0.0f, 0.0f);
-
-    for (size_t i = 0; i < d_renderedString.getLineCount(); ++i)
-    {
-        const Sizef line_sz(d_renderedString.getPixelSize(d_owner, i));
-        sz.d_height += line_sz.d_height;
-
-        if (line_sz.d_width > sz.d_width)
-            sz.d_width = line_sz.d_width;
-    }
-
-    return sz;
+    return d_renderedText.getExtents();
 }
 
-
-/*************************************************************************
-	Draw the list box item in its current state.
-*************************************************************************/
-void ListboxTextItem::draw(GeometryBuffer& buffer, const Rectf& targetRect,
-                           float alpha, const Rectf* clipper) const
+//----------------------------------------------------------------------------//
+void ListboxTextItem::createRenderGeometry(std::vector<GeometryBuffer*>& out,
+    const Rectf& targetRect, float alpha, const Rectf* clipper) const
 {
-    if (d_selected && d_selectBrush != 0)
-        d_selectBrush->render(buffer, targetRect, clipper,
-                            getModulateAlphaColourRect(d_selectCols, alpha));
-
-    const Font* font = getFont();
-
-    if (!font)
-        return;
-
-    Vector2f draw_pos(targetRect.getPosition());
-
-    draw_pos.d_y += CoordConverter::alignToPixels(
-        (font->getLineSpacing() - font->getFontHeight()) * 0.5f);
-
-    if (!d_renderedStringValid)
-        parseTextString();
-
-    const ColourRect final_colours(
-        getModulateAlphaColourRect(ColourRect(0xFFFFFFFF), alpha));
-
-    for (size_t i = 0; i < d_renderedString.getLineCount(); ++i)
+    // Draw selection brush
+    if (d_selected && d_selectBrush)
     {
-        d_renderedString.draw(d_owner, i, buffer, draw_pos, &final_colours, clipper, 0.0f);
-        draw_pos.d_y += d_renderedString.getPixelSize(d_owner, i).d_height;
+        ImageRenderSettings imgRenderSettings(targetRect, clipper, d_selectCols, alpha);
+        d_selectBrush->createRenderGeometry(out, imgRenderSettings);
+    }
+
+    // Draw text
+    if (const Font* font = getFont())
+    {
+        if (!d_renderedTextValid)
+            parseTextString();
+
+        d_renderedText.createRenderGeometry(out, targetRect.getPosition(), &d_textCols, clipper);
     }
 }
 
-
-/*************************************************************************
-	Set the colours used for text rendering.	
-*************************************************************************/
-void ListboxTextItem::setTextColours(Colour top_left_colour,
-                                     Colour top_right_colour,
-                                     Colour bottom_left_colour,
-                                     Colour bottom_right_colour)
+//----------------------------------------------------------------------------//
+void ListboxTextItem::parseTextString() const
 {
-	d_textCols.d_top_left		= top_left_colour;
-	d_textCols.d_top_right		= top_right_colour;
-	d_textCols.d_bottom_left	= bottom_left_colour;
-	d_textCols.d_bottom_right	= bottom_right_colour;
+    d_renderedText.renderText(d_textLogical, d_textParser, getFont(), DefaultParagraphDirection::LeftToRight);
+    d_renderedText.setHorizontalFormatting(HorizontalTextFormatting::LeftAligned);
+    d_renderedText.setWordWrapEnabled(false);
+    d_renderedText.updateDynamicObjectExtents(d_owner);
+    d_renderedText.updateFormatting(d_owner->getPixelSize().d_width);
 
-    d_renderedStringValid = false;
+    d_renderedTextValid = true;
 }
 
 //----------------------------------------------------------------------------//
 void ListboxTextItem::setText(const String& text)
 {
     ListboxItem::setText(text);
-
-    d_renderedStringValid = false;
+    d_renderedTextValid = false;
 }
 
 //----------------------------------------------------------------------------//
-void ListboxTextItem::parseTextString() const
+void ListboxTextItem::setTextColours(Colour top_left_colour,
+                                     Colour top_right_colour,
+                                     Colour bottom_left_colour,
+                                     Colour bottom_right_colour)
 {
-    if (d_textParsingEnabled)
-        d_renderedString =
-            d_stringParser.parse(getTextVisual(), 0, &d_textCols);
-    else
-        d_renderedString =
-            d_noTagsStringParser.parse(getTextVisual(), 0, &d_textCols);
-
-    d_renderedStringValid = true;
+    d_textCols.d_top_left = top_left_colour;
+    d_textCols.d_top_right = top_right_colour;
+    d_textCols.d_bottom_left = bottom_left_colour;
+    d_textCols.d_bottom_right = bottom_right_colour;
+    d_renderedTextValid = false;
 }
 
 //----------------------------------------------------------------------------//
-void ListboxTextItem::setTextParsingEnabled(const bool enable)
+// FIXME: now this silently resets a custom parser!
+void ListboxTextItem::setTextParsingEnabled(bool enable)
 {
-    d_textParsingEnabled = enable;
-    d_renderedStringValid = false;
+    setCustomTextParser(enable ? CEGUI::System::getSingleton().getDefaultTextParser() : nullptr);
 }
 
 //----------------------------------------------------------------------------//
 bool ListboxTextItem::isTextParsingEnabled() const
 {
-    return d_textParsingEnabled;
+    return !!d_textParser;
+}
+
+//----------------------------------------------------------------------------//
+void ListboxTextItem::setCustomTextParser(CEGUI::TextParser* parser)
+{
+    if (d_textParser == parser)
+        return;
+
+    d_textParser = parser;
+    d_renderedTextValid = false;
 }
 
 //----------------------------------------------------------------------------//
 bool ListboxTextItem::handleFontRenderSizeChange(const Font* const font)
 {
-    return getFont() == font;
+    if (font == getFont())
+    {
+        d_renderedTextValid = false;
+        return true;
+    }
+
+    return false;
 }
 
-//----------------------------------------------------------------------------//
-
-} // End of  CEGUI namespace section
+}

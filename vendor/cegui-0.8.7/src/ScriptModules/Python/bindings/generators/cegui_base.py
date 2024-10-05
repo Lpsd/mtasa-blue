@@ -415,10 +415,6 @@ def( "subscribeEvent", &EventSet_subscribeEvent);
     mouseCursor.include()
     mouseCursor.noncopyable = True
 
-    # NamedElement.h
-    namedElement = CEGUI_ns.class_("NamedElement")
-    namedElement.include()
-
     # NamedXMLResourceManager.h
     xmlResourceExistsActionEnum = CEGUI_ns.enum("XMLResourceExistsAction")
     xmlResourceExistsActionEnum.include()
@@ -899,10 +895,6 @@ void Iterator_previous(::CEGUI::%s& t)
     gridLayoutContainer.include()
     # FIXME: Temporary, this should work with transformations
     gridLayoutContainer.mem_fun("mapFromIdxToGrid").exclude()
-
-    # elements/GroupBox.h
-    groupBox = CEGUI_ns.class_("GroupBox")
-    groupBox.include()
 
     # elements/HorizontalLayoutContainer.h
     horizontalLayoutContainer = CEGUI_ns.class_("HorizontalLayoutContainer")

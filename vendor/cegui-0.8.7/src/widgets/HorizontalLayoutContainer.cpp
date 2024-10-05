@@ -26,31 +26,20 @@
  ***************************************************************************/
 #include "CEGUI/widgets/HorizontalLayoutContainer.h"
 #include "CEGUI/CoordConverter.h"
-#include <algorithm>
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
-/*************************************************************************
-    Constants
-*************************************************************************/
 // type name for this widget
 const String HorizontalLayoutContainer::WidgetTypeName("HorizontalLayoutContainer");
 
-/*************************************************************************
-    Constructor
-*************************************************************************/
+//----------------------------------------------------------------------------//
 HorizontalLayoutContainer::HorizontalLayoutContainer(const String& type,
                                                      const String& name) :
-        SequentialLayoutContainer(type, name)
+    LayoutContainer(type, name)
 {}
 
 //----------------------------------------------------------------------------//
-HorizontalLayoutContainer::~HorizontalLayoutContainer(void)
-{}
-
-//----------------------------------------------------------------------------//
-void HorizontalLayoutContainer::layout()
+void HorizontalLayoutContainer::layout_impl()
 {
     // used to compare UDims
     const float absHeight = getChildContentArea().get().getHeight();
@@ -60,14 +49,17 @@ void HorizontalLayoutContainer::layout()
     UDim leftOffset(0, 0);
     UDim layoutHeight(0, 0);
 
-    for (ChildList::iterator it = d_children.begin(); it != d_children.end(); ++it)
+    for (auto child : d_children)
     {
-        Window* window = static_cast<Window*>(*it);
+        Window* window = static_cast<Window*>(child);
 
         const UVector2 offset = getOffsetForWindow(window);
+        window->setPosition(offset + UVector2(leftOffset, UDim(0, 0)));
+        
+        // setPosition triggered child pixel size recalculation, now we can get bounds
         const UVector2 boundingSize = getBoundingSizeForWindow(window);
 
-        // full child window width, including margins
+        // full child window height, including margins
         const UDim& childHeight = boundingSize.d_y;
 
         if (CoordConverter::asAbsolute(layoutHeight, absHeight) <
@@ -76,7 +68,6 @@ void HorizontalLayoutContainer::layout()
             layoutHeight = childHeight;
         }
 
-        window->setPosition(offset + UVector2(leftOffset, UDim(0, 0)));
         leftOffset += boundingSize.d_x;
     }
 
@@ -85,5 +76,4 @@ void HorizontalLayoutContainer::layout()
 
 //----------------------------------------------------------------------------//
 
-} // End of  CEGUI namespace section
-
+}

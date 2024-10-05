@@ -28,17 +28,14 @@
 #define _CEGUIRenderingWindow_h_
 
 #include "CEGUI/RenderingSurface.h"
-#include "CEGUI/Vector.h"
-#include "CEGUI/Quaternion.h"
-#include "CEGUI/Size.h"
-#include "CEGUI/Rect.h"
+#include "CEGUI/Rectf.h"
+#include <glm/gtc/quaternion.hpp>
 
 #if defined(_MSC_VER)
 #	pragma warning(push)
 #	pragma warning(disable : 4251)
 #endif
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 /*!
@@ -107,7 +104,7 @@ public:
         other root surface.  It is \e not relative to the owner of the
         RenderingWindow.
     */
-    void setPosition(const Vector2f& position);
+    void setPosition(const glm::vec2& position);
 
     /*!
     \brief
@@ -127,7 +124,7 @@ public:
     \param rotation
         Quaternion object describing the rotation.
     */
-    void setRotation(const Quaternion& rotation);
+    void setRotation(const glm::quat& rotation);
 
     /*!
     \brief
@@ -138,7 +135,7 @@ public:
         Vector3 describing the three dimensional point around which the
         RenderingWindow will be rotated.
     */
-    void setPivot(const Vector3f& pivot);
+    void setPivot(const glm::vec3& pivot);
 
     /*!
     \brief
@@ -153,7 +150,7 @@ public:
         other root surface.  It is \e not relative to the owner of the
         RenderingWindow.
     */
-    const Vector2f& getPosition() const;
+    const glm::vec2& getPosition() const { return d_position; }
 
     /*!
     \brief
@@ -162,7 +159,7 @@ public:
     \return
         Size object describing the current pixel size of the RenderingWindow.
     */
-    const Sizef& getSize() const;
+    const Sizef& getSize() const { return d_size; }
 
     /*!
     \brief
@@ -171,7 +168,7 @@ public:
     \return
         Quaternion object describing the rotation for the RenderingWindow.
     */
-    const Quaternion& getRotation()const;
+    const glm::quat& getRotation() const { return d_rotation; }
 
     /*!
     \brief
@@ -181,7 +178,7 @@ public:
         Vector3 object describing the current location of the pivot point used
         when rotating the RenderingWindow.
     */
-    const Vector3f& getPivot() const;
+    const glm::vec3& getPivot() const { return d_pivot; }
 
     /*!
     \brief
@@ -193,8 +190,8 @@ public:
         The TextureTarget object that receives the rendered output resulting
         from geometry queued to this RenderingWindow.
     */
-    const TextureTarget& getTextureTarget() const;
-    TextureTarget& getTextureTarget();
+    const TextureTarget& getTextureTarget() const { return d_textarget; }
+    TextureTarget& getTextureTarget() { return d_textarget; }
 
     /*!
     \brief
@@ -256,7 +253,7 @@ public:
         cases invalidating the cached imagery will not require the potentially
         expensive regeneration of the geometry for the RenderingWindow itself.
     */
-    void invalidateGeometry();
+    void invalidateGeometry() { d_geometryValid = false; }
 
     /*!
     \brief
@@ -268,20 +265,22 @@ public:
         RenderingSurface object that owns, and is targetted by, the
         RenderingWindow.
     */
-    const RenderingSurface& getOwner() const;
-    RenderingSurface& getOwner();
+    const RenderingSurface& getOwner() const { return *d_owner; }
+    RenderingSurface& getOwner() { return *d_owner; }
 
     /*!
     \brief
         Fill in Vector2 object \a p_out with an unprojected version of the
         point described by Vector2 \a p_in.
     */
-    void unprojectPoint(const Vector2f& p_in, Vector2f& p_out);
+    void unprojectPoint(const glm::vec2& p_in, glm::vec2& p_out);
+
+    Rectf getTextureRect() const;
 
     // overrides from base
-    void draw();
-    void invalidate();
-    bool isRenderingWindow() const;
+    void draw(std::uint32_t drawModeMask = DrawModeMaskAll) override;
+    void invalidate() override;
+    bool isRenderingWindow() const override { return true; }
 
 protected:
     //! default generates geometry to draw window as a single quad.
@@ -292,27 +291,25 @@ protected:
     // friend is so that RenderingSurface can call setOwner to xfer ownership.
     friend void RenderingSurface::transferRenderingWindow(RenderingWindow&);
 
-    //! holds ref to renderer
-    Renderer& d_renderer;
-    //! TextureTarget to draw to. Like d_target in base, but avoiding downcasts.
-    TextureTarget& d_textarget;
     //! RenderingSurface that owns this object, we render back to this object.
-    RenderingSurface* d_owner;
-    //! GeometryBuffer that holds geometry for drawing this window.
-    GeometryBuffer* d_geometry;
-    //! indicates whether data in GeometryBuffer is up-to-date
-    bool d_geometryValid;
+    RenderingSurface* d_owner = nullptr;
+    //! The same as d_target in base, but avoiding impossible downcast of the virtual base.
+    TextureTarget& d_textarget;
+    //! The geometry buffers that cache the geometry drawn by this Window.
+    GeometryBuffer& d_geometryBuffer;
     //! Position of this RenderingWindow
-    Vector2f d_position;
+    glm::vec2 d_position = glm::vec2(0.f, 0.f);
     //! Size of this RenderingWindow
     Sizef d_size;
     //! Rotation for this RenderingWindow
-    Quaternion d_rotation;
+    glm::quat d_rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
     //! Pivot point used for the rotation.
-    Vector3f d_pivot;
+    glm::vec3 d_pivot = glm::vec3(0.f, 0.f, 0.f);
+    //! indicates whether data in GeometryBuffer is up-to-date
+    bool d_geometryValid = false;
 };
 
-} // End of  CEGUI namespace section
+}
 
 #if defined(_MSC_VER)
 #	pragma warning(pop)

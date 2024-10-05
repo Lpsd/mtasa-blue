@@ -38,7 +38,6 @@
 #include "CEGUI/Base.h"
 #include <cassert>
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 /* Copyright (C) Scott Bilas, 2000.
@@ -72,7 +71,8 @@ public:
         assert( !ms_Singleton );
         ms_Singleton = static_cast<T*>(this);
     }
-   ~Singleton( void )
+
+    virtual ~Singleton( void )
         {  assert( ms_Singleton );  ms_Singleton = 0;  }
     static T& getSingleton( void )
         {  assert( ms_Singleton );  return ( *ms_Singleton );  }

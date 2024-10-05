@@ -27,7 +27,7 @@
 #ifndef _CEGUIRenderEffect_h_
 #define _CEGUIRenderEffect_h_
 
-#include "CEGUI/Base.h"
+#include <CEGUI/Base.h>
 
 // Start of CEGUI namespace section
 namespace CEGUI
@@ -37,8 +37,7 @@ namespace CEGUI
     Interface for objects that hook into RenderingWindow to affect the rendering
     process, thus allowing various effects to be achieved.
 */
-class CEGUIEXPORT RenderEffect :
-    public AllocatedObject<RenderEffect>
+class CEGUIEXPORT RenderEffect
 {
 public:
     virtual ~RenderEffect() {};

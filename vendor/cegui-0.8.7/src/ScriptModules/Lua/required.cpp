@@ -40,18 +40,18 @@ namespace CEGUI
 // returns horizontal range as two values for lua
 void ceguiLua_Thumb_getHorzRange(Thumb* wnd, float* min, float* max)
 {
-	std::pair<float,float> range_pair = wnd->getHorzRange();
-	*min = range_pair.first;
-	*max = range_pair.second;
+	const auto range_pair = wnd->getHorzRange();
+	*min = range_pair.x;
+	*max = range_pair.y;
 }
 
 
 // returns vertical range as two values for lua
 void ceguiLua_Thumb_getVertRange(Thumb* wnd, float* min, float* max)
 {
-	std::pair<float,float> range_pair = wnd->getVertRange();
-	*min = range_pair.first;
-	*max = range_pair.second;
+    const auto range_pair = wnd->getVertRange();
+	*min = range_pair.x;
+	*max = range_pair.y;
 }
 
 
@@ -60,21 +60,10 @@ void ceguiLua_Thumb_getVertRange(Thumb* wnd, float* min, float* max)
 *************************************************************************/
 
 // allocates and returns a new ListboxTextItem
-ListboxTextItem* ceguiLua_createListboxTextItem(const String& text, uint item_id, void* item_data, bool disabled, bool auto_delete)
+ListboxTextItem* ceguiLua_createListboxTextItem(const String& text, unsigned int item_id, void* item_data, bool disabled, bool auto_delete)
 {
 	return new ListboxTextItem(text,item_id,item_data,disabled,auto_delete);
 }
-
-/*************************************************************************
-Functions for creating tree items
-*************************************************************************/
-
-// allocates and returns a new TreeItem
-TreeItem* ceguiLua_createTreeItem(const String& text, uint item_id, void* item_data, bool disabled, bool auto_delete)
-{
-	return new TreeItem(text,item_id,item_data,disabled,auto_delete);
-}
-
 
 /************************************************************************
     OutStream
@@ -114,9 +103,9 @@ float ceguiLua_PropertyHelper::stringToFloat(const String& str)
 }
 
 //----------------------------------------------------------------------------//
-unsigned int ceguiLua_PropertyHelper::stringToUint(const String& str)
+unsigned int ceguiLua_PropertyHelper::stringToUint32(const String& str)
 {
-    return PropertyHelper<uint>::fromString(str);
+    return PropertyHelper<std::uint32_t>::fromString(str);
 }
 
 //----------------------------------------------------------------------------//
@@ -132,9 +121,9 @@ Sizef ceguiLua_PropertyHelper::stringToSize(const String& str)
 }
 
 //----------------------------------------------------------------------------//
-Vector2f ceguiLua_PropertyHelper::stringToVector2(const String& str)
+glm::vec2 ceguiLua_PropertyHelper::stringToVector2(const String& str)
 {
-    return PropertyHelper<Vector2f >::fromString(str);
+    return PropertyHelper<glm::vec2>::fromString(str);
 }
 
 //----------------------------------------------------------------------------//
@@ -198,9 +187,9 @@ String ceguiLua_PropertyHelper::floatToString(float val)
 }
 
 //----------------------------------------------------------------------------//
-String ceguiLua_PropertyHelper::uintToString(unsigned int val)
+String ceguiLua_PropertyHelper::uint32ToString(unsigned int val)
 {
-    return PropertyHelper<uint>::toString(val);
+    return PropertyHelper<std::uint32_t>::toString(val);
 }
 
 //----------------------------------------------------------------------------//
@@ -216,9 +205,9 @@ String ceguiLua_PropertyHelper::sizeToString(const Sizef& val)
 }
 
 //----------------------------------------------------------------------------//
-String ceguiLua_PropertyHelper::vector2ToString(const Vector2f& val)
+String ceguiLua_PropertyHelper::vector2ToString(const glm::vec2& val)
 {
-    return PropertyHelper<Vector2f >::toString(val);
+    return PropertyHelper<glm::vec2>::toString(val);
 }
 
 //----------------------------------------------------------------------------//

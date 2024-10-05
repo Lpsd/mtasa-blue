@@ -29,25 +29,17 @@
 #ifndef _CEGUIWindowFactoryManager_h_
 #define _CEGUIWindowFactoryManager_h_
 
-#include "CEGUI/Base.h"
-#include "CEGUI/String.h"
 #include "CEGUI/Singleton.h"
-#include "CEGUI/Logger.h"
 #include "CEGUI/IteratorBase.h"
-#include "CEGUI/WindowFactory.h"
 #include "CEGUI/TplWindowFactory.h"
-#include "CEGUI/Exceptions.h"
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 #if defined(_MSC_VER)
 #	pragma warning(push)
-#	pragma warning(disable : 4275)
 #	pragma warning(disable : 4251)
 #endif
 
-
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 /*! 
@@ -59,8 +51,7 @@ namespace CEGUI
     with the window renderers and all.
 */
 class CEGUIEXPORT WindowFactoryManager :
-    public Singleton<WindowFactoryManager>,
-    public AllocatedObject<WindowFactoryManager>
+    public Singleton<WindowFactoryManager>
 {
 public:
     /*!
@@ -113,14 +104,13 @@ public:
 		\return
 			number of target types stacked for this alias.
 		*/
-		uint	getStackedTargetCount(void) const;
+		unsigned int	getStackedTargetCount(void) const;
 
 
 	private:
 		friend class WindowFactoryManager;
 
-		typedef std::vector<String
-            CEGUI_VECTOR_ALLOC(String)> TargetTypeStack; //!< Type used to implement stack of target type names.
+		typedef std::vector<String> TargetTypeStack; //!< Type used to implement stack of target type names.
 
 		TargetTypeStack	d_targetStack; //!< Container holding the target types.
 	};
@@ -133,17 +123,14 @@ public:
 	\brief
 		Constructs a new WindowFactoryManager object.
 	*/
-	WindowFactoryManager(void);
+	WindowFactoryManager();
 
 
 	/*!
 	\brief
 		Destructor for WindowFactoryManager objects
 	*/
-	~WindowFactoryManager(void)
-	{
-		Logger::getSingleton().logEvent("CEGUI::WindowFactoryManager singleton destroyed");
-	}
+    ~WindowFactoryManager();
 
 
 	/*************************************************************************
@@ -178,7 +165,7 @@ public:
         Nothing
     */
     template <typename T>
-    static void addFactory();
+    static void addFactory() { addFactoryInternal(new T()); }
 
     /*!
     \brief
@@ -457,15 +444,13 @@ private:
 	/*************************************************************************
 		Implementation Data
 	*************************************************************************/
-	typedef	std::map<String, WindowFactory*, StringFastLessCompare
-        CEGUI_MAP_ALLOC(String, WindowFactory*)> WindowFactoryRegistry; //!< Type used to implement registry of WindowFactory objects
-	typedef std::map<String, AliasTargetStack, StringFastLessCompare
-        CEGUI_MAP_ALLOC(String, AliasTargetStack)> TypeAliasRegistry; //!< Type used to implement registry of window type aliases.
-    typedef std::map<String, FalagardWindowMapping, StringFastLessCompare
-        CEGUI_MAP_ALLOC(String, FalagardWindowMapping)> FalagardMapRegistry; //!< Type used to implement registry of falagard window mappings.
+	typedef	std::unordered_map<String, WindowFactory*> WindowFactoryRegistry; //!< Type used to implement registry of WindowFactory objects
+	typedef std::unordered_map<String, AliasTargetStack> TypeAliasRegistry; //!< Type used to implement registry of window type aliases.
+    typedef std::unordered_map<String, FalagardWindowMapping> FalagardMapRegistry; //!< Type used to implement registry of falagard window mappings.
     //! Type used for list of WindowFacory objects that we created ourselves
-    typedef std::vector<WindowFactory*
-        CEGUI_VECTOR_ALLOC(WindowFactory*)> OwnedWindowFactoryList;
+    typedef std::vector<WindowFactory*> OwnedWindowFactoryList;
+
+    static void addFactoryInternal(WindowFactory* factory);
 
 	WindowFactoryRegistry	d_factoryRegistry;			//!< The container that forms the WindowFactory registry
 	TypeAliasRegistry		d_aliasRegistry;			//!< The container that forms the window type alias registry.
@@ -501,38 +486,6 @@ public:
     */
     FalagardMappingIterator getFalagardMappingIterator() const;
 };
-
-//----------------------------------------------------------------------------//
-template <typename T>
-void WindowFactoryManager::addFactory()
-{
-    // create the factory object
-    WindowFactory* factory = CEGUI_NEW_AO T;
-
-    // only do the actual add now if our singleton has already been created
-    if (WindowFactoryManager::getSingletonPtr())
-    {
-        Logger::getSingleton().logEvent("Created WindowFactory for '" +
-                                        factory->getTypeName() +
-                                        "' windows.");
-        // add the factory we just created
-        CEGUI_TRY
-        {
-            WindowFactoryManager::getSingleton().addFactory(factory);
-        }
-        CEGUI_CATCH (Exception&)
-        {
-            Logger::getSingleton().logEvent("Deleted WindowFactory for '" +
-                                            factory->getTypeName() +
-                                            "' windows.");
-            // delete the factory object
-            CEGUI_DELETE_AO factory;
-            CEGUI_RETHROW;
-        }
-    }
-
-    d_ownedFactories.push_back(factory);
-}
 
 //----------------------------------------------------------------------------//
 template <typename T>

@@ -29,9 +29,8 @@
 #ifndef _CEGUITabControl_h_
 #define _CEGUITabControl_h_
 
-#include "../Base.h"
 #include "../Window.h"
-#include <vector>
+#include "../WindowRenderer.h"
 
 
 #if defined(_MSC_VER)
@@ -81,7 +80,7 @@ public:
 	static const String EventNamespace;				//!< Namespace for global events
     static const String WidgetTypeName;             //!< Window factory name
 
-	enum TabPanePosition
+	enum class TabPanePosition : int
 	{
 		Top,
 		Bottom
@@ -151,7 +150,7 @@ public:
 		Also ensures that the tab is made visible (tab pane is scrolled if required).
     \exception	InvalidRequestException	thrown if \a index is out of range.
     */
-    void    setSelectedTab(uint ID);
+    void    setSelectedTab(unsigned int ID);
 
     /*!
     \brief
@@ -173,7 +172,7 @@ public:
         Ensure that the tab by the ID of the root window within it is visible.
     \exception	InvalidRequestException	thrown if \a index is out of range.
     */
-    void    makeTabVisible(uint ID);
+    void    makeTabVisible(unsigned int ID);
 
     /*!
     \brief
@@ -222,8 +221,15 @@ public:
 
     \exception	InvalidRequestException	thrown if content is not found.
     */
-    Window*	getTabContents(uint ID) const;
+    Window*	getTabContents(unsigned int ID) const;
 
+    /*!
+    \brief
+        Return the TabButton associated with this Window.
+    \exception	InvalidRequestException	thrown if content is not found.
+    */
+	TabButton* getButtonForTabContents(Window* wnd) const;
+    
     /*!
 	\brief
 		Return whether the tab contents window is currently selected.
@@ -273,7 +279,7 @@ public:
 	\return
 		Nothing
 	*/
-	virtual void	initialiseComponents(void);
+    void	initialiseComponents() override;
 
     /*!
     \brief
@@ -309,7 +315,7 @@ public:
     \par
     The tab content will be destroyed.
     */
-    void removeTab(uint ID);
+    void removeTab(unsigned int ID);
 
 
 	/*************************************************************************
@@ -324,7 +330,7 @@ public:
 
 	/*!
 	\brief
-		Destructor for Listbox base class.
+		Destructor for TabControl base class.
 	*/
 	virtual ~TabControl(void);
 
@@ -344,7 +350,7 @@ protected:
     \return
         Nothing
     */
-    virtual	void	drawSelf(const RenderingContext&) { /* do nothing; rendering handled by children */ }
+    void drawSelf(const RenderingContext&, std::uint32_t) override { /* do nothing; rendering is handled by children */ }
 
     /*!
     \brief
@@ -356,12 +362,6 @@ protected:
         Remove the TabButton for the specified child Window.
     */
     virtual void removeButtonForTabContent(Window* wnd);
-    /*!
-    \brief
-        Return the TabButton associated with this Window.
-    \exception	InvalidRequestException	thrown if content is not found.
-    */
-	TabButton* getButtonForTabContents(Window* wnd) const;
     /*!
     \brief
         Construct a button name to handle a window.
@@ -411,12 +411,11 @@ protected:
     */
     Window* getTabPane() const;
 
-    void performChildWindowLayout(bool nonclient_sized_hint = false,
-                                  bool client_sized_hint = false);
-    int writeChildWindowsXML(XMLSerializer& xml_stream) const;
+    virtual void performChildLayout(bool client, bool nonClient) override;
+    int writeChildWindowsXML(XMLSerializer& xml_stream) const override;
 
     // validate window renderer
-    virtual bool validateWindowRenderer(const WindowRenderer* renderer) const;
+    bool validateWindowRenderer(const WindowRenderer* renderer) const override;
 
     /*!
     \brief
@@ -449,15 +448,14 @@ protected:
 		WindowEventArgs object whose 'window' pointer field is set to the window that triggered the event.  For this
 		event the trigger window is always 'this'.
 	*/
-	virtual void	onFontChanged(WindowEventArgs& e);
+    void	onFontChanged(WindowEventArgs& e) override;
 
 	/*************************************************************************
 		Implementation Data
 	*************************************************************************/
     UDim        d_tabHeight;        //!< The height of the tabs in pixels
     UDim        d_tabPadding;       //!< The padding of the tabs relative to parent
-    typedef std::vector<TabButton*
-        CEGUI_VECTOR_ALLOC(TabButton*)> TabButtonVector;
+    typedef std::vector<TabButton*> TabButtonVector;
     TabButtonVector d_tabButtonVector;  //!< Sorting for tabs
     float       d_firstTabOffset;   //!< The offset in pixels of the first tab
     TabPanePosition d_tabPanePos;   //!< The position of the tab pane
@@ -490,13 +488,13 @@ protected:
     /*************************************************************************
 		Private methods
 	*************************************************************************/
-	void	addTabControlProperties(void);
+	void addTabControlProperties(void);
 
-    void    addChild_impl(Element* element);
-    void    removeChild_impl(Element* element);
-    
-    //! \copydoc Window::getChildByNamePath_impl
-    virtual NamedElement* getChildByNamePath_impl(const String& name_path) const;
+    void addChild_impl(Element* element) override;
+    void removeChild_impl(Element* element) override;
+
+    //! \copydoc Window::findChildByNamePath_impl
+    Window* findChildByNamePath_impl(const String& name_path) const override;
 
     /*************************************************************************
     Event handlers
@@ -528,21 +526,21 @@ public:
     {
         if (str == "Bottom")
         {
-            return TabControl::Bottom;
+            return TabControl::TabPanePosition::Bottom;
         }
         else
         {
-            return TabControl::Top;
+            return TabControl::TabPanePosition::Top;
         }
     }
 
     static string_return_type toString(pass_type val)
     {
-        if (val == TabControl::Top)
+        if (val == TabControl::TabPanePosition::Top)
         {
             return "Top";
         }
-        else if (val == TabControl::Bottom)
+        else if (val == TabControl::TabPanePosition::Bottom)
         {
             return "Bottom";
         }

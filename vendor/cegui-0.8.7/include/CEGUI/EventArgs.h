@@ -46,22 +46,14 @@ namespace CEGUI
     the event system does not look at this value, code at a higher level can use it to determine
     how far to propagate an event.
 */
-class CEGUIEXPORT EventArgs :
-    public AllocatedObject<EventArgs>
+class CEGUIEXPORT EventArgs
 {
 public:
-    /*************************************************************************
-        Construction
-    *************************************************************************/
-    EventArgs(void) : handled(0) {}
-    virtual ~EventArgs(void) {}
 
+    virtual ~EventArgs() = default;
 
-    /*************************************************************************
-        Data members
-    *************************************************************************/
     //! handlers should increment this if they handled the event.
-    uint handled;
+    unsigned int handled = 0;
 };
 
 /*!

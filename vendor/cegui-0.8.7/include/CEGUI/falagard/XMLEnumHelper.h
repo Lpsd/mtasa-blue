@@ -27,8 +27,10 @@
 #ifndef _CEGUIFalXMLEnumHelper_h_
 #define _CEGUIFalXMLEnumHelper_h_
 
-#include "../String.h"
-#include "../Window.h"
+#include "../VerticalAlignment.h"
+#include "../HorizontalAlignment.h"
+#include "../text/DefaultParagraphDirection.h"
+#include "../Exceptions.h"
 #include "CEGUI/falagard/Enums.h"
 
 namespace CEGUI
@@ -37,26 +39,26 @@ template<typename T>
 class FalagardXMLHelper;
 
 template<>
-class CEGUIEXPORT FalagardXMLHelper<VerticalFormatting>
+class CEGUIEXPORT FalagardXMLHelper<VerticalImageFormatting>
 {
 public:
-    typedef VerticalFormatting return_type;
-    typedef VerticalFormatting pass_type;
+    typedef VerticalImageFormatting return_type;
+    typedef VerticalImageFormatting pass_type;
 
     static String toString(pass_type val)
     {
         switch (val)
         {
-        case VF_BOTTOM_ALIGNED:
+        case VerticalImageFormatting::BottomAligned:
             return BottomAligned;
 
-        case VF_CENTRE_ALIGNED:
+        case VerticalImageFormatting::CentreAligned:
             return CentreAligned;
 
-        case VF_TILED:
+        case VerticalImageFormatting::Tiled:
             return Tiled;
 
-        case VF_STRETCHED:
+        case VerticalImageFormatting::Stretched:
             return Stretched;
 
         default:
@@ -67,19 +69,19 @@ public:
     static return_type fromString(const String& str)
     {
         if (str == CentreAligned)
-            return VF_CENTRE_ALIGNED;
+            return VerticalImageFormatting::CentreAligned;
 
         else if (str == BottomAligned)
-            return VF_BOTTOM_ALIGNED;
+            return VerticalImageFormatting::BottomAligned;
 
         else if (str == Tiled)
-            return VF_TILED;
+            return VerticalImageFormatting::Tiled;
 
         else if (str == Stretched)
-            return VF_STRETCHED;
+            return VerticalImageFormatting::Stretched;
 
         else
-            return VF_TOP_ALIGNED;
+            return VerticalImageFormatting::TopAligned;
     }
 
     //! Definitions of the possible values represented as Strings
@@ -101,16 +103,16 @@ public:
     {
         switch (val)
         {
-        case HF_RIGHT_ALIGNED:
+        case HorizontalFormatting::RightAligned:
             return RightAligned;
 
-        case HF_CENTRE_ALIGNED:
+        case HorizontalFormatting::CentreAligned:
             return CentreAligned;
 
-        case HF_TILED:
+        case HorizontalFormatting::Tiled:
             return Tiled;
 
-        case HF_STRETCHED:
+        case HorizontalFormatting::Stretched:
             return Stretched;
 
         default:
@@ -121,19 +123,19 @@ public:
     static return_type fromString(const String& str)
     {
         if (str == CentreAligned)
-            return HF_CENTRE_ALIGNED;
+            return HorizontalFormatting::CentreAligned;
 
         else if (str == RightAligned)
-            return HF_RIGHT_ALIGNED;
+            return HorizontalFormatting::RightAligned;
 
         else if (str == Tiled)
-            return HF_TILED;
+            return HorizontalFormatting::Tiled;
 
         else if (str == Stretched)
-            return HF_STRETCHED;
+            return HorizontalFormatting::Stretched;
 
         else
-            return HF_LEFT_ALIGNED;
+            return HorizontalFormatting::LeftAligned;
     }
 
     //! Definitions of the possible values represented as Strings
@@ -155,10 +157,10 @@ public:
     {
         switch (val)
         {
-        case VA_BOTTOM:
+        case VerticalAlignment::Bottom:
             return BottomAligned;
 
-        case VA_CENTRE:
+        case VerticalAlignment::Centre:
             return CentreAligned;
 
         default:
@@ -169,13 +171,13 @@ public:
     static return_type fromString(const String& str)
     {
         if (str == CentreAligned)
-            return VA_CENTRE;
+            return VerticalAlignment::Centre;
 
         else if (str == BottomAligned)
-            return VA_BOTTOM;
+            return VerticalAlignment::Bottom;
 
         else
-            return VA_TOP;
+            return VerticalAlignment::Top;
     }
 
     //! Definitions of the possible values represented as Strings
@@ -195,10 +197,10 @@ public:
     {
         switch (val)
         {
-        case HA_RIGHT:
+        case HorizontalAlignment::Right:
             return RightAligned;
 
-        case HA_CENTRE:
+        case HorizontalAlignment::Centre:
             return CentreAligned;
 
         default:
@@ -209,13 +211,13 @@ public:
     static return_type fromString(const String& str)
     {
         if (str == CentreAligned)
-            return HA_CENTRE;
+            return HorizontalAlignment::Centre;
 
         else if (str == RightAligned)
-            return HA_RIGHT;
+            return HorizontalAlignment::Right;
 
         else
-            return HA_LEFT;
+            return HorizontalAlignment::Left;
     }
 
     //! Definitions of the possible values represented as Strings
@@ -235,34 +237,34 @@ public:
     {
         switch (val)
         {
-        case DT_LEFT_EDGE:
+        case DimensionType::LeftEdge:
             return LeftEdge;
 
-        case DT_X_POSITION:
+        case DimensionType::XPosition:
             return XPosition;
 
-        case DT_TOP_EDGE:
+        case DimensionType::TopEdge:
             return TopEdge;
 
-        case DT_Y_POSITION:
+        case DimensionType::YPosition:
             return YPosition;
 
-        case DT_RIGHT_EDGE:
+        case DimensionType::RightEdge:
             return RightEdge;
 
-        case DT_BOTTOM_EDGE:
+        case DimensionType::BottomEdge:
             return BottomEdge;
 
-        case DT_WIDTH:
+        case DimensionType::Width:
             return Width;
 
-        case DT_HEIGHT:
+        case DimensionType::Height:
             return Height;
 
-        case DT_X_OFFSET:
+        case DimensionType::XOffset:
             return XOffset;
 
-        case DT_Y_OFFSET:
+        case DimensionType::YOffset:
             return YOffset;
 
         default:
@@ -273,37 +275,37 @@ public:
     static return_type fromString(const String& str)
     {
         if (str == LeftEdge)
-            return DT_LEFT_EDGE;
+            return DimensionType::LeftEdge;
 
         else if (str == XPosition)
-            return DT_X_POSITION;
+            return DimensionType::XPosition;
 
         else if (str == TopEdge)
-            return DT_TOP_EDGE;
+            return DimensionType::TopEdge;
 
         else if (str == YPosition)
-            return DT_Y_POSITION;
+            return DimensionType::YPosition;
 
         else if (str == RightEdge)
-            return DT_RIGHT_EDGE;
+            return DimensionType::RightEdge;
 
         else if (str == BottomEdge)
-            return DT_BOTTOM_EDGE;
+            return DimensionType::BottomEdge;
 
         else if (str == Width)
-            return DT_WIDTH;
+            return DimensionType::Width;
 
         else if (str == Height)
-            return DT_HEIGHT;
+            return DimensionType::Height;
 
         else if (str == XOffset)
-            return DT_X_OFFSET;
+            return DimensionType::XOffset;
 
         else if (str == YOffset)
-            return DT_Y_OFFSET;
+            return DimensionType::YOffset;
 
         else
-            return DT_INVALID;
+            return DimensionType::Invalid;
     }
 
     //! Definitions of the possible values represented as Strings
@@ -331,10 +333,10 @@ public:
     {
         switch (val)
         {
-        case VTF_BOTTOM_ALIGNED:
+        case VerticalTextFormatting::BottomAligned:
             return BottomAligned;
 
-        case VTF_CENTRE_ALIGNED:
+        case VerticalTextFormatting::CentreAligned:
             return CentreAligned;
 
         default:
@@ -345,13 +347,13 @@ public:
     static return_type fromString(const String& str)
     {
         if (str == CentreAligned)
-            return VTF_CENTRE_ALIGNED;
+            return VerticalTextFormatting::CentreAligned;
 
         else if (str == BottomAligned)
-            return VTF_BOTTOM_ALIGNED;
+            return VerticalTextFormatting::BottomAligned;
 
         else
-            return VTF_TOP_ALIGNED;
+            return VerticalTextFormatting::TopAligned;
     }
 
     //! Definitions of the possible values represented as Strings
@@ -371,57 +373,55 @@ public:
     {
         switch (val)
         {
-        case HTF_RIGHT_ALIGNED:
-            return RightAligned;
+            case HorizontalTextFormatting::RightAligned:
+                return RightAligned;
+            case HorizontalTextFormatting::CentreAligned:
+                return CentreAligned;
+            case HorizontalTextFormatting::Justified:
+                return Justified;
+            case HorizontalTextFormatting::Bidi:
+                return Bidi;
 
-        case HTF_CENTRE_ALIGNED:
-            return CentreAligned;
+            // TODO: deprecated, remove later when users migrate their data
+            case HorizontalTextFormatting::WordWrapLeftAligned:
+                return WordWrapLeftAligned;
+            case HorizontalTextFormatting::WordWrapCentreAligned:
+                return WordWrapCentreAligned;
+            case HorizontalTextFormatting::WordWrapRightAligned:
+                return WordWrapRightAligned;
+            case HorizontalTextFormatting::WordWrapJustified:
+                return WordWrapJustified;
+            ////////////////////////////////////////////////////////////////
 
-        case HTF_JUSTIFIED:
-            return Justified;
-
-        case HTF_WORDWRAP_LEFT_ALIGNED:
-            return WordWrapLeftAligned;
-
-        case HTF_WORDWRAP_RIGHT_ALIGNED:
-            return WordWrapRightAligned;
-
-        case HTF_WORDWRAP_CENTRE_ALIGNED:
-            return WordWrapCentreAligned;
-
-        case HTF_WORDWRAP_JUSTIFIED:
-            return WordWrapJustified;
-
-        default:
-            return LeftAligned;
+            default:
+                return LeftAligned;
         }
     }
 
     static return_type fromString(const String& str)
     {
         if (str == CentreAligned)
-            return HTF_CENTRE_ALIGNED;
-
+            return HorizontalTextFormatting::CentreAligned;
         else if (str == RightAligned)
-            return HTF_RIGHT_ALIGNED;
-
+            return HorizontalTextFormatting::RightAligned;
         else if (str == Justified)
-            return HTF_JUSTIFIED;
+            return HorizontalTextFormatting::Justified;
+        else if (str == Bidi)
+            return HorizontalTextFormatting::Bidi;
 
+        // TODO: deprecated, remove later when users migrate their data
         else if (str == WordWrapLeftAligned)
-            return HTF_WORDWRAP_LEFT_ALIGNED;
-
+            return HorizontalTextFormatting::WordWrapLeftAligned;
         else if (str == WordWrapCentreAligned)
-            return HTF_WORDWRAP_CENTRE_ALIGNED;
-
+            return HorizontalTextFormatting::WordWrapCentreAligned;
         else if (str == WordWrapRightAligned)
-            return HTF_WORDWRAP_RIGHT_ALIGNED;
-
+            return HorizontalTextFormatting::WordWrapRightAligned;
         else if (str == WordWrapJustified)
-            return HTF_WORDWRAP_JUSTIFIED;
+            return HorizontalTextFormatting::WordWrapJustified;
+        ////////////////////////////////////////////////////////////////
 
         else
-            return HTF_LEFT_ALIGNED;
+            return HorizontalTextFormatting::LeftAligned;
     }
 
     //! Definitions of the possible values represented as Strings
@@ -429,10 +429,48 @@ public:
     static const CEGUI::String CentreAligned;
     static const CEGUI::String RightAligned;
     static const CEGUI::String Justified;
+    static const CEGUI::String Bidi;
+
+    // TODO: deprecated, remove later when users migrate their data
     static const CEGUI::String WordWrapLeftAligned;
     static const CEGUI::String WordWrapRightAligned;
     static const CEGUI::String WordWrapCentreAligned;
     static const CEGUI::String WordWrapJustified;
+};
+
+template<>
+class CEGUIEXPORT FalagardXMLHelper<DefaultParagraphDirection>
+{
+public:
+    typedef DefaultParagraphDirection return_type;
+    typedef DefaultParagraphDirection pass_type;
+
+    static return_type fromString(const String& str)
+    {
+        if (str == "RightToLeft")
+        {
+            return DefaultParagraphDirection::RightToLeft;
+        }
+
+        if (str == "Automatic")
+        {
+            return DefaultParagraphDirection::Automatic;
+        }
+
+        return DefaultParagraphDirection::LeftToRight;
+    }
+
+    static String toString(pass_type val)
+    {
+        if (val == DefaultParagraphDirection::LeftToRight)
+            return "LeftToRight";
+        else if (val == DefaultParagraphDirection::RightToLeft)
+            return "RightToLeft";
+        else if (val == DefaultParagraphDirection::Automatic)
+            return "Automatic";
+        else
+            return "LeftToRight";
+    }
 };
 
 template<>
@@ -446,10 +484,10 @@ public:
     {
         switch (val)
         {
-        case FMT_BASELINE:
+        case FontMetricType::Baseline:
             return Baseline;
 
-        case FMT_HORZ_EXTENT:
+        case FontMetricType::HorzExtent:
             return HorzExtent;
 
         default:
@@ -460,13 +498,13 @@ public:
     static return_type fromString(const String& str)
     {
         if (str == LineSpacing)
-            return FMT_LINE_SPACING;
+            return FontMetricType::LineSpacing;
 
         else if (str == Baseline)
-            return FMT_BASELINE;
+            return FontMetricType::Baseline;
 
         else
-            return FMT_HORZ_EXTENT;
+            return FontMetricType::HorzExtent;
     }
 
     static const CEGUI::String LineSpacing;
@@ -485,17 +523,23 @@ public:
     {
         switch (val)
         {
-        case DOP_ADD:
+        case DimensionOperator::Add:
             return Add;
 
-        case DOP_SUBTRACT:
+        case DimensionOperator::Subtract:
             return Subtract;
 
-        case DOP_MULTIPLY:
+        case DimensionOperator::Multiply:
             return Multiply;
 
-        case DOP_DIVIDE:
+        case DimensionOperator::Divide:
             return Divide;
+
+        case DimensionOperator::Max:
+            return Max;
+
+        case DimensionOperator::Min:
+            return Min;
 
         default:
             return Noop;
@@ -505,25 +549,33 @@ public:
     static return_type fromString(const String& str)
     {
         if (str == Add)
-            return DOP_ADD;
+            return DimensionOperator::Add;
 
         else if (str == Subtract)
-            return DOP_SUBTRACT;
+            return DimensionOperator::Subtract;
 
         else if (str == Multiply)
-            return DOP_MULTIPLY;
+            return DimensionOperator::Multiply;
 
         else if (str == Divide)
-            return DOP_DIVIDE;
+            return DimensionOperator::Divide;
+
+        else if (str == Max)
+            return DimensionOperator::Max;
+
+        else if (str == Min)
+            return DimensionOperator::Min;
 
         else
-            return DOP_NOOP;
+            return DimensionOperator::NoOp;
     }
 
     static const CEGUI::String Add;
     static const CEGUI::String Subtract;
     static const CEGUI::String Multiply;
     static const CEGUI::String Divide;
+    static const CEGUI::String Max;
+    static const CEGUI::String Min;
     static const CEGUI::String Noop;
 };
 
@@ -538,28 +590,28 @@ public:
     {
         switch (val)
         {
-        case FIC_TOP_LEFT_CORNER:
+        case FrameImageComponent::TopLeftCorner:
             return TopLeftCorner;
 
-        case FIC_TOP_RIGHT_CORNER:
+        case FrameImageComponent::TopRightCorner:
             return TopRightCorner;
 
-        case FIC_BOTTOM_LEFT_CORNER:
+        case FrameImageComponent::BottomLeftCorner:
             return BottomLeftCorner;
 
-        case FIC_BOTTOM_RIGHT_CORNER:
+        case FrameImageComponent::BottomRightCorner:
             return BottomRightCorner;
 
-        case FIC_LEFT_EDGE:
+        case FrameImageComponent::LeftEdge:
             return LeftEdge;
 
-        case FIC_RIGHT_EDGE:
+        case FrameImageComponent::RightEdge:
             return RightEdge;
 
-        case FIC_TOP_EDGE:
+        case FrameImageComponent::TopEdge:
             return TopEdge;
 
-        case FIC_BOTTOM_EDGE:
+        case FrameImageComponent::BottomEdge:
             return BottomEdge;
 
         default:
@@ -570,31 +622,31 @@ public:
     static return_type fromString(const String& str)
     {
         if (str == TopLeftCorner)
-            return FIC_TOP_LEFT_CORNER;
+            return FrameImageComponent::TopLeftCorner;
 
         if (str == TopRightCorner)
-            return FIC_TOP_RIGHT_CORNER;
+            return FrameImageComponent::TopRightCorner;
 
         if (str == BottomLeftCorner)
-            return FIC_BOTTOM_LEFT_CORNER;
+            return FrameImageComponent::BottomLeftCorner;
 
         if (str == BottomRightCorner)
-            return FIC_BOTTOM_RIGHT_CORNER;
+            return FrameImageComponent::BottomRightCorner;
 
         if (str == LeftEdge)
-            return FIC_LEFT_EDGE;
+            return FrameImageComponent::LeftEdge;
 
         if (str == RightEdge)
-            return FIC_RIGHT_EDGE;
+            return FrameImageComponent::RightEdge;
 
         if (str == TopEdge)
-            return FIC_TOP_EDGE;
+            return FrameImageComponent::TopEdge;
 
         if (str == BottomEdge)
-            return FIC_BOTTOM_EDGE;
+            return FrameImageComponent::BottomEdge;
 
         else
-            return FIC_BACKGROUND;
+            return FrameImageComponent::Background;
     }
 
     static const CEGUI::String TopLeftCorner;
@@ -619,29 +671,29 @@ public:
     {
         switch (val)
         {
-        case CEA_REDRAW:
+        case ChildEventAction::Redraw:
             return Redraw;
 
-        case CEA_LAYOUT:
+        case ChildEventAction::Layout:
             return Layout;
 
         default:
-            CEGUI_THROW(InvalidRequestException(
-                "Invalid enumeration value given."));
+            throw InvalidRequestException(
+                "Invalid enumeration value given.");
         }
     }
 
     static return_type fromString(const String& str)
     {
         if (str == Redraw)
-            return CEA_REDRAW;
+            return ChildEventAction::Redraw;
 
         if (str == Layout)
-            return CEA_LAYOUT;
+            return ChildEventAction::Layout;
 
-        CEGUI_THROW(InvalidRequestException(
+        throw InvalidRequestException(
             "'" + str +
-            "' does not represent a ChildEventAction enumerated value."));
+            "' does not represent a ChildEventAction enumerated value.");
     }
 
     static const CEGUI::String Redraw;
@@ -657,12 +709,12 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 template<>
-class PropertyHelper<VerticalFormatting>
+class PropertyHelper<VerticalImageFormatting>
 {
 public:
-    typedef VerticalFormatting return_type;
+    typedef VerticalImageFormatting return_type;
     typedef return_type safe_method_return_type;
-    typedef VerticalFormatting pass_type;
+    typedef VerticalImageFormatting pass_type;
     typedef String string_return_type;
 
     static const String& getDataTypeName()
@@ -748,8 +800,33 @@ public:
 
     static const String& getDataTypeName()
     {
-        static String type("HorizontalTextFormatting");
+        static const String type("HorizontalTextFormatting");
+        return type;
+    }
 
+    static return_type fromString(const String& str)
+    {
+        return FalagardXMLHelper<return_type>::fromString(str);
+    }
+
+    static string_return_type toString(pass_type val)
+    {
+        return FalagardXMLHelper<return_type>::toString(val);
+    }
+};
+
+template<>
+class CEGUIEXPORT PropertyHelper<DefaultParagraphDirection>
+{
+public:
+    typedef DefaultParagraphDirection return_type;
+    typedef return_type safe_method_return_type;
+    typedef DefaultParagraphDirection pass_type;
+    typedef String string_return_type;
+
+    static const String& getDataTypeName()
+    {
+        static const String type("DefaultParagraphDirection");
         return type;
     }
 

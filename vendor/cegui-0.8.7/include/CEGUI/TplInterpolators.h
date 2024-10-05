@@ -29,11 +29,9 @@
 #ifndef _CEGUITplInterpolators_h_
 #define _CEGUITplInterpolators_h_
 
-#include "CEGUI/Base.h"
 #include "CEGUI/Interpolator.h"
 #include "CEGUI/PropertyHelper.h"
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 
@@ -44,14 +42,8 @@ public:
         d_type(type)
     {}
     
-    //! destructor
-    virtual ~TplInterpolatorBase() {}
-    
     //! \copydoc Interpolator::getType
-    virtual const String& getType() const
-    {
-        return d_type;
-    }
+    const String& getType() const override { return d_type; }
     
 private:
     const String d_type;
@@ -73,13 +65,10 @@ public:
         TplInterpolatorBase(type)
     {}
     
-    //! destructor
-    virtual ~TplLinearInterpolator() {}
-    
     //! \copydoc Interpolator::interpolateAbsolute
-    virtual String interpolateAbsolute(const String& value1,
-                                       const String& value2,
-                                       float position)
+    String interpolateAbsolute(const String& value1,
+                               const String& value2,
+                               float position) override
     {
         typename Helper::return_type val1 = Helper::fromString(value1);
         typename Helper::return_type val2 = Helper::fromString(value2);
@@ -90,10 +79,10 @@ public:
     }
     
     //! \copydoc Interpolator::interpolateRelative
-    virtual String interpolateRelative(const String& base,
-                                       const String& value1,
-                                       const String& value2,
-                                       float position)
+    String interpolateRelative(const String& base,
+                               const String& value1,
+                               const String& value2,
+                               float position) override
     {
         typename Helper::return_type bas = Helper::fromString(base);
         typename Helper::return_type val1 = Helper::fromString(value1);
@@ -105,10 +94,10 @@ public:
     }
     
     //! \copydoc Interpolator::interpolateRelativeMultiply
-    virtual String interpolateRelativeMultiply(const String& base,
-                                               const String& value1,
-                                               const String& value2,
-                                               float position)
+    String interpolateRelativeMultiply(const String& base,
+                                       const String& value1,
+                                       const String& value2,
+                                       float position) override
     {
         typename Helper::return_type bas = Helper::fromString(base);
         typename PropertyHelper<float>::return_type val1 = PropertyHelper<float>::fromString(value1);
@@ -139,28 +128,26 @@ public:
         TplInterpolatorBase(type)
     {}
     
-    //! destructor
-    virtual ~TplDiscreteInterpolator() {}
-    
     //! \copydoc Interpolator::interpolateAbsolute
-    virtual String interpolateAbsolute(const String& value1,
-                                       const String& value2,
-                                       float position)
+    String interpolateAbsolute(const String& value1,
+                               const String& value2,
+                               float position) override
     {
         typename Helper::return_type val1 = Helper::fromString(value1);
         typename Helper::return_type val2 = Helper::fromString(value2);
 
-        typename Helper::return_type result = position < 0.5 ? val1 : val2;;
+        typename Helper::return_type result = position < 0.5 ? val1 : val2;
 
         return Helper::toString(result);
     }
     
     //! \copydoc Interpolator::interpolateRelative
-    virtual String interpolateRelative(const String& /*base*/,
-                                       const String& value1,
-                                       const String& value2,
-                                       float position)
+    String interpolateRelative(const String& /*base*/,
+                               const String& value1,
+                               const String& value2,
+                               float position) override
     {
+        // NB: TplDiscreteRelativeInterpolator below implements this as expected
         //typename Helper::return_type bas = Helper::fromString(base);
         typename Helper::return_type val1 = Helper::fromString(value1);
         typename Helper::return_type val2 = Helper::fromString(value2);
@@ -171,10 +158,10 @@ public:
     }
     
     //! \copydoc Interpolator::interpolateRelativeMultiply
-    virtual String interpolateRelativeMultiply(const String& base,
-                                               const String& /*value1*/,
-                                               const String& /*value2*/,
-                                               float /*position*/)
+    String interpolateRelativeMultiply(const String& base,
+                                       const String& /*value1*/,
+                                       const String& /*value2*/,
+                                       float /*position*/) override
     {
         typename Helper::return_type bas = Helper::fromString(base);
         /*const float val1 = PropertyHelper<float>::fromString(value1);
@@ -205,14 +192,11 @@ public:
         TplDiscreteInterpolator<T>(type)
     {}
     
-    //! destructor
-    virtual ~TplDiscreteRelativeInterpolator() {}
-    
     //! \copydoc Interpolator::interpolateRelative
-    virtual String interpolateRelative(const String& base,
-                                       const String& value1,
-                                       const String& value2,
-                                       float position)
+    String interpolateRelative(const String& base,
+                               const String& value1,
+                               const String& value2,
+                               float position) override
     {
         typename Helper::return_type bas = Helper::fromString(base);
         typename Helper::return_type val1 = Helper::fromString(value1);
@@ -224,6 +208,6 @@ public:
     }
 };
 
-} // End of  CEGUI namespace section
+}
 
-#endif  // end of guard _CEGUITplInterpolators_h_
+#endif

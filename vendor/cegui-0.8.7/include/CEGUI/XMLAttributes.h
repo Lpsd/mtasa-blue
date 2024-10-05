@@ -27,37 +27,23 @@
 #ifndef _CEGUIXMLAttributes_h_
 #define _CEGUIXMLAttributes_h_
 
-#include "CEGUI/Base.h"
 #include "CEGUI/String.h"
-#include <map>
+#include <unordered_map>
 
 #if defined(_MSC_VER)
 #	pragma warning(push)
 #	pragma warning(disable : 4251)
 #endif
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
     /*!
     \brief
         Class representing a block of attributes associated with an XML element.
      */
-    class CEGUIEXPORT XMLAttributes :
-        public AllocatedObject<XMLAttributes>
+    class CEGUIEXPORT XMLAttributes final
     {
     public:
-        /*!
-        \brief
-            XMLAttributes constructor.
-         */
-        XMLAttributes(void);
-
-        /*!
-        \brief
-            XMLAttributes Destructor
-         */
-        virtual ~XMLAttributes(void);
 
         /*!
         \brief
@@ -164,7 +150,7 @@ namespace CEGUI
             Return the value of attribute \a attrName as a string.
 
         \param attrName
-            String object holding the name of the attribute whos value is to be returned.
+            String object holding the name of the attribute whose value is to be returned.
 
         \param def
             String object holding the default value to be returned if \a attrName does not exist in the attribute block.
@@ -174,14 +160,14 @@ namespace CEGUI
         \return
             String object containing the value of attribute \a attrName if present, or \a def if not.
          */
-        const String& getValueAsString(const String& attrName, const String& def = "") const;
+        String getValueAsString(const String& attrName, const String& def = "") const;
 
         /*!
         \brief
             Return the value of attribute \a attrName as a boolean value.
 
         \param attrName
-            String object holding the name of the attribute whos value is to be returned.
+            String object holding the name of the attribute whose value is to be returned.
 
         \param def
             bool value specifying the default value to be returned if \a attrName does not exist in the attribute block.
@@ -234,8 +220,8 @@ namespace CEGUI
         float getValueAsFloat(const String& attrName, float def = 0.0f) const;
 
     protected:
-        typedef std::map<String, String, StringFastLessCompare> AttributeMap;
-        AttributeMap    d_attrs;
+
+        std::unordered_map<String, String> d_attrs;
     };
 
 } // End of  CEGUI namespace section

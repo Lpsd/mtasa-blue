@@ -6,7 +6,7 @@
 				rectangle
 *************************************************************************/
 /***************************************************************************
- *   Copyright (C) 2004 - 2006 Paul D Turner & The CEGUI Development Team
+ *   Copyright (C) 2004 - 2015 Paul D Turner & The CEGUI Development Team
  *
  *   Permission is hereby granted, free of charge, to any person obtaining
  *   a copy of this software and associated documentation files (the
@@ -30,18 +30,15 @@
 #ifndef _CEGUIColourRect_h_
 #define _CEGUIColourRect_h_
 
-#include "CEGUI/Base.h"
 #include "CEGUI/Colour.h"
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 /*!
 \brief
 	Class that holds details of colours for the four corners of a rectangle.
 */
-class CEGUIEXPORT ColourRect :
-    public AllocatedObject<ColourRect>
+class CEGUIEXPORT ColourRect
 {
 public:
 	/*!
@@ -139,6 +136,13 @@ public:
 	*/
 	bool	isMonochromatic() const;
 
+    bool isFullyTransparent() const
+    {
+        return d_top_left.getAlpha() <= 0.f &&
+            d_top_right.getAlpha() <= 0.f &&
+            d_bottom_left.getAlpha() <= 0.f &&
+            d_bottom_right.getAlpha() <= 0.f;
+    }
 
 	/*!
 	\brief
@@ -218,9 +222,46 @@ public:
         );  
     }
 
+    /*!
+        \brief Compares two ColourRects for equality
+    */
+    inline bool operator==(const ColourRect& rhs) const
+    {
+        return (d_top_left == rhs.d_top_left) &&
+               (d_top_right == rhs.d_top_right) &&
+               (d_bottom_left == rhs.d_bottom_left) &&
+               (d_bottom_right == rhs.d_bottom_right);
+    }
+
+    /*!
+        \brief Compares two ColourRects for inequality
+    */
+    inline bool operator!=(const ColourRect& rhs) const
+    {
+        return !(*this == rhs);
+    }
+
+    /*!
+    \brief Writes a ColourRect to a stream
+    */
+    friend std::ostream& operator << (std::ostream& s, const ColourRect& val);
+
+    /*!
+    \brief Extracts a ColourRect from a stream
+    */
+    friend std::istream& operator >> (std::istream& inStream, ColourRect& val);
+
 
 	Colour	d_top_left, d_top_right, d_bottom_left, d_bottom_right;		//!< ColourRect component colours
 };
+
+inline ColourRect operator *(const ColourRect& a, const ColourRect& b)
+{
+    return ColourRect(a.d_top_left * b.d_top_left,
+        a.d_top_right * b.d_top_right,
+        a.d_bottom_left * b.d_bottom_left,
+        a.d_bottom_right * b.d_bottom_right);
+}
 
 } // End of  CEGUI namespace section
 

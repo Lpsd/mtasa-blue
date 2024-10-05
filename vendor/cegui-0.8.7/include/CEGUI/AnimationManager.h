@@ -43,9 +43,7 @@
 namespace CEGUI
 {
 
-class CEGUIEXPORT AnimationManager :
-    public Singleton<AnimationManager>,
-    public AllocatedObject<AnimationManager>
+class CEGUIEXPORT AnimationManager : public Singleton<AnimationManager>
 {
 public:
     //! Name of the schema used for loading animation xml files.
@@ -63,7 +61,7 @@ public:
         to the GUI system's AnimationManager via the System object, and use
         that.
     */
-    AnimationManager(void);
+    AnimationManager();
 
 
     /*!
@@ -73,7 +71,7 @@ public:
         This will properly destroy all remaining AnimationInstance and Animation
         objects.
     */
-    ~AnimationManager(void);
+    ~AnimationManager() override;
 
     /*!
     \brief
@@ -150,7 +148,7 @@ public:
     \brief
         Retrieves animation by index
     */
-    Animation* getAnimationAtIdx(size_t index) const;
+    Animation* getAnimationAtIndex(size_t index) const;
 
     /*!
     \brief
@@ -176,29 +174,32 @@ public:
     */
     AnimationInstance* instantiateAnimation(const String& name);
 
-    /*!
-    \brief
-        Destroys given animation instance
-    */
+    //! \brief Destroys given animation instance
     void destroyAnimationInstance(AnimationInstance* instance);
 
-    /*!
-    \brief
-        Destroys all instances of given animation
-    */
+    //! \brief Destroys all instances targeted at the given object
+    void destroyAnimationInstances(PropertySet* target);
+
+    //! \brief Destroys all instances of given animation
     void destroyAllInstancesOfAnimation(Animation* animation);
-    
+
     /*!
     \brief
         Destroys all instances of all animations
     */
     void destroyAllAnimationInstances();
 
-    /*!
-    \brief
-        Retrieves animation instance at given index
-    */
-    AnimationInstance* getAnimationInstanceAtIdx(size_t index) const;
+    //! \brief Retrieves animation instance at given index
+    AnimationInstance* getAnimationInstanceAtIndex(size_t index) const;
+
+    //! \brief Retrieves animation instance for the given target
+    AnimationInstance* getAnimationInstance(Animation* animation, PropertySet* target) const;
+
+    //! \overload
+    AnimationInstance* getAnimationInstance(const String& animName, PropertySet* target) const
+    {
+        return animName.empty() ? nullptr : getAnimationInstance(getAnimation(animName), target);
+    }
 
     /*!
     \brief
@@ -300,31 +301,23 @@ public:
     }
 
 private:
-    typedef std::map<String, Interpolator*, std::less<String>
-        CEGUI_MAP_ALLOC(String, Interpolator*)> InterpolatorMap;
+
     String generateUniqueAnimationName();
     
     //! stores available interpolators
-    InterpolatorMap d_interpolators;
-    typedef std::vector<Interpolator*
-        CEGUI_VECTOR_ALLOC(Interpolator*)> BasicInterpolatorList;
+    std::map<String, Interpolator*> d_interpolators;
     //! stores interpolators that are inbuilt in CEGUI
-    BasicInterpolatorList d_basicInterpolators;
-
-    typedef std::map<String, Animation*> AnimationMap;
+    std::vector<Interpolator*> d_basicInterpolators;
     //! all defined animations
-    AnimationMap d_animations;
-
-    typedef std::multimap<Animation*, AnimationInstance*, std::less<Animation*>
-        CEGUI_MULTIMAP_ALLOC(Animation*, AnimationInstance*)> AnimationInstanceMap;
+    std::map<String, Animation*> d_animations;
     //! all instances of animations
-    AnimationInstanceMap d_animationInstances;
+    std::multimap<Animation*, AnimationInstance*> d_animationInstances;
     //! Default resource group used when loading animation xml files.
     static String s_defaultResourceGroup;
     //! Base name to use for generated window names.
     static const String GeneratedAnimationNameBase;
     //! Counter used to generate unique animation names.
-    unsigned long d_uid_counter;
+    std::uint32_t d_uid_counter;
 };
 
 } // End of  CEGUI namespace section

@@ -25,187 +25,200 @@
  *   OTHER DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
 #include "CEGUI/WindowRendererSets/Core/Slider.h"
-#include "CEGUI/falagard/WidgetLookManager.h"
 #include "CEGUI/falagard/WidgetLookFeel.h"
-#include "CEGUI/WindowManager.h"
 #include "CEGUI/CoordConverter.h"
 #include "CEGUI/widgets/Thumb.h"
 #include "CEGUI/TplWindowRendererProperty.h"
 
-
-// Start of CEGUI namespace section
 namespace CEGUI
 {
-    const String FalagardSlider::TypeName("Core/Slider");
+const String FalagardSlider::TypeName("Core/Slider");
 
-    FalagardSlider::FalagardSlider(const String& type) :
-        SliderWindowRenderer(type),
-        d_vertical(false),
-        d_reversed(false)
-    {
-        CEGUI_DEFINE_WINDOW_RENDERER_PROPERTY(FalagardSlider,bool,
+//----------------------------------------------------------------------------//
+FalagardSlider::FalagardSlider(const String& type) :
+    SliderWindowRenderer(type)
+{
+    CEGUI_DEFINE_WINDOW_RENDERER_PROPERTY(FalagardSlider, bool,
         "VerticalSlider", "Property to get/set whether the Slider operates in the vertical direction."
-        "  Value is either \"true\" or \"false\".",
-        &FalagardSlider::setVertical,&FalagardSlider::isVertical,
+        "  Value is boolean.",
+        &FalagardSlider::setVertical, &FalagardSlider::isVertical,
         false);
-        CEGUI_DEFINE_WINDOW_RENDERER_PROPERTY(FalagardSlider,bool,
+    CEGUI_DEFINE_WINDOW_RENDERER_PROPERTY(FalagardSlider, bool,
         "ReversedDirection", "Property to get/set whether the Slider operates in reversed direction."
-        "  Value is either \"true\" or \"false\".",
-        &FalagardSlider::setReversedDirection,&FalagardSlider::isReversedDirection,
+        "  Value is boolean.",
+        &FalagardSlider::setReversedDirection, &FalagardSlider::isReversedDirection,
         false);
-    }
+}
 
-    void FalagardSlider::render()
+//----------------------------------------------------------------------------//
+void FalagardSlider::createRenderGeometry()
+{
+    // TODO: use the same LnF for vertical and horizontal, rotate geometry here!
+
+    const auto& lnf = getLookNFeel();
+    const auto& imagery = lnf.getStateImagery(
+        d_window->isEffectiveDisabled() ? "Disabled" :
+        (d_window->isFocused() && lnf.isStateImageryPresent("EnabledFocused")) ? "EnabledFocused" :
+        "Enabled");
+    imagery.render(*d_window);
+}
+
+//----------------------------------------------------------------------------//
+bool FalagardSlider::performChildWindowLayout()
+{
+    updateThumb();
+    return true;
+}
+
+//----------------------------------------------------------------------------//
+void FalagardSlider::updateThumb()
+{
+    Slider* w = static_cast<Slider*>(d_window);
+    Thumb* theThumb = w->getThumb();
+
+    // get area the thumb is supposed to use as it's area.
+    const Rectf area(getLookNFeel().getNamedArea("ThumbTrackArea").getArea().getPixelRect(*w));
+
+    const Sizef w_pixel_size(w->getPixelSize());
+
+    // get base location for thumb widget
+    const float thumbRelXPos = w_pixel_size.d_width == 0.0f ? 0.0f : (area.left() / w_pixel_size.d_width);
+    const float thumbRelYPos = w_pixel_size.d_height == 0.0f ? 0.0f : (area.top() / w_pixel_size.d_height);
+    UVector2 thumbPosition(cegui_reldim(thumbRelXPos), cegui_reldim(thumbRelYPos));
+
+    const float fraction = w->getValueFraction();
+
+    if (d_vertical)
     {
-        const StateImagery* imagery;
+        // pixel extent of total available area the thumb moves in
+        const float slideExtent = area.getHeight() - theThumb->getPixelSize().d_height;
 
-        // get WidgetLookFeel for the assigned look.
-        const WidgetLookFeel& wlf = getLookNFeel();
-        // try and get imagery for our current state
-        imagery = &wlf.getStateImagery(d_window->isEffectiveDisabled() ? "Disabled" : "Enabled");
-        // peform the rendering operation.
-        imagery->render(*d_window);
-    }
-
-    void FalagardSlider::performChildWindowLayout()
-    {
-        updateThumb();
-    }
-
-    void FalagardSlider::updateThumb(void)
-    {
-        Slider* w = (Slider*)d_window;
-        // get area the thumb is supposed to use as it's area.
-        const WidgetLookFeel& wlf = getLookNFeel();
-        Rectf area(wlf.getNamedArea("ThumbTrackArea").getArea().getPixelRect(*w));
-        // get accesss to the thumb
-        Thumb* theThumb = w->getThumb();
-
-        const Sizef w_pixel_size(w->getPixelSize());
-
-        const float thumbRelXPos = w_pixel_size.d_width == 0.0f ? 0.0f : (area.left() / w_pixel_size.d_width);
-        const float thumbRelYPos = w_pixel_size.d_height == 0.0f ? 0.0f : (area.top() / w_pixel_size.d_height);
-        // get base location for thumb widget
-        UVector2 thumbPosition(cegui_reldim(thumbRelXPos), cegui_reldim(thumbRelYPos));
-
-        // Is this a vertical slider
-        if (d_vertical)
-        {
-            // pixel extent of total available area the thumb moves in
-            float slideExtent = area.getHeight() - theThumb->getPixelSize().d_height;
-
-            // Set range of motion for the thumb widget
-            if (w_pixel_size.d_height != 0.0f)
-                theThumb->setVertRange(area.top()  / w_pixel_size.d_height,
-                                      (area.top() + slideExtent) / w_pixel_size.d_height);
-            else
-                theThumb->setVertRange(0.0f, 0.0f);
-
-            // calculate vertical positon for thumb
-            float thumbOffset = w->getCurrentValue() * (slideExtent / w->getMaxValue());
-
-            if (w_pixel_size.d_height != 0.0f)
-                thumbPosition.d_y.d_scale +=
-                    (d_reversed ? thumbOffset : slideExtent - thumbOffset) / w_pixel_size.d_height;
-        }
-        // Horizontal slider
+        // Set range of motion for the thumb widget
+        if (w_pixel_size.d_height != 0.0f)
+            theThumb->setVertRange(area.top()  / w_pixel_size.d_height,
+                                    (area.top() + slideExtent) / w_pixel_size.d_height);
         else
-        {
-            // pixel extent of total available area the thumb moves in
-            float slideExtent = area.getWidth() - theThumb->getPixelSize().d_width;
+            theThumb->setVertRange(0.0f, 0.0f);
 
-            // Set range of motion for the thumb widget
-            if (w_pixel_size.d_width != 0.0f)
-                theThumb->setHorzRange(area.left() / w_pixel_size.d_width,
-                                      (area.left() + slideExtent) / w_pixel_size.d_width);
-            else
-                theThumb->setHorzRange(0.0f, 0.0f);
+        // calculate vertical positon for thumb
+        const float thumbOffset = fraction * slideExtent;
 
-
-            // calculate horizontal positon for thumb
-            float thumbOffset = w->getCurrentValue() * (slideExtent / w->getMaxValue());
-
-            if (w_pixel_size.d_width != 0.0f)
-                thumbPosition.d_x.d_scale +=
-                    (d_reversed ? slideExtent - thumbOffset : thumbOffset)  / w_pixel_size.d_width;
-        }
-
-        // set new position for thumb.
-        theThumb->setPosition(thumbPosition);
+        if (w_pixel_size.d_height != 0.0f)
+            thumbPosition.d_y.d_scale +=
+                (d_reversed ? thumbOffset : slideExtent - thumbOffset) / w_pixel_size.d_height;
     }
-
-    float FalagardSlider::getValueFromThumb(void) const
+    else
     {
-        Slider* w = (Slider*)d_window;
-        // get area the thumb is supposed to use as it's area.
-        const WidgetLookFeel& wlf = getLookNFeel();
-        const Rectf area(wlf.getNamedArea("ThumbTrackArea").getArea().getPixelRect(*w));
-        // get accesss to the thumb
-        Thumb* theThumb = w->getThumb();
+        // pixel extent of total available area the thumb moves in
+        const float slideExtent = area.getWidth() - theThumb->getPixelSize().d_width;
 
-        // slider is vertical
-        if (d_vertical)
-        {
-            // pixel extent of total available area the thumb moves in
-            float slideExtent = area.getHeight() - theThumb->getPixelSize().d_height;
-            // calculate value represented by current thumb position
-            float thumbValue = (CoordConverter::asAbsolute(
-                theThumb->getYPosition(), w->getPixelSize().d_height) - area.top()) / (slideExtent / w->getMaxValue());
-            // return final thumb value according to slider settings
-            return d_reversed ? thumbValue : w->getMaxValue() - thumbValue;
-        }
-        // slider is horizontal
+        // Set range of motion for the thumb widget
+        if (w_pixel_size.d_width != 0.0f)
+            theThumb->setHorzRange(area.left() / w_pixel_size.d_width,
+                                    (area.left() + slideExtent) / w_pixel_size.d_width);
         else
-        {
-            // pixel extent of total available area the thumb moves in
-            float slideExtent = area.getWidth() - theThumb->getPixelSize().d_width;
-            // calculate value represented by current thumb position
-            float thumbValue = (CoordConverter::asAbsolute(
-                theThumb->getXPosition(), w->getPixelSize().d_width) - area.left()) / (slideExtent / w->getMaxValue());
-            // return final thumb value according to slider settings
-            return d_reversed ? w->getMaxValue() - thumbValue : thumbValue;
-        }
+            theThumb->setHorzRange(0.0f, 0.0f);
+
+
+        // calculate horizontal positon for thumb
+        const float thumbOffset = fraction * slideExtent;
+
+        if (w_pixel_size.d_width != 0.0f)
+            thumbPosition.d_x.d_scale +=
+                (d_reversed ? slideExtent - thumbOffset : thumbOffset)  / w_pixel_size.d_width;
     }
 
-    float FalagardSlider::getAdjustDirectionFromPoint(const Vector2f& pt) const
+    theThumb->setPosition(thumbPosition);
+}
+
+//----------------------------------------------------------------------------//
+FalagardSlider::value_type FalagardSlider::getValueAtPoint(float pt) const
+{
+    const Slider* w = static_cast<Slider*>(d_window);
+    const Thumb* theThumb = w->getThumb();
+
+    // get area the thumb is supposed to use as it's area.
+    const Rectf area(getLookNFeel().getNamedArea("ThumbTrackArea").getArea().getPixelRect(*w));
+
+    float thumbCurrOffset;
+    float thumbMaxOffset;
+    if (d_vertical)
     {
-        Slider* w = (Slider*)d_window;
-        const Rectf absrect(w->getThumb()->getUnclippedOuterRect().get());
-
-        if ((d_vertical && (pt.d_y < absrect.top())) ||
-            (!d_vertical && (pt.d_x > absrect.right())))
-        {
-            return d_reversed ? -1.0f : 1.0f;
-        }
-        else if ((d_vertical && (pt.d_y > absrect.bottom())) ||
-            (!d_vertical && (pt.d_x < absrect.left())))
-        {
-            return d_reversed ? 1.0f : -1.0f;
-        }
-        else
-        {
-            return 0;
-        }
+        thumbCurrOffset = pt - area.top();
+        thumbMaxOffset = area.getHeight() - theThumb->getPixelSize().d_height;
+        if (!d_reversed)
+            thumbCurrOffset = thumbMaxOffset - thumbCurrOffset;
     }
-
-    bool FalagardSlider::isVertical() const
+    else
     {
-        return d_vertical;
+        thumbCurrOffset = pt - area.left();
+        thumbMaxOffset = area.getWidth() - theThumb->getPixelSize().d_width;
+        if (d_reversed)
+            thumbCurrOffset = thumbMaxOffset - thumbCurrOffset;
     }
 
-    void FalagardSlider::setVertical(bool setting)
+    // Linearly interpolate between min and max
+    const float frac = thumbCurrOffset / thumbMaxOffset;
+    return w->getMinimumValue() + frac * (w->getMaximumValue() - w->getMinimumValue());
+}
+
+//----------------------------------------------------------------------------//
+FalagardSlider::value_type FalagardSlider::getValueFromThumb() const
+{
+    const Slider* w = static_cast<Slider*>(d_window);
+    const Thumb* theThumb = static_cast<Slider*>(d_window)->getThumb();
+    const float pt = d_vertical ?
+        CoordConverter::asAbsolute(theThumb->getYPosition(), w->getPixelSize().d_height) :
+        CoordConverter::asAbsolute(theThumb->getXPosition(), w->getPixelSize().d_width);
+    return getValueAtPoint(pt);
+}
+
+//----------------------------------------------------------------------------//
+float FalagardSlider::getAdjustDirectionFromPoint(const glm::vec2& pt) const
+{
+    Slider* w = static_cast<Slider*>(d_window);
+    const Rectf& thumbRect = w->getThumb()->getUnclippedOuterRect().get();
+
+    // Work with coords here to stop moving as soon as the cursor is over the thumb
+    float dir;
+    if ((d_vertical && (pt.y < thumbRect.top())) ||
+        (!d_vertical && (pt.x > thumbRect.right())))
     {
-        d_vertical = setting;
+        dir = d_reversed ? -1.0f : 1.0f;
+    }
+    else if ((d_vertical && (pt.y > thumbRect.bottom())) ||
+        (!d_vertical && (pt.x < thumbRect.left())))
+    {
+        dir = d_reversed ? 1.0f : -1.0f;
+    }
+    else
+    {
+        return 0.f;
     }
 
-    bool FalagardSlider::isReversedDirection() const
-    {
-        return d_reversed;
-    }
+    const auto& sliderPos = w->getUnclippedOuterRect().get().getPosition();
+    const value_type ptValue = getValueAtPoint(d_vertical ? (pt.y - sliderPos.y) : (pt.x - sliderPos.x));
+    const value_type currValue = w->getCurrentValue();
+    value_type nextValue = currValue + dir * w->getStepSize();
 
-    void FalagardSlider::setReversedDirection(bool setting)
+    if (w->isDiscrete())
     {
-        d_reversed = setting;
+        // Stop at the nearest value to avoid thumb oscillation
+        nextValue = w->roundToStep(nextValue);
+        return (std::abs(nextValue - ptValue) < std::abs(currValue - ptValue)) ? dir : 0.f;
     }
+    else if (nextValue == currValue)
+    {
+        // If no step size is specified, jump to the cursor immediately
+        w->setCurrentValue(ptValue);
+        return 0.f;
+    }
+    else
+    {
+        // Magnet exactly to the cursor stepwise
+        const float factor = static_cast<float>((ptValue - currValue) / (nextValue - currValue));
+        return (factor > 1.f) ? dir : dir * factor;
+    }
+}
 
 } // End of  CEGUI namespace section

@@ -26,27 +26,18 @@
  ***************************************************************************/
 #include "CEGUI/falagard/ComponentBase.h"
 #include "CEGUI/falagard/XMLHandler.h"
-#include "CEGUI/Exceptions.h"
+#include "CEGUI/XMLSerializer.h"
 #include "CEGUI/PropertyHelper.h"
 #include "CEGUI/Colour.h"
-#include <iostream>
 
 namespace CEGUI
 {
-//----------------------------------------------------------------------------//
-FalagardComponentBase::FalagardComponentBase() :
-    d_colours(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF)
-{}
 
 //----------------------------------------------------------------------------//
-FalagardComponentBase::~FalagardComponentBase()
-{}
-
-//----------------------------------------------------------------------------//
-void FalagardComponentBase::render(Window& srcWindow,
-                                   const CEGUI::ColourRect* modColours,
-                                   const Rectf* clipper,
-                                   bool clipToDisplay) const
+void FalagardComponentBase::createRenderGeometryAndAddToWindow(
+    Window& srcWindow,
+    const CEGUI::ColourRect* modColours,
+    const Rectf* clipper) const
 {
     Rectf dest_rect(d_area.getPixelRect(srcWindow));
 
@@ -54,16 +45,16 @@ void FalagardComponentBase::render(Window& srcWindow,
         clipper = &dest_rect;
 
     const Rectf final_clip_rect(dest_rect.getIntersection(*clipper));
-    render_impl(srcWindow, dest_rect, modColours,
-                &final_clip_rect, clipToDisplay);
+    addImageRenderGeometryToWindow_impl(srcWindow, dest_rect, modColours,
+        &final_clip_rect);
 }
 
 //----------------------------------------------------------------------------//
-void FalagardComponentBase::render(Window& srcWindow,
-                                   const Rectf& baseRect,
-                                   const CEGUI::ColourRect* modColours,
-                                   const Rectf* clipper,
-                                   bool clipToDisplay) const
+void FalagardComponentBase::createRenderGeometryAndAddToWindow(
+    Window& srcWindow,
+    const Rectf& baseRect,
+    const CEGUI::ColourRect* modColours,
+    const Rectf* clipper) const
 {
     Rectf dest_rect(d_area.getPixelRect(srcWindow, baseRect));
 
@@ -71,44 +62,9 @@ void FalagardComponentBase::render(Window& srcWindow,
         clipper = &dest_rect;
 
     const Rectf final_clip_rect(dest_rect.getIntersection(*clipper));
-    render_impl(srcWindow, dest_rect, modColours,
-                &final_clip_rect, clipToDisplay);
-}
 
-//----------------------------------------------------------------------------//
-const ComponentArea& FalagardComponentBase::getComponentArea() const
-{
-    return d_area;
-}
-
-//----------------------------------------------------------------------------//
-void FalagardComponentBase::setComponentArea(const ComponentArea& area)
-{
-    d_area = area;
-}
-
-//----------------------------------------------------------------------------//
-const ColourRect& FalagardComponentBase::getColours() const
-{
-    return d_colours;
-}
-
-//----------------------------------------------------------------------------//
-void FalagardComponentBase::setColours(const ColourRect& cols)
-{
-    d_colours = cols;
-}
-
-//----------------------------------------------------------------------------//
-const String& FalagardComponentBase::getColoursPropertySource() const
-{
-    return d_colourPropertyName;
-}
-
-//----------------------------------------------------------------------------//
-void FalagardComponentBase::setColoursPropertySource(const String& property)
-{
-    d_colourPropertyName = property;
+    addImageRenderGeometryToWindow_impl(srcWindow, dest_rect, modColours,
+        &final_clip_rect);
 }
 
 //----------------------------------------------------------------------------//
@@ -116,13 +72,8 @@ void FalagardComponentBase::initColoursRect(const Window& wnd,
                                             const ColourRect* modCols,
                                             ColourRect& cr) const
 {
-    // if colours come via a colour property
     if (!d_colourPropertyName.empty())
-    {
-        // if property accesses a ColourRect or a colour
         cr = wnd.getProperty<ColourRect>(d_colourPropertyName);
-    }
-    // use explicit ColourRect.
     else
         cr = d_colours;
 
@@ -133,15 +84,13 @@ void FalagardComponentBase::initColoursRect(const Window& wnd,
 //----------------------------------------------------------------------------//
 bool FalagardComponentBase::writeColoursXML(XMLSerializer& xml_stream) const
 {
-
     if (!d_colourPropertyName.empty())
     {
         xml_stream.openTag(Falagard_xmlHandler::ColourRectPropertyElement);
         xml_stream.attribute(Falagard_xmlHandler::NameAttribute, d_colourPropertyName)
             .closeTag();
     }
-    else if (!d_colours.isMonochromatic() ||
-              d_colours.d_top_left != Colour(1,1,1,1))
+    else if (!d_colours.isMonochromatic() || d_colours.d_top_left != Colour(1.f, 1.f, 1.f, 1.f))
     {
         xml_stream.openTag(Falagard_xmlHandler::ColoursElement)
             .attribute(Falagard_xmlHandler::TopLeftAttribute,
@@ -161,13 +110,9 @@ bool FalagardComponentBase::writeColoursXML(XMLSerializer& xml_stream) const
 }
 
 //----------------------------------------------------------------------------//
-bool FalagardComponentBase::handleFontRenderSizeChange(Window& window,
-                                                       const Font* font) const
+bool FalagardComponentBase::handleFontRenderSizeChange(Window& window, const Font* font) const
 {
     return d_area.handleFontRenderSizeChange(window, font);
 }
 
-//----------------------------------------------------------------------------//
-
 }
-

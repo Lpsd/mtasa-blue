@@ -6,13 +6,15 @@ project "CEGUI-0.8.7"
 
 	includedirs {
 		"include",
+        "dependencies/glm-0.9.4.5",
 		"../freetype/include",
-		"dependencies/pcre-8.12"
+		"../pcre"
 	}
 
 	links { 
-		"freetype", 
-		"pcre-8.12",
+        "glm-0.9.4.5",
+		"freetype",
+		"pcre",
 		"dbghelp",
 		"winmm"
 	}
@@ -55,7 +57,8 @@ project "CEGUI-0.8.7"
 		"include/CEGUI/MinizipResourceProvider.h",
 		"src/IconvStringTranscoder.cpp",
 		"include/CEGUI/IconvStringTranscoder.h",
-		"src/minibidi.cpp"
+		"src/minibidi.cpp",
+		"src/AndroidUtils.cpp"
 	}
 
 	filter "architecture:x64"

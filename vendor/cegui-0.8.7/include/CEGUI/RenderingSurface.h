@@ -30,36 +30,35 @@
 #include "CEGUI/EventSet.h"
 #include "CEGUI/EventArgs.h"
 #include "CEGUI/RenderQueue.h"
+#include <vector>
 
 #if defined(_MSC_VER)
 #   pragma warning(push)
 #   pragma warning(disable : 4251)
 #endif
 
-
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 //----------------------------------------------------------------------------//
 //! Enumerated type for valid render queue IDs.
-enum RenderQueueID
+enum class RenderQueueID : int
 {
-    RQ_USER_0,
+    User0,
     //! Queue for rendering that appears beneath base imagery.
-    RQ_UNDERLAY,
-    RQ_USER_1,
+    Underlay,
+    User1,
     //! Queue for base level rendering by the surface owner.
-    RQ_BASE,
-    RQ_USER_2,
+    Base,
+    User2,
     //! Queue for first level of 'content' rendering.
-    RQ_CONTENT_1,
-    RQ_USER_3,
+    Content1,
+    User3,
     //! Queue for second level of 'content' rendering.
-    RQ_CONTENT_2,
-    RQ_USER_4,
+    Content2,
+    User4,
     //! Queue for overlay rendering that appears above other regular rendering.
-    RQ_OVERLAY,
-    RQ_USER_5
+    Overlay,
+    User5
 };
 
 //----------------------------------------------------------------------------//
@@ -81,7 +80,7 @@ public:
         RenderQueueID value indicating the queue that the event is being
         generated for.
     */
-    RenderQueueEventArgs(const RenderQueueID id);
+    RenderQueueEventArgs(const RenderQueueID id) : queueID(id) {}
 
     //! ID of the queue that this event has been fired for.
     RenderQueueID queueID;
@@ -95,8 +94,8 @@ public:
     to it.
 
     A RenderingSurface has a number of queues that can be used for rendering;
-    normal window rendering will typically be done on RQ_BASE queue, things that
-    are overlaid everything else are rendered to RQ_OVERLAY.
+    normal window rendering will typically be done on RenderQueueID::BASE queue, things that
+    are overlaid everything else are rendered to RenderQueueID::Overlay.
     \par
     The event EventRenderQueueStarted is fired before each queue is rendered and
     the event EventRenderQueueEnded is fired after each queue is rendered.
@@ -105,9 +104,7 @@ public:
     these are queues that have had some interaction - such as clearing or adding
     geometry.
 */
-class CEGUIEXPORT RenderingSurface :
-    public EventSet,
-    public AllocatedObject<RenderingSurface>
+class CEGUIEXPORT RenderingSurface : public EventSet
 {
 public:
     //! Namespace for global events from RenderingSurface objects.
@@ -152,6 +149,29 @@ public:
 
     /*!
     \brief
+        Add the specified GeometryBuffers to the specified queue for rendering
+        when the RenderingSurface is drawn.
+
+    \param queue
+        One of the RenderQueueID enumerated values indicating which prioritised
+        queue the GeometryBuffer should be added to.
+
+    \param geometryBuffers
+        List of GeometryBuffers to be added to the specified rendering queue.
+
+    \note
+        The RenderingSurface does not take ownership of the GeometryBuffers, and
+        does not destroy it when the RenderingSurface geometry is cleared.
+        Rather, the RenderingSurface is just maintaining a list of things to be
+        drawn; the actual GeometryBuffers can be re-used by whichever object
+        does own them, and even changed or updated while still "attached" to
+        a RenderingSurface.
+    */
+    void addGeometryBuffers(const RenderQueueID queue,
+                            const std::vector<GeometryBuffer*>& geometry_buffers);
+
+    /*!
+    \brief
         Add the specified GeometryBuffer to the specified queue for rendering
         when the RenderingSurface is drawn.
 
@@ -159,19 +179,19 @@ public:
         One of the RenderQueueID enumerated values indicating which prioritised
         queue the GeometryBuffer should be added to.
 
-    \param buffer
-        GeometryBuffer object to be added to the specified rendering queue.
+    \param geometry_buffers
+        The GeometryBuffer to be added to the specified rendering queue.
 
     \note
         The RenderingSurface does not take ownership of the GeometryBuffer, and
         does not destroy it when the RenderingSurface geometry is cleared.
-        Rather, the RenderingSurface is just maintaining a list of thigs to be
+        Rather, the RenderingSurface is just maintaining a list of things to be
         drawn; the actual GeometryBuffers can be re-used by whichever object
-        \e does own them, and even changed or updated while still "attached" to
+        does own them, and even changed or updated while still "attached" to
         a RenderingSurface.
     */
     void addGeometryBuffer(const RenderQueueID queue,
-                           const GeometryBuffer& buffer);
+                           GeometryBuffer& geometry_buffer);
 
     /*!
     \brief
@@ -181,11 +201,11 @@ public:
         One of the RenderQueueID enumerated values indicating which prioritised
         queue the GeometryBuffer should be removed from.
 
-    \param buffer
+    \param geometry_buffer
         GeometryBuffer object to be removed from the specified rendering queue.
     */
     void removeGeometryBuffer(const RenderQueueID queue,
-                              const GeometryBuffer& buffer);
+                              const GeometryBuffer& geometry_buffer);
 
     /*!
     \brief
@@ -220,8 +240,19 @@ public:
         operation is complete.  This allows the next draw operation to occur
         without needing to requeue all the GeometryBuffers (if for instance the
         sequence of buffers to be drawn remains unchanged).
+
+    \param drawMode
+        The drawMode is a bit-mask that specifies which Windows shall be
+        rendered in this pass. The bit flags that are active in each Window's
+        bit-mask will be checked against the supplied mask. If any of them matches,
+        then the Window will be rendered, otherwise it won't.
+
+        The default draw bitmask has all bits set to 1. The default flag for is
+        Windows is Window::DrawModeFlagWindowRegular and the flag bit for the cursor
+        is Window::DrawModeFlagMouseCursor.
+
     */
-    virtual void draw();
+    virtual void draw(std::uint32_t drawMode = DrawModeMaskAll);
 
     /*!
     \brief
@@ -235,7 +266,7 @@ public:
         the rendered output - that geometry content has changed and the cached
         imagery should be cleared and redrawn.
     */
-    virtual void invalidate();
+    virtual void invalidate() { d_invalidated = true; }
 
     /*!
     \brief
@@ -263,7 +294,7 @@ public:
         - true to indicate the RenderingSurface is a RenderingWindow instance.
         - false to indicate the RenderingSurface is not a RenderingWindow.
     */
-    virtual bool isRenderingWindow() const;
+    virtual bool isRenderingWindow() const { return false; }
 
     /*!
     \brief
@@ -326,38 +357,34 @@ public:
         RenderTarget object that the RenderingSurface is using to draw it's
         output.
     */
-    const RenderTarget& getRenderTarget() const;
-    RenderTarget& getRenderTarget();
+    const RenderTarget& getRenderTarget() const { return *d_target; }
+    RenderTarget& getRenderTarget() { return *d_target; }
+
+    std::map<RenderQueueID, RenderQueue>& getRenderQueueList() { return d_queues; }
 
 protected:
     /** draw the surface content. Default impl draws the render queues.
      * NB: Called between RenderTarget activate and deactivate calls.
      */
-    virtual void drawContent();
+    virtual void drawContent(std::uint32_t drawModeMask);
 
     //! draw a rendering queue, firing events before and after.
-    void draw(const RenderQueue& queue, RenderQueueEventArgs& args);
+    void draw(const RenderQueue& queue, RenderQueueEventArgs& args, std::uint32_t drawModeMask);
 
-    //! detatch ReneringWindow from this RenderingSurface
-    void detatchWindow(RenderingWindow& w);
+    //! detach ReneringWindow from this RenderingSurface
+    void detachWindow(RenderingWindow& w);
 
     //! attach ReneringWindow from this RenderingSurface
     void attachWindow(RenderingWindow& w);
 
-    //! collection type for the queues
-    typedef std::map<RenderQueueID, RenderQueue
-        /*CEGUI_MAP_ALLOC(RenderQueueID, RenderQueue)*/> RenderQueueList;
-    //! collection type for created RenderingWindow objects
-    typedef std::vector<RenderingWindow*
-        CEGUI_VECTOR_ALLOC(RenderingWindow*)> RenderingWindowList;
     //! the collection of RenderQueue objects.
-    RenderQueueList d_queues;
+    std::map<RenderQueueID, RenderQueue> d_queues;
     //! collection of RenderingWindow object we own
-    RenderingWindowList d_windows;
+    std::vector<RenderingWindow*> d_windows;
     //! RenderTarget that this surface actually draws to.
     RenderTarget* d_target;
     //! holds invalidated state of target (as far as we are concerned)
-    bool d_invalidated;
+    bool d_invalidated = true;
 };
 
 } // End of  CEGUI namespace section

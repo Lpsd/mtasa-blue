@@ -29,12 +29,8 @@
 #ifndef _CEGUIScriptModule_h_
 #define _CEGUIScriptModule_h_
 
-#include "CEGUI/Base.h"
-#include "CEGUI/String.h"
 #include "CEGUI/Event.h"
 
-
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 /*!
@@ -42,8 +38,7 @@ namespace CEGUI
 	Abstract interface required for all scripting support modules to be used with
 	the CEGUI system.
 */
-class CEGUIEXPORT ScriptModule :
-    public AllocatedObject<ScriptModule>
+class CEGUIEXPORT ScriptModule
 {
 public:
 	/*************************************************************************
@@ -235,8 +230,7 @@ protected:
 \brief
 	Functor class used for binding named script functions to events
 */
-class CEGUIEXPORT ScriptFunctor :
-    public AllocatedObject<ScriptFunctor>
+class CEGUIEXPORT ScriptFunctor
 {
 public:
 	ScriptFunctor(const String& functionName) : scriptFunctionName(functionName) {}

@@ -30,12 +30,8 @@
 #define _CEGUIWindowRendererManager_h_
 
 #include "CEGUI/Singleton.h"
-#include "CEGUI/WindowRenderer.h"
-#include "CEGUI/Logger.h"
-#include "CEGUI/Exceptions.h"
 #include "CEGUI/TplWindowRendererFactory.h"
-#include <map>
-#include <vector>
+#include <unordered_map>
 
 #if defined(_MSC_VER)
 #   pragma warning(push)
@@ -46,8 +42,7 @@
 namespace CEGUI
 {
 class CEGUIEXPORT WindowRendererManager :
-    public Singleton<WindowRendererManager>,
-    public AllocatedObject<WindowRendererManager>
+    public Singleton<WindowRendererManager>
 {
 public:
     /*************************************************************************
@@ -85,7 +80,7 @@ public:
         for.
     */
     template <typename T>
-    static void addFactory();
+    static void addFactory() { addFactoryInternal(new T()); }
 
     /*!
     \brief
@@ -117,51 +112,19 @@ private:
     /*************************************************************************
         Private implementation
     *************************************************************************/
+    static void addFactoryInternal(WindowRendererFactory* factory);
 
     /*************************************************************************
         Implementation data
     *************************************************************************/
-    typedef std::map<String, WindowRendererFactory*, StringFastLessCompare> WR_Registry;
+    typedef std::unordered_map<String, WindowRendererFactory*> WR_Registry;
     WR_Registry d_wrReg;
 
     //! Container type to hold WindowRenderFacory objects that we created.
-    typedef std::vector<WindowRendererFactory*
-        CEGUI_VECTOR_ALLOC(WindowRendererFactory*)> OwnedFactoryList;
+    typedef std::vector<WindowRendererFactory*> OwnedFactoryList;
     //! Container that tracks WindowFactory objects we created ourselves.
     static OwnedFactoryList d_ownedFactories;
 };
-
-//----------------------------------------------------------------------------//
-template <typename T>
-void WindowRendererManager::addFactory()
-{
-    // create the factory object
-    WindowRendererFactory* factory = CEGUI_NEW_AO T;
-
-    // only do the actual add now if our singleton has already been created
-    if (WindowRendererManager::getSingletonPtr())
-    {
-        Logger::getSingleton().logEvent("Created WindowRendererFactory for '" +
-                                        factory->getName() +
-                                        "' WindowRenderers.");
-        // add the factory we just created
-        CEGUI_TRY
-        {
-            WindowRendererManager::getSingleton().addFactory(factory);
-        }
-        CEGUI_CATCH (Exception&)
-        {
-            Logger::getSingleton().logEvent("Deleted WindowRendererFactory for "
-                                            "'" + factory->getName() +
-                                            "' WindowRenderers.");
-            // delete the factory object
-            CEGUI_DELETE_AO factory;
-            CEGUI_RETHROW;
-        }
-    }
-
-    d_ownedFactories.push_back(factory);
-}
 
 //----------------------------------------------------------------------------//
 template <typename T>

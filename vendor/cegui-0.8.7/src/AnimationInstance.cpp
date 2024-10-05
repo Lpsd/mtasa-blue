@@ -30,10 +30,8 @@
 #include "CEGUI/Animation.h"
 #include "CEGUI/Exceptions.h"
 #include "CEGUI/Window.h"
-#include "CEGUI/Affector.h"
 #include "CEGUI/Logger.h"
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 
@@ -44,42 +42,23 @@ const String AnimationInstance::EventAnimationStarted("AnimationStarted");
 const String AnimationInstance::EventAnimationStopped("AnimationStopped");
 const String AnimationInstance::EventAnimationPaused("AnimationPaused");
 const String AnimationInstance::EventAnimationUnpaused("AnimationUnpaused");
+const String AnimationInstance::EventAnimationFinished("AnimationFinished");
 const String AnimationInstance::EventAnimationEnded("AnimationEnded");
 const String AnimationInstance::EventAnimationLooped("AnimationLooped");
 
 //----------------------------------------------------------------------------//
 AnimationInstance::AnimationInstance(Animation* definition):
-    d_definition(definition),
-
-    d_target(0),
-    d_eventReceiver(0),
-    d_eventSender(0),
-
-    d_position(0.0),
-    d_speed(1.0),
-    d_bounceBackwards(false),
-    d_running(false),
-    d_skipNextStep(false),
-    // default behaviour is to never skip
-    d_maxStepDeltaSkip(-1.0f),
-    // default behaviour is to never clamp
-    d_maxStepDeltaClamp(-1.0f),
-    d_autoSteppingEnabled(true)
+    d_definition(definition)
 {}
 
 //----------------------------------------------------------------------------//
-AnimationInstance::~AnimationInstance(void)
+AnimationInstance::~AnimationInstance()
 {
-    if (d_eventSender)
-    {
-        d_definition->autoUnsubscribe(this);
-    }
-}
+    if (d_running)
+        stop();
 
-//----------------------------------------------------------------------------//
-Animation* AnimationInstance::getDefinition() const
-{
-    return d_definition;
+    if (d_eventSender)
+        d_definition->autoUnsubscribe(this);
 }
 
 //----------------------------------------------------------------------------//
@@ -90,49 +69,19 @@ void AnimationInstance::setTarget(PropertySet* target)
     purgeSavedPropertyValues();
 
     if (d_definition->getAutoStart() && !isRunning())
-    {
         start();
-    }
-}
-
-//----------------------------------------------------------------------------//
-PropertySet* AnimationInstance::getTarget() const
-{
-    return d_target;
-}
-
-//----------------------------------------------------------------------------//
-void AnimationInstance::setEventReceiver(EventSet* receiver)
-{
-    d_eventReceiver = receiver;
-}
-
-//----------------------------------------------------------------------------//
-EventSet* AnimationInstance::getEventReceiver() const
-{
-    return d_eventReceiver;
 }
 
 //----------------------------------------------------------------------------//
 void AnimationInstance::setEventSender(EventSet* sender)
 {
     if (d_eventSender)
-    {
         d_definition->autoUnsubscribe(this);
-    }
 
     d_eventSender = sender;
 
     if (d_eventSender)
-    {
         d_definition->autoSubscribe(this);
-    }
-}
-
-//----------------------------------------------------------------------------//
-EventSet* AnimationInstance::getEventSender() const
-{
-    return d_eventSender;
 }
 
 //----------------------------------------------------------------------------//
@@ -148,19 +97,13 @@ void AnimationInstance::setPosition(float position)
 {
     if (position < 0.0 || position > d_definition->getDuration())
     {
-        CEGUI_THROW(InvalidRequestException(
+        throw InvalidRequestException(
                         "Unable to set position of this animation instance "
                         "because given position isn't in interval "
-                        "[0.0, duration of animation]."));
+                        "[0.0, duration of animation].");
     }
 
     d_position = position;
-}
-
-//----------------------------------------------------------------------------//
-float AnimationInstance::getPosition() const
-{
-    return d_position;
 }
 
 //----------------------------------------------------------------------------//
@@ -169,61 +112,19 @@ void AnimationInstance::setSpeed(float speed)
     // first sort out the adventurous users
     if (speed < 0.0f)
     {
-        CEGUI_THROW(InvalidRequestException(
+        throw InvalidRequestException(
                         "You can't set playback speed to a value that's lower "
-                        "than 0.0"));
+                        "than 0.0");
     }
 
     if (speed == 0.0f)
     {
-        CEGUI_THROW(InvalidRequestException(
+        throw InvalidRequestException(
                         "AnimationInstance::setSpeed: You can't set playback speed "
-                        "to zero, please use AnimationInstance::pause instead"));
+                        "to zero, please use AnimationInstance::pause instead");
     }
 
     d_speed = speed;
-}
-
-//----------------------------------------------------------------------------//
-float AnimationInstance::getSpeed() const
-{
-    return d_speed;
-}
-
-//----------------------------------------------------------------------------//
-void AnimationInstance::setSkipNextStep(bool skip)
-{
-    d_skipNextStep = skip;
-}
-
-//----------------------------------------------------------------------------//
-bool AnimationInstance::getSkipNextStep() const
-{
-    return d_skipNextStep;
-}
-
-//----------------------------------------------------------------------------//
-void AnimationInstance::setMaxStepDeltaSkip(float maxDelta)
-{
-    d_maxStepDeltaSkip = maxDelta;
-}
-
-//----------------------------------------------------------------------------//
-float AnimationInstance::getMaxStepDeltaSkip() const
-{
-    return d_maxStepDeltaSkip;
-}
-
-//----------------------------------------------------------------------------//
-void AnimationInstance::setMaxStepDeltaClamp(float maxDelta)
-{
-    d_maxStepDeltaClamp = maxDelta;
-}
-
-//----------------------------------------------------------------------------//
-float AnimationInstance::getMaxStepDeltaClamp() const
-{
-    return d_maxStepDeltaClamp;
 }
 
 //----------------------------------------------------------------------------//
@@ -235,13 +136,17 @@ void AnimationInstance::start(bool skipNextStep)
     if (d_definition && d_definition->getDuration() > 0)
     {
         d_running = true;
+
+        purgeSavedPropertyValues();
+        d_definition->savePropertyValues(this);
+
         onAnimationStarted();
     }
     else
     {
         Logger::getSingleton().logEvent(
             "AnimationInstance::start - Starting an animation instance with "
-            "no animation definition or 0 duration has no effect!", Warnings);
+            "no animation definition or 0 duration has no effect!", LoggingLevel::Informative);
         onAnimationStarted();
         onAnimationEnded();
     }
@@ -276,7 +181,7 @@ void AnimationInstance::unpause(bool skipNextStep)
     {
         Logger::getSingleton().logEvent(
             "AnimationInstance::unpause - Unpausing an animation instance with "
-            "no animation definition or 0 duration has no effect!", Warnings);
+            "no animation definition or 0 duration has no effect!", LoggingLevel::Informative);
         onAnimationUnpaused();
         onAnimationEnded();
     }
@@ -285,32 +190,24 @@ void AnimationInstance::unpause(bool skipNextStep)
 //----------------------------------------------------------------------------//
 void AnimationInstance::togglePause(bool skipNextStep)
 {
-    if (isRunning())
-    {
+    if (d_running)
         pause();
-    }
     else
-    {
         unpause(skipNextStep);
+}
+
+//----------------------------------------------------------------------------//
+void AnimationInstance::finish()
+{
+    if (d_definition)
+    {
+        setPosition(d_definition->getDuration());
+        apply();
     }
-}
 
-//----------------------------------------------------------------------------//
-bool AnimationInstance::isRunning() const
-{
-    return d_running;
-}
-
-//----------------------------------------------------------------------------//
-void AnimationInstance::setAutoSteppingEnabled(bool enabled)
-{
-	d_autoSteppingEnabled = enabled;
-}
-
-//----------------------------------------------------------------------------//
-bool AnimationInstance::isAutoSteppingEnabled() const
-{
-	return d_autoSteppingEnabled;
+    d_running = false;
+    setPosition(0.0);
+    onAnimationFinished();
 }
 
 //----------------------------------------------------------------------------//
@@ -324,10 +221,10 @@ void AnimationInstance::step(float delta)
 
     if (delta < 0.0f)
     {
-        CEGUI_THROW(InvalidRequestException(
+        throw InvalidRequestException(
                         "You can't step the Animation Instance with negative "
                         "delta! You can't reverse the flow of time, stop "
-                        "trying!"));
+                        "trying!");
     }
 
     // first we deal with delta size
@@ -365,8 +262,8 @@ void AnimationInstance::step(float delta)
     // the position could have gotten out of the desired range, we have to
     // alter it depending on replay method of our animation definition
 
-    // first a simple clamp with RM_Once
-    if (d_definition->getReplayMode() == Animation::RM_Once)
+    // first a simple clamp with ReplayMode::PLAY_ONCE
+    if (d_definition->getReplayMode() == Animation::ReplayMode::PlayOnce)
     {
         float newPosition = d_position + delta;
 
@@ -382,8 +279,8 @@ void AnimationInstance::step(float delta)
 
         setPosition(newPosition);
     }
-    // a both sided wrap with RM_Loop
-    else if (d_definition->getReplayMode() == Animation::RM_Loop)
+    // a both sided wrap with ReplayMode::LOOP
+    else if (d_definition->getReplayMode() == Animation::ReplayMode::Loop)
     {
         float newPosition = d_position + delta;
 
@@ -395,8 +292,8 @@ void AnimationInstance::step(float delta)
 
         setPosition(newPosition);
     }
-    // bounce back and forth with RM_Bounce
-    else if (d_definition->getReplayMode() == Animation::RM_Bounce)
+    // bounce back and forth with ReplayMode::BOUNCE
+    else if (d_definition->getReplayMode() == Animation::ReplayMode::Bounce)
     {
         if (d_bounceBackwards)
         {
@@ -431,42 +328,44 @@ void AnimationInstance::step(float delta)
 }
 
 //----------------------------------------------------------------------------//
-bool AnimationInstance::handleStart(const CEGUI::EventArgs&)
+bool AnimationInstance::handleStart(const EventArgs&)
 {
     start();
-
     return true;
 }
 
 //----------------------------------------------------------------------------//
-bool AnimationInstance::handleStop(const CEGUI::EventArgs&)
+bool AnimationInstance::handleStop(const EventArgs&)
 {
     stop();
-
     return true;
 }
 
 //----------------------------------------------------------------------------//
-bool AnimationInstance::handlePause(const CEGUI::EventArgs&)
+bool AnimationInstance::handlePause(const EventArgs&)
 {
     pause();
-
     return true;
 }
 
 //----------------------------------------------------------------------------//
-bool AnimationInstance::handleUnpause(const CEGUI::EventArgs&)
+bool AnimationInstance::handleUnpause(const EventArgs&)
 {
     unpause();
-
     return true;
 }
 
 //----------------------------------------------------------------------------//
-bool AnimationInstance::handleTogglePause(const CEGUI::EventArgs&)
+bool AnimationInstance::handleTogglePause(const EventArgs&)
 {
     togglePause();
+    return true;
+}
 
+//----------------------------------------------------------------------------//
+bool AnimationInstance::handleFinish(const EventArgs&)
+{
+    finish();
     return true;
 }
 
@@ -474,12 +373,11 @@ bool AnimationInstance::handleTogglePause(const CEGUI::EventArgs&)
 void AnimationInstance::savePropertyValue(const String& propertyName)
 {
     assert(d_target);
-
     d_savedPropertyValues[propertyName] = d_target->getProperty(propertyName);
 }
 
 //----------------------------------------------------------------------------//
-void AnimationInstance::purgeSavedPropertyValues(void)
+void AnimationInstance::purgeSavedPropertyValues()
 {
     d_savedPropertyValues.clear();
 }
@@ -487,8 +385,7 @@ void AnimationInstance::purgeSavedPropertyValues(void)
 //----------------------------------------------------------------------------//
 const String& AnimationInstance::getSavedPropertyValue(const String& propertyName)
 {
-    PropertyValueMap::iterator it = d_savedPropertyValues.find(propertyName);
-
+    auto it = d_savedPropertyValues.find(propertyName);
     if (it == d_savedPropertyValues.end())
     {
         // even though we explicitly save all used property values when
@@ -511,12 +408,8 @@ void AnimationInstance::addAutoConnection(Event::Connection conn)
 //----------------------------------------------------------------------------//
 void AnimationInstance::unsubscribeAutoConnections()
 {
-    for (ConnectionTracker::iterator it = d_autoConnections.begin();
-         it != d_autoConnections.end(); ++it)
-    {
-        (*it)->disconnect();
-    }
-
+    for (auto& connection : d_autoConnections)
+        connection->disconnect();
     d_autoConnections.clear();
 }
 
@@ -524,17 +417,12 @@ void AnimationInstance::unsubscribeAutoConnections()
 void AnimationInstance::apply()
 {
     if (d_target)
-    {
         d_definition->apply(this);
-    }
 }
 
 //----------------------------------------------------------------------------//
 void AnimationInstance::onAnimationStarted()
 {
-    purgeSavedPropertyValues();
-    d_definition->savePropertyValues(this);
-
     if (d_eventReceiver)
     {
         AnimationEventArgs args(this);
@@ -573,6 +461,16 @@ void AnimationInstance::onAnimationUnpaused()
 }
 
 //----------------------------------------------------------------------------//
+void AnimationInstance::onAnimationFinished()
+{
+    if (d_eventReceiver)
+    {
+        AnimationEventArgs args(this);
+        d_eventReceiver->fireEvent(EventAnimationFinished, args, EventNamespace);
+    }
+}
+
+//----------------------------------------------------------------------------//
 void AnimationInstance::onAnimationEnded()
 {
     if (d_eventReceiver)
@@ -592,7 +490,4 @@ void AnimationInstance::onAnimationLooped()
     }
 }
 
-//----------------------------------------------------------------------------//
-
-} // End of  CEGUI namespace section
-
+}

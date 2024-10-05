@@ -33,18 +33,17 @@
 
 namespace CEGUI
 {
+
 //! Common base class used for renderable components within an ImagerySection.
-class CEGUIEXPORT FalagardComponentBase :
-    public AllocatedObject<FalagardComponentBase>
+class CEGUIEXPORT FalagardComponentBase
 {
 public:
-    FalagardComponentBase();
-    virtual ~FalagardComponentBase();
+
+    virtual ~FalagardComponentBase() = default;
 
     /*!
     \brief
-        Render this component.  More correctly, the component is cached for
-        rendering.
+        Creates the render geometry for this component and adds it to the Window
 
     \param srcWindow
         Window to use as the base for translating the component's ComponentArea
@@ -55,13 +54,13 @@ public:
         component's stored colour values to calculate a set of 'final' colour
         values to be used.  May be 0.
     */
-    void render(Window& srcWindow, const CEGUI::ColourRect* modColours = 0,
-                const Rectf* clipper = 0, bool clipToDisplay = false) const;
+    void createRenderGeometryAndAddToWindow(
+        Window& srcWindow, const CEGUI::ColourRect* modColours = nullptr,
+        const Rectf* clipper = nullptr) const;
 
     /*!
     \brief
-        Render this component.  More correctly, the component is cached for
-        rendering.
+        Creates the render geometry for this component and adds it to the Window
 
     \param srcWindow
         Window to use as the base for translating the component's ComponentArea
@@ -76,9 +75,10 @@ public:
         component's stored colour values to calculate a set of 'final' colour
         values to be used.  May be 0.
     */
-    void render(Window& srcWindow, const Rectf& baseRect,
-                const CEGUI::ColourRect* modColours = 0,
-                const Rectf* clipper = 0, bool clipToDisplay = false) const;
+    void createRenderGeometryAndAddToWindow(
+        Window& srcWindow, const Rectf& baseRect,
+        const CEGUI::ColourRect* modColours = nullptr,
+        const Rectf* clipper = nullptr) const;
 
     /*!
     \brief
@@ -87,7 +87,7 @@ public:
     \return
         ComponentArea object describing the component's current target area.
     */
-    const ComponentArea& getComponentArea() const;
+    const ComponentArea& getComponentArea() const { return d_area; }
 
     /*!
     \brief
@@ -96,7 +96,7 @@ public:
     \param area
         ComponentArea object describing a new target area for the component.
     */
-    void setComponentArea(const ComponentArea& area);
+    void setComponentArea(const ComponentArea& area) { d_area = area; }
 
     /*!
     \brief
@@ -106,7 +106,7 @@ public:
         ColourRect object holding the colours currently in use by this
         component.
     */
-    const ColourRect& getColours() const;
+    const ColourRect& getColours() const { return d_colours; }
 
     /*!
     \brief
@@ -115,7 +115,7 @@ public:
     \param cols
         ColourRect object describing the colours to be used by this component.
     */
-    void setColours(const ColourRect& cols);
+    void setColours(const ColourRect& cols) { d_colours = cols; }
 
     /*!
     \brief
@@ -124,7 +124,7 @@ public:
     \return
         String object holding the name of the property.
     */
-    const String& getColoursPropertySource() const;
+    const String& getColoursPropertySource() const { return d_colourPropertyName; }
 
     /*!
     \brief
@@ -133,13 +133,13 @@ public:
     \param property
         String containing the name of the property.
     */
-    void setColoursPropertySource(const String& property);
+    void setColoursPropertySource(const String& property) { d_colourPropertyName = property; }
 
     //! perform any processing required due to the given font having changed.
-    virtual bool handleFontRenderSizeChange(Window& window,
-                                            const Font* font) const;
+    virtual bool handleFontRenderSizeChange(Window& window, const Font* font) const;
 
 protected:
+
     /*!
     \brief
         Helper function to initialise a ColourRect with appropriate values
@@ -154,9 +154,10 @@ protected:
                          ColourRect& cr) const;
 
     //! Function to do main render caching work.
-    virtual void render_impl(Window& srcWindow, Rectf& destRect,
-                             const CEGUI::ColourRect* modColours,
-                             const Rectf* clipper, bool clipToDisplay) const = 0;
+    virtual void addImageRenderGeometryToWindow_impl(
+        Window& srcWindow, Rectf& destRect,
+        const CEGUI::ColourRect* modColours,
+        const Rectf* clipper) const = 0;
 
     /*!
     \brief
@@ -177,7 +178,7 @@ protected:
     //! Destination area for this component.
     ComponentArea d_area;
     //! base colours to be applied when rendering the image component.
-    ColourRect d_colours;
+    ColourRect d_colours = ColourRect(0xFFFFFFFF);
     //! name of property to fetch colours from.
     String d_colourPropertyName;
 };

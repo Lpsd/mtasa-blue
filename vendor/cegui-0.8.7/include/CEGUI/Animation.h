@@ -61,20 +61,20 @@ namespace CEGUI
 \see
     AnimationInstance, Affector
 */
-class CEGUIEXPORT Animation : public AllocatedObject<Animation>
+class CEGUIEXPORT Animation
 {
 public:
     //! enumerates possible replay modes
-    enum ReplayMode
+    enum class ReplayMode : int
     {
         //! plays the animation just once, then stops
-        RM_Once,
+        PlayOnce,
         //! loops the animation infinitely
-        RM_Loop,
+        Loop,
         /** infinitely plays the animation forward, when it reaches the end, it
          * plays it backwards, etc...
          */
-        RM_Bounce
+        Bounce
     };
 
     /** internal constructor, please only construct animations via
@@ -163,7 +163,7 @@ public:
     \brief
         Retrieves the Affector at given index
     */
-    Affector* getAffectorAtIdx(size_t index) const;
+    Affector* getAffectorAtIndex(size_t index) const;
 
     /*!
     \brief
@@ -193,6 +193,7 @@ public:
         - Pause
         - Unpause
         - TogglePause
+        - Finish
 
         eventName is the name of the event we want to subscribe to
     */
@@ -227,6 +228,8 @@ public:
     */
     void autoSubscribe(AnimationInstance* instance);
 
+    bool hasAutoSubscriptions() const { return !d_autoSubscriptions.empty(); }
+
     /*!
     \brief
         Unsubscribes all auto subscriptions with information from given
@@ -235,7 +238,7 @@ public:
     \par
         This is internal method! Only use if you know what you're doing!
     */
-    void autoUnsubscribe(AnimationInstance* instance);
+    static void autoUnsubscribe(AnimationInstance* instance);
 
     /*!
      \brief
@@ -283,18 +286,14 @@ private:
      */
     bool d_autoStart;
 
-    typedef std::vector<Affector*
-        CEGUI_VECTOR_ALLOC(Affector*)> AffectorList;
     //! list of affectors defined in this animation
-    AffectorList d_affectors;
+    std::vector<Affector*> d_affectors;
 
-    typedef std::multimap<String, String, std::less<String>
-        CEGUI_MAP_ALLOC(String, String)> SubscriptionMap;
     /** holds pairs of 2 strings, the left string is the Event that we will
      * subscribe to, the right string is the action that will be invoked to the
      * instance if the event is fired on target window
      */
-    SubscriptionMap d_autoSubscriptions;
+    std::multimap<String, String> d_autoSubscriptions;
 };
 
 } // End of  CEGUI namespace section

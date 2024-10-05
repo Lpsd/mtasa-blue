@@ -29,37 +29,23 @@
 #ifndef _CEGUILogger_h_
 #define _CEGUILogger_h_
 
-#include "CEGUI/Base.h"
-#include "CEGUI/String.h"
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <utility>
 #include "CEGUI/Singleton.h"
 
-
-#if defined(_MSC_VER)
-#	pragma warning(push)
-#	pragma warning(disable : 4275)
-#	pragma warning(disable : 4251)
-#endif
-
-
-// Start of CEGUI namespace section
 namespace CEGUI
 {
+class String;
 
 /*!
 \brief
 	Enumeration of logging levels
 */
-enum LoggingLevel
+enum class LoggingLevel : int
 {
-	Errors,			//!< Only actual error conditions will be logged.
-    Warnings,       //!< Warnings will be logged as well.
-	Standard,		//!< Basic events will be logged (default level).
-	Informative,	//!< Useful tracing (object creations etc) information will be logged.
-	Insane			//!< Mostly everything gets logged (use for heavy tracing only, log WILL be big).
+	Error,          //!< Only actual error conditions will be logged.
+    Warning,        //!< LoggingLevel::Warning will be logged as well.
+	Standard,       //!< Basic events will be logged (default level).
+	Informative,    //!< Useful tracing (object creations etc) information will be logged.
+	Insane          //!< Mostly everything gets logged (use for heavy tracing only, log WILL be big).
 };
 
 /*!
@@ -70,20 +56,22 @@ enum LoggingLevel
     a object of that type before you create the CEGUI::System singleton.
 */
 class CEGUIEXPORT Logger :
-    public Singleton<Logger>,
-    public AllocatedObject<Logger>
+    public Singleton<Logger>
 {
 public:
 	/*!
 	\brief
 		Constructor for Logger object.
 	*/
-	Logger(void);
+	Logger();
+
+    Logger(const Logger&) = delete;
+    Logger& operator=(const Logger&) = delete;
 
 	/*!
 	\brief Destructor for Logger object.
 	*/
-	virtual ~Logger(void);
+	virtual ~Logger();
 
 
 	/*!
@@ -122,7 +110,7 @@ public:
 	\return
 		Nothing
 	*/
-	virtual void logEvent(const String& message, LoggingLevel level = Standard) = 0;
+	virtual void logEvent(const String& message, LoggingLevel level = LoggingLevel::Standard) = 0;
 
     /*!
     \brief
@@ -145,30 +133,18 @@ public:
 
 protected:
 	LoggingLevel	d_level;		//!< Holds current logging level
-
-private:
-	/*************************************************************************
-		Copy constructor and assignment usage is denied.
-	*************************************************************************/
-	Logger(const Logger&) : Singleton <Logger>() {}
-	Logger& operator=(const Logger&) {return *this;}
-
 };
 
 /*************************************************************************
-	This macro is used for 'Insane' level logging so that those items are
+	This macro is used for 'LoggingLevel::Insane' level logging so that those items are
 	excluded from non-debug builds
 *************************************************************************/
 #if defined(DEBUG) || defined (_DEBUG)
-#	define CEGUI_LOGINSANE( message ) CEGUI::Logger::getSingleton().logEvent((message), CEGUI::Insane);
+#	define CEGUI_LOGINSANE( message ) CEGUI::Logger::getSingleton().logEvent((message), CEGUI::LoggingLevel::Insane);
 #else
-#	define CEGUI_LOGINSANE( message ) (void)0
+#	define CEGUI_LOGINSANE( message ) (void)0;
 #endif
 
 } // End of  CEGUI namespace section
-
-#if defined(_MSC_VER)
-#	pragma warning(pop)
-#endif
 
 #endif	// end of guard _CEGUILogger_h_

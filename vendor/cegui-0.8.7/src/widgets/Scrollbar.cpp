@@ -48,6 +48,24 @@ const String Scrollbar::IncreaseButtonName("__auto_incbtn__");
 const String Scrollbar::DecreaseButtonName("__auto_decbtn__");
 
 //----------------------------------------------------------------------------//
+bool Scrollbar::standardProcessing(Scrollbar* vert, Scrollbar* horz, float delta, bool horzOnly)
+{
+    if (!horzOnly && vert && vert->isEffectiveVisible() && vert->getDocumentSize() > vert->getPageSize())
+    {
+        vert->setScrollPosition(vert->getScrollPosition() + vert->getStepSize() * delta);
+        return true;
+    }
+
+    if (horz && horz->isEffectiveVisible() && horz->getDocumentSize() > horz->getPageSize())
+    {
+        horz->setScrollPosition(horz->getScrollPosition() + horz->getStepSize() * delta);
+        return true;
+    }
+
+    return false;
+}
+
+//----------------------------------------------------------------------------//
 ScrollbarWindowRenderer::ScrollbarWindowRenderer(const String& name) :
     WindowRenderer(name, Scrollbar::EventNamespace)
 {
@@ -72,7 +90,7 @@ Scrollbar::~Scrollbar(void)
 }
 
 //----------------------------------------------------------------------------//
-void Scrollbar::initialiseComponents(void)
+void Scrollbar::initialiseComponents()
 {
     // Set up thumb
     Thumb* const t = getThumb();
@@ -101,57 +119,57 @@ void Scrollbar::initialiseComponents(void)
                                      this));
 
     // do initial layout
-    performChildWindowLayout();
+    Window::initialiseComponents();
 }
 
 //----------------------------------------------------------------------------//
 void Scrollbar::setDocumentSize(float document_size)
 {
-    if (d_documentSize != document_size)
-    {
-        const bool reset_max_position = d_endLockPosition && isAtEnd();
+    if (d_documentSize == document_size)
+        return;
 
-        d_documentSize = document_size;
+    const bool reset_max_position = d_endLockPosition && isAtEnd();
 
-        if (reset_max_position)
-            setScrollPosition(getMaxScrollPosition());
-        else
-            updateThumb();
+    d_documentSize = document_size;
 
-        WindowEventArgs args(this);
-        onScrollConfigChanged(args);
-    }
+    if (reset_max_position)
+        setScrollPosition(getMaxScrollPosition());
+    else
+        updateThumb();
+
+    WindowEventArgs args(this);
+    onScrollConfigChanged(args);
 }
 
 //----------------------------------------------------------------------------//
 void Scrollbar::setPageSize(float page_size)
 {
-    if (d_pageSize != page_size)
-    {
-        const bool reset_max_position = d_endLockPosition && isAtEnd();
+    if (d_pageSize == page_size)
+        return;
 
-        d_pageSize = page_size;
+    const bool reset_max_position = d_endLockPosition && isAtEnd();
 
-        if (reset_max_position)
-            setScrollPosition(getMaxScrollPosition());
-        else
-            updateThumb();
+    d_pageSize = page_size;
 
-        WindowEventArgs args(this);
-        onScrollConfigChanged(args);
-    }
+    if (reset_max_position)
+        setScrollPosition(getMaxScrollPosition());
+    else
+        updateThumb();
+
+    WindowEventArgs args(this);
+    onScrollConfigChanged(args);
 }
 
 //----------------------------------------------------------------------------//
 void Scrollbar::setStepSize(float step_size)
 {
-    if (d_stepSize != step_size)
-    {
-        d_stepSize = step_size;
+    if (d_stepSize == step_size)
+        return;
 
-        WindowEventArgs args(this);
-        onScrollConfigChanged(args);
-    }
+    d_stepSize = step_size;
+
+    WindowEventArgs args(this);
+    onScrollConfigChanged(args);
 }
 
 //----------------------------------------------------------------------------//
@@ -171,8 +189,6 @@ void Scrollbar::setScrollPosition(float position)
 {
     const bool modified = setScrollPosition_impl(position);
     updateThumb();
-
-    // notification if required
     if (modified)
     {
         WindowEventArgs args(this);
@@ -183,7 +199,7 @@ void Scrollbar::setScrollPosition(float position)
 //----------------------------------------------------------------------------//
 bool Scrollbar::validateWindowRenderer(const WindowRenderer* renderer) const
 {
-    return dynamic_cast<const ScrollbarWindowRenderer*>(renderer) != 0;
+    return dynamic_cast<const ScrollbarWindowRenderer*>(renderer) != nullptr;
 }
 
 //----------------------------------------------------------------------------//
@@ -207,20 +223,20 @@ void Scrollbar::onThumbTrackEnded(WindowEventArgs& e)
 //----------------------------------------------------------------------------//
 void Scrollbar::onScrollConfigChanged(WindowEventArgs& e)
 {
-    performChildWindowLayout();
+    performChildLayout(false, false);
     fireEvent(EventScrollConfigChanged, e, EventNamespace);
 }
 
 //----------------------------------------------------------------------------//
-void Scrollbar::onMouseButtonDown(MouseEventArgs& e)
+void Scrollbar::onMouseButtonDown(MouseButtonEventArgs& e)
 {
     // base class processing
     Window::onMouseButtonDown(e);
 
-    if (e.button != LeftButton)
+    if (e.d_button != MouseButton::Left)
         return;
 
-    const float adj = getAdjustDirectionFromPoint(e.position);
+    const float adj = getAdjustDirectionFromPoint(e.d_surfacePos);
 
     if (adj > 0)
         scrollForwardsByPage();
@@ -231,13 +247,13 @@ void Scrollbar::onMouseButtonDown(MouseEventArgs& e)
 }
 
 //----------------------------------------------------------------------------//
-void Scrollbar::onMouseWheel(MouseEventArgs& e)
+void Scrollbar::onScroll(ScrollEventArgs& e)
 {
     // base class processing
-    Window::onMouseWheel(e);
+    Window::onScroll(e);
 
-    // scroll by e.wheelChange * stepSize
-    setScrollPosition(d_position + d_stepSize * -e.wheelChange);
+    // scroll by vertical scroll * stepSize
+    setScrollPosition(d_position + d_stepSize * -e.d_delta);
 
     // ensure the message does not go to our parent.
     ++e.handled;
@@ -255,7 +271,7 @@ bool Scrollbar::handleThumbMoved(const EventArgs&)
 //----------------------------------------------------------------------------//
 bool Scrollbar::handleIncreaseClicked(const EventArgs& e)
 {
-    if (((const MouseEventArgs&)e).button != LeftButton)
+    if (static_cast<const MouseButtonEventArgs&>(e).d_button != MouseButton::Left)
         return false;
 
     scrollForwardsByStep();
@@ -265,7 +281,7 @@ bool Scrollbar::handleIncreaseClicked(const EventArgs& e)
 //----------------------------------------------------------------------------//
 bool Scrollbar::handleDecreaseClicked(const EventArgs& e)
 {
-    if (((const MouseEventArgs&)e).button != LeftButton)
+    if (static_cast<const MouseButtonEventArgs&>(e).d_button != MouseButton::Left)
         return false;
 
     scrollBackwardsByStep();
@@ -372,9 +388,9 @@ Thumb* Scrollbar::getThumb() const
 void Scrollbar::updateThumb(void)
 {
     if (!d_windowRenderer)
-        CEGUI_THROW(InvalidRequestException(
+        throw InvalidRequestException(
             "This function must be implemented by the window renderer object "
-            "(no window renderer is assigned.)"));
+            "(no window renderer is assigned.)");
 
     static_cast<ScrollbarWindowRenderer*>(d_windowRenderer)->updateThumb();
 }
@@ -383,21 +399,21 @@ void Scrollbar::updateThumb(void)
 float Scrollbar::getValueFromThumb(void) const
 {
     if (!d_windowRenderer)
-        CEGUI_THROW(InvalidRequestException(
+        throw InvalidRequestException(
             "This function must be implemented by the window renderer object "
-            "(no window renderer is assigned.)"));
+            "(no window renderer is assigned.)");
 
     return static_cast<ScrollbarWindowRenderer*>(
                d_windowRenderer)->getValueFromThumb();
 }
 
 //----------------------------------------------------------------------------//
-float Scrollbar::getAdjustDirectionFromPoint(const Vector2f& pt) const
+float Scrollbar::getAdjustDirectionFromPoint(const glm::vec2& pt) const
 {
     if (!d_windowRenderer)
-        CEGUI_THROW(InvalidRequestException(
+        throw InvalidRequestException(
             "This function must be implemented by the window renderer object "
-            "(no window renderer is assigned.)"));
+            "(no window renderer is assigned.)");
 
     return static_cast<ScrollbarWindowRenderer*>(
                d_windowRenderer)->getAdjustDirectionFromPoint(pt);
@@ -406,17 +422,9 @@ float Scrollbar::getAdjustDirectionFromPoint(const Vector2f& pt) const
 //----------------------------------------------------------------------------//
 bool Scrollbar::setScrollPosition_impl(const float position)
 {
-    const float old_pos = d_position;
-    const float max_pos = getMaxScrollPosition();
-
-    // limit position to valid range:  0 <= position <= max_pos
-    d_position = (position >= 0) ?
-                 ((position <= max_pos) ?
-                  position :
-                  max_pos) :
-                     0.0f;
-
-    return d_position != old_pos;
+    const float oldPos = d_position;
+    d_position = std::max(0.f, std::min(position, getMaxScrollPosition()));
+    return d_position != oldPos;
 }
 
 //----------------------------------------------------------------------------//
@@ -485,7 +493,7 @@ float Scrollbar::getMaxScrollPosition() const
 {
     // max position is (docSize - pageSize)
     // but must be at least 0 (in case doc size is very small)
-    return ceguimax((d_documentSize - d_pageSize), 0.0f);
+    return std::max((d_documentSize - d_pageSize), 0.0f);
 }
 
 //----------------------------------------------------------------------------//

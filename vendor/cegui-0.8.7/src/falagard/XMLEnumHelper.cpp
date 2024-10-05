@@ -33,11 +33,11 @@ namespace CEGUI
 {
 
     //! Definitions of static constants
-    const CEGUI::String FalagardXMLHelper<VerticalFormatting>::TopAligned("TopAligned");
-    const CEGUI::String FalagardXMLHelper<VerticalFormatting>::CentreAligned("CentreAligned");
-    const CEGUI::String FalagardXMLHelper<VerticalFormatting>::BottomAligned("BottomAligned");
-    const CEGUI::String FalagardXMLHelper<VerticalFormatting>::Stretched("Stretched");
-    const CEGUI::String FalagardXMLHelper<VerticalFormatting>::Tiled("Tiled");
+    const CEGUI::String FalagardXMLHelper<VerticalImageFormatting>::TopAligned("TopAligned");
+    const CEGUI::String FalagardXMLHelper<VerticalImageFormatting>::CentreAligned("CentreAligned");
+    const CEGUI::String FalagardXMLHelper<VerticalImageFormatting>::BottomAligned("BottomAligned");
+    const CEGUI::String FalagardXMLHelper<VerticalImageFormatting>::Stretched("Stretched");
+    const CEGUI::String FalagardXMLHelper<VerticalImageFormatting>::Tiled("Tiled");
 
     const CEGUI::String FalagardXMLHelper<HorizontalFormatting>::LeftAligned("LeftAligned");
     const CEGUI::String FalagardXMLHelper<HorizontalFormatting>::CentreAligned("CentreAligned");
@@ -73,6 +73,7 @@ namespace CEGUI
     const CEGUI::String FalagardXMLHelper<HorizontalTextFormatting>::CentreAligned("CentreAligned");
     const CEGUI::String FalagardXMLHelper<HorizontalTextFormatting>::RightAligned("RightAligned");
     const CEGUI::String FalagardXMLHelper<HorizontalTextFormatting>::Justified("Justified");
+    const CEGUI::String FalagardXMLHelper<HorizontalTextFormatting>::Bidi("Bidi");
     const CEGUI::String FalagardXMLHelper<HorizontalTextFormatting>::WordWrapLeftAligned("WordWrapLeftAligned");
     const CEGUI::String FalagardXMLHelper<HorizontalTextFormatting>::WordWrapRightAligned("WordWrapRightAligned");
     const CEGUI::String FalagardXMLHelper<HorizontalTextFormatting>::WordWrapCentreAligned("WordWrapCentreAligned");
@@ -86,6 +87,8 @@ namespace CEGUI
     const CEGUI::String FalagardXMLHelper<DimensionOperator>::Subtract("Subtract");
     const CEGUI::String FalagardXMLHelper<DimensionOperator>::Multiply("Multiply");
     const CEGUI::String FalagardXMLHelper<DimensionOperator>::Divide("Divide");
+    const CEGUI::String FalagardXMLHelper<DimensionOperator>::Max("Max");
+    const CEGUI::String FalagardXMLHelper<DimensionOperator>::Min("Min");
     const CEGUI::String FalagardXMLHelper<DimensionOperator>::Noop("Noop");
 
     const CEGUI::String FalagardXMLHelper<FrameImageComponent>::TopLeftCorner("TopLeftCorner");

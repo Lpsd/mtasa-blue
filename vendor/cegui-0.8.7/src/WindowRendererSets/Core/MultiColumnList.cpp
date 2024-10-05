@@ -31,12 +31,16 @@
 #include "CEGUI/CoordConverter.h"
 #include "CEGUI/widgets/Scrollbar.h"
 #include "CEGUI/widgets/ListHeader.h"
-#include "CEGUI/widgets/ListboxItem.h"
+#include "CEGUI/widgets/ListboxTextItem.h"
 
 // Start of CEGUI namespace section
 namespace CEGUI
 {
     const String FalagardMultiColumnList::TypeName("Core/MultiColumnList");
+    const String FalagardMultiColumnList::UnselectedTextColourPropertyName("NormalTextColour");
+    const String FalagardMultiColumnList::SelectedTextColourPropertyName("SelectedTextColour");
+    const String FalagardMultiColumnList::ActiveSelectionColourPropertyName("ActiveSelectionColour");
+    const String FalagardMultiColumnList::InactiveSelectionColourPropertyName("InactiveSelectionColour");
 
 
     FalagardMultiColumnList::FalagardMultiColumnList(const String& type) :
@@ -46,7 +50,7 @@ namespace CEGUI
 
     Rectf FalagardMultiColumnList::getListRenderArea(void) const
     {
-        MultiColumnList* w = (MultiColumnList*)d_window;
+        MultiColumnList* w = static_cast<MultiColumnList*>(d_window);
         // get WidgetLookFeel for the assigned look.
         const WidgetLookFeel& wlf = getLookNFeel();
         bool v_visible = w->getVertScrollbar()->isVisible();
@@ -67,7 +71,7 @@ namespace CEGUI
             }
             area_name += "Scroll";
 
-            if (wlf.isNamedAreaDefined(area_name))
+            if (wlf.isNamedAreaPresent(area_name))
             {
                 return wlf.getNamedArea(area_name).getArea().getPixelRect(*w);
             }
@@ -77,9 +81,9 @@ namespace CEGUI
         return wlf.getNamedArea("ItemRenderingArea").getArea().getPixelRect(*w);
     }
 
-    void FalagardMultiColumnList::render()
+    void FalagardMultiColumnList::createRenderGeometry()
     {
-        MultiColumnList* w = (MultiColumnList*)d_window;
+        MultiColumnList* w = static_cast<MultiColumnList*>(d_window);
         const ListHeader* header = w->getListHeader();
         const Scrollbar* vertScrollbar = w->getVertScrollbar();
         const Scrollbar* horzScrollbar = w->getHorzScrollbar();
@@ -90,7 +94,7 @@ namespace CEGUI
         //
         // Render list items
         //
-        Vector3f itemPos;
+        glm::vec3 itemPos;
         Sizef itemSize;
         Rectf itemClipper, itemRect;
 
@@ -98,22 +102,27 @@ namespace CEGUI
         Rectf itemsArea(getListRenderArea());
 
         // set up initial positional details for items
-        itemPos.d_y = itemsArea.top() - vertScrollbar->getScrollPosition();
-        itemPos.d_z = 0.0f;
+        itemPos.y = itemsArea.top() - vertScrollbar->getScrollPosition();
+        itemPos.z = 0.0f;
 
         const float alpha = w->getEffectiveAlpha();
+        const ColourRect normalTextCol = getOptionalColour(UnselectedTextColourPropertyName, ListboxTextItem::DefaultTextColour);
+        const ColourRect selectedTextCol = getOptionalColour(SelectedTextColourPropertyName, ListboxTextItem::DefaultTextColour);
+        const ColourRect selectionBgCol = getOptionalColour(
+            w->isActive() ? ActiveSelectionColourPropertyName : InactiveSelectionColourPropertyName,
+            ListboxItem::DefaultSelectionColour);
 
         // loop through the items
-        for (uint i = 0; i < w->getRowCount(); ++i)
+        for (unsigned int i = 0; i < w->getRowCount(); ++i)
         {
             // set initial x position for this row.
-            itemPos.d_x = itemsArea.left() - horzScrollbar->getScrollPosition();
+            itemPos.x = itemsArea.left() - horzScrollbar->getScrollPosition();
 
             // calculate height for this row.
             itemSize.d_height = w->getHighestRowItemHeight(i);
 
             // loop through the columns in this row
-            for (uint j = 0; j < w->getColumnCount(); ++j)
+            for (unsigned int j = 0; j < w->getColumnCount(); ++j)
             {
                 // allow item to use full width of the column
                 itemSize.d_width = CoordConverter::asAbsolute(header->getColumnWidth(j), header->getPixelSize().d_width);
@@ -124,41 +133,41 @@ namespace CEGUI
                 if (item)
                 {
                     // calculate destination area for this item.
-                    itemRect.left(itemPos.d_x);
-                    itemRect.top(itemPos.d_y);
+                    itemRect.left(itemPos.x);
+                    itemRect.top(itemPos.y);
                     itemRect.setSize(itemSize);
                     itemClipper = itemRect.getIntersection(itemsArea);
 
                     // skip this item if totally clipped
                     if (itemClipper.getWidth() == 0)
                     {
-                        itemPos.d_x += itemSize.d_width;
+                        itemPos.x += itemSize.d_width;
                         continue;
                     }
 
-                    // draw this item
-                    item->draw(w->getGeometryBuffer(), itemRect, alpha, &itemClipper);
+                    // Create render geometry for this item and add it to the Window
+                    item->setSelectionColours(selectionBgCol);
+                    if (auto textItem = dynamic_cast<ListboxTextItem*>(item))
+                        textItem->setTextColours(textItem->isSelected() ? selectedTextCol : normalTextCol);
+                    item->createRenderGeometry(w->getGeometryBuffers(), itemRect, alpha, &itemClipper);
                 }
 
                 // update position for next column.
-                itemPos.d_x += itemSize.d_width;
+                itemPos.x += itemSize.d_width;
             }
 
             // update position ready for next row
-            itemPos.d_y += itemSize.d_height;
+            itemPos.y += itemSize.d_height;
         }
     }
 
     void FalagardMultiColumnList::cacheListboxBaseImagery()
     {
-        const StateImagery* imagery;
-
-        // get WidgetLookFeel for the assigned look.
         const WidgetLookFeel& wlf = getLookNFeel();
-        // try and get imagery for our current state
-        imagery = &wlf.getStateImagery(d_window->isEffectiveDisabled() ? "Disabled" : "Enabled");
-        // peform the rendering operation.
-        imagery->render(*d_window);
+        const auto& imagery = wlf.getStateImagery(d_window->isEffectiveDisabled() ? "Disabled"
+            : ((d_window->isFocused() && wlf.isStateImageryPresent("EnabledFocused")) ? "EnabledFocused" :
+                "Enabled"));
+        imagery.render(*d_window);
     }
 
-} // End of  CEGUI namespace section
+}

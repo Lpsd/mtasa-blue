@@ -100,7 +100,16 @@ namespace CEGUI
         */
         void    setBackgroundEnabled(bool setting);
 
-        virtual void render();
+        void createRenderGeometry() override;
+
+        /*!
+        \brief
+            Called when the frame is enabled/disabled.
+
+        \see isFrameEnabled
+        \see setFrameEnabled
+        */
+        virtual void onIsFrameEnabledChanged();
 
     protected:
         // implementation data

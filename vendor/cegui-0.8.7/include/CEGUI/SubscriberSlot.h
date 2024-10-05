@@ -27,15 +27,13 @@
 #ifndef _CEGUISubscriberSlot_h_
 #define _CEGUISubscriberSlot_h_
 
-#include "CEGUI/Base.h"
 #include "CEGUI/FreeFunctionSlot.h"
-#include "CEGUI/FunctorCopySlot.h"
-#include "CEGUI/FunctorReferenceSlot.h"
-#include "CEGUI/FunctorPointerSlot.h"
 #include "CEGUI/MemberFunctionSlot.h"
+#include "CEGUI/FunctorCopySlot.h"
+#include "CEGUI/FunctorPointerSlot.h"
+#include "CEGUI/FunctorReferenceSlot.h"
 #include "CEGUI/FunctorReferenceBinder.h"
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 
@@ -48,8 +46,7 @@ namespace CEGUI
     exceptions are for subscribing member functions and references to functor
     objects.
 */
-class CEGUIEXPORT SubscriberSlot :
-    public AllocatedObject<SubscriberSlot>
+class CEGUIEXPORT SubscriberSlot
 {
 public:
     /*!
@@ -72,7 +69,7 @@ public:
         The handler doesn't have to return bool. True is always returned.
     */
     inline SubscriberSlot(FreeFunctionSlotVoid::SlotFunction* func):
-        d_functor_impl(CEGUI_NEW_AO FreeFunctionSlotVoid(func))
+        d_functor_impl(new FreeFunctionSlotVoid(func))
     {}
 
     /*!
@@ -83,7 +80,7 @@ public:
         The handler doesn't have to take EventArgs. EventArgs are ignored.
     */
     inline SubscriberSlot(FreeFunctionSlotNoArgs::SlotFunction* func):
-        d_functor_impl(CEGUI_NEW_AO FreeFunctionSlotNoArgs(func))
+        d_functor_impl(new FreeFunctionSlotNoArgs(func))
     {}
 
     /*!
@@ -94,7 +91,7 @@ public:
         The handler doesn't have to take EventArgs or return bool.
     */
     inline SubscriberSlot(FreeFunctionSlotVoidNoArgs::SlotFunction* func):
-        d_functor_impl(CEGUI_NEW_AO FreeFunctionSlotVoidNoArgs(func))
+        d_functor_impl(new FreeFunctionSlotVoidNoArgs(func))
     {}
 
     /*!
@@ -121,7 +118,7 @@ public:
     */
     bool connected() const
     {
-        return d_functor_impl != 0;
+        return d_functor_impl != nullptr;
     }
 
     /*!
@@ -197,7 +194,7 @@ public:
 
 private:
     //! Points to the internal functor object to which we are bound
-    SlotFunctorBase* d_functor_impl;
+    SlotFunctorBase<EventArgs>* d_functor_impl;
 };
 
 } // End of  CEGUI namespace section

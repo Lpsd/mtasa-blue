@@ -27,14 +27,15 @@
  *   ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  *   OTHER DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
-
 #ifndef _CEGUIElement_h_
 #define _CEGUIElement_h_
 
-#include "CEGUI/Base.h"
 #include "CEGUI/PropertySet.h"
 #include "CEGUI/EventSet.h"
 #include "CEGUI/EventArgs.h"
+#include "CEGUI/Rectf.h"
+
+#include <vector>
 
 #if defined(_MSC_VER)
 #   pragma warning(push)
@@ -43,163 +44,6 @@
 
 namespace CEGUI
 {
-
-/*!
-\brief Enumerated type used when specifying horizontal alignments for Element
-
-\see VerticalAlignment
- */
-enum HorizontalAlignment
-{
-    /**
-     * Element's position specifies an offset of it's left edge from the left
-     * edge of it's parent.
-     */
-    HA_LEFT,
-    /**
-     * Element's position specifies an offset of it's horizontal centre from the
-     * horizontal centre of it's parent.
-     */
-    HA_CENTRE,
-    /**
-     * Element's position specifies an offset of it's right edge from the right
-     * edge of it's parent.
-     */
-    HA_RIGHT
-};
-
-template<>
-class PropertyHelper<HorizontalAlignment>
-{
-public:
-    typedef HorizontalAlignment return_type;
-    typedef return_type safe_method_return_type;
-    typedef HorizontalAlignment pass_type;
-    typedef String string_return_type;
-
-    static const String& getDataTypeName()
-    {
-        static String type("HorizontalAlignment");
-
-        return type;
-    }
-
-    static return_type fromString(const String& str)
-    {
-        if (str == "Centre")
-        {
-            return HA_CENTRE;
-        }
-        else if (str == "Right")
-        {
-            return HA_RIGHT;
-        }
-        else
-        {
-            return HA_LEFT;
-        }
-    }
-
-    static string_return_type toString(pass_type val)
-    {
-        if (val == HA_CENTRE)
-        {
-            return "Centre";
-        }
-        else if (val == HA_RIGHT)
-        {
-            return "Right";
-        }
-        else if (val == HA_LEFT)
-        {
-            return "Left";
-        }
-        else
-        {
-            assert(false && "Invalid horizontal alignment");
-            return "Centre";
-        }
-    }
-};
-
-/*!
-\brief Enumerated type used when specifying vertical alignments for Element
-
-\see HorizontalAlignment
- */
-enum VerticalAlignment
-{
-    /**
-     * Element's position specifies an offset of it's top edge from the top edge
-     * of it's parent.
-     */
-    VA_TOP,
-    /**
-     * Element's position specifies an offset of it's vertical centre from the
-     * vertical centre of it's parent.
-     */
-    VA_CENTRE,
-    /**
-     * Element's position specifies an offset of it's bottom edge from the
-     * bottom edge of it's parent.
-     */
-    VA_BOTTOM
-};
-
-template<>
-class PropertyHelper<CEGUI::VerticalAlignment>
-{
-public:
-    typedef VerticalAlignment return_type;
-    typedef return_type safe_method_return_type;
-    typedef VerticalAlignment pass_type;
-    typedef String string_return_type;
-
-    static const String& getDataTypeName()
-    {
-        static String type("VerticalAlignment");
-
-        return type;
-    }
-
-    static return_type fromString(const String& str)
-    {
-      if (str == "Centre")
-      {
-          return VA_CENTRE;
-      }
-      else if (str == "Bottom")
-      {
-          return VA_BOTTOM;
-      }
-      else
-      {
-          return VA_TOP;
-      }
-    }
-
-    static string_return_type toString(pass_type val)
-    {
-        if (val == VA_CENTRE)
-        {
-            return "Centre";
-        }
-        else if (val == VA_BOTTOM)
-        {
-            return "Bottom";
-        }
-        else if (val == VA_TOP)
-        {
-            return "Top";
-        }
-        else
-        {
-            assert(false && "Invalid vertical alignment");
-            return "Centre";
-        }
-    }
-};
-
 /*!
 \brief
     EventArgs based class that is used for objects passed to handlers triggered
@@ -239,10 +83,7 @@ class directly. You most likely want to use CEGUI::Window.
     that deriving classes can easily make their getParent and return the proper
     casted type (Window* for example).
 */
-class CEGUIEXPORT Element :
-    public PropertySet,
-    public EventSet,
-    public AllocatedObject<Element>
+class CEGUIEXPORT Element : public PropertySet, public EventSet
 {
 public:
     //! Namespace for global events
@@ -253,12 +94,6 @@ public:
      * ElementEventArgs::element set to the Element whose size was changed.
      */
     static const String EventSized;
-    /** Event fired when the parent of this Element has been re-sized.
-     * Handlers are passed a const ElementEventArgs reference with
-     * ElementEventArgs::element pointing to the <em>parent element</em> that
-     * was resized, not the element whose parent was resized.
-     */
-    static const String EventParentSized;
     /** Event fired when the Element position has changed.
      * Handlers are passed a const ElementEventArgs reference with
      * ElementEventArgs::element set to the Element whose position was changed.
@@ -291,6 +126,11 @@ public:
      * ElementEventArgs::element set to the child element that was removed.
      */
     static const String EventChildRemoved;
+    /** Event fired when child elements get rearranged.
+     * Handlers are passed a const ElementEventArgs reference with
+     * ElementEventArgs::element set to the element whose children were rearranged.
+     */
+    static const String EventChildOrderChanged;
     /** Event fired when the z-order of the element has changed.
      * Handlers are passed a const ElementEventArgs reference with
      * ElementEventArgs::element set to the Element whose z order position has
@@ -303,6 +143,8 @@ public:
      * changed.
      */
     static const String EventNonClientChanged;
+    //! \brief Fired when "AdjustWidthToContent" or "AdjustHeightToContent" changes.
+    static const String EventIsSizeAdjustedToContentChanged;
 
     /*!
     \brief A tiny wrapper to hide some of the dirty work of rect caching
@@ -320,14 +162,13 @@ public:
         If the bool is true all PixelAlignment settings will be overridden
         and no pixel alignment will take place.
         */
-        typedef Rectf (Element::*DataGenerator)(bool) const;
+        typedef Rectf(Element::* DataGenerator)(bool) const;
 
-        CachedRectf(Element const* element, DataGenerator generator):
+        CachedRectf(Element const* element, DataGenerator generator) :
             d_element(element),
-            d_generator(generator),
+            d_generator(generator)
             // we don't have to initialise d_cachedData here, it will get
             // regenerated and reset anyways
-            d_cacheValid(false)
         {}
 
         /*!
@@ -336,9 +177,7 @@ public:
         inline const Rectf& get() const
         {
             if (!d_cacheValid)
-            {
                 regenerateCache();
-            }
 
             return d_cachedData;
         }
@@ -354,12 +193,13 @@ public:
             // if the cache is not valid we will use this chance to regenerate it
             // of course this is only applicable if we are allowed to use pixel alignment where applicable
             if (!d_cacheValid && !skipAllPixelAlignment)
-            {
                 return get();
-            }
 
-            return CEGUI_CALL_MEMBER_FN(*d_element, d_generator)(skipAllPixelAlignment);
+            return ((*d_element).*d_generator)(skipAllPixelAlignment);
         }
+
+        //! \brief Retrieves cached Rectf even if the cache is invalid
+        const Rectf& getCurrent() const { return d_cachedData; }
 
         /*!
         \brief Invalidates the cached Rectf causing it to be regenerated
@@ -367,54 +207,58 @@ public:
         The regeneration will not happen immediately, it will happen when user
         requests the data.
         */
-        inline void invalidateCache() const
-        {
-            d_cacheValid = false;
-        }
+        void invalidateCache() const { d_cacheValid = false; }
 
-        inline bool isCacheValid() const
-        {
-            return d_cacheValid;
-        }
+        bool isCacheValid() const { return d_cacheValid; }
 
         inline void regenerateCache() const
         {
             // false, since when we are caching we don't want to skip anything, we want everything to act
             // exactly as it was setup
-            d_cachedData = CEGUI_CALL_MEMBER_FN(*d_element, d_generator)(false);
-
+            d_cachedData = (*d_element.*d_generator)(false);
             d_cacheValid = true;
         }
 
     private:
+
         Element const* d_element;
         const DataGenerator d_generator;
 
         mutable Rectf d_cachedData;
-        mutable bool  d_cacheValid;
+        mutable bool  d_cacheValid = false;
     };
 
     /*!
-    \brief Constructor
-    */
-    Element();
+    \brief
+        Retrieves parents of given elements that are siblings of
+        their lowest common ancestor
 
-    /*!
-    \brief Destructor
+    \returns
+        - two different siblings if there is a lowest common ancestor
+        - both elements equal to one of input elements if it is an ancestor of another
+        - both nullptrs if there is no common ancestor
     */
-    virtual ~Element();
+    static std::pair<Element*, Element*> getSiblingsInCommonAncestor(const Element* e1, const Element* e2);
+
+    //! Retrieves the lowest common ancestor of two elements (may be nullptr)
+    static inline Element* getCommonAncestor(const Element* e1, const Element* e2)
+    {
+        const auto siblings = getSiblingsInCommonAncestor(e1, e2);
+        return (siblings.first == siblings.second) ? siblings.first : siblings.first->getParentElement();
+    }
+
+    Element();
+    Element(const Element&) = delete;
+    Element& operator=(const Element&) = delete;
 
     /*!
     \brief Retrieves parent of this element
-   
+
     \returns
         pointer to parent or 0, 0 means that this Element is a root of
         the subtree it represents
     */
-    inline Element* getParentElement() const
-    {
-        return d_parent;
-    }
+    Element* getParentElement() const { return d_parent; }
 
     /*!
     \brief
@@ -433,22 +277,27 @@ public:
     \param size
         UVector2 describing the new size of the element area.
 
+    \param adjust_size_to_content
+        If the size actually changes, should we call "AdjustSizeToContent"?
+        Normally, this should be true. However, if this function is called from
+        inside "AdjustSizeToContent", you must set this to false to prevent
+        infinite recursion.
+
     \see UDim
     */
-    virtual void setArea(const UVector2& pos, const USize& size);
+    void setArea(const UVector2& pos, const USize& size, bool adjust_size_to_content);
 
     //! \overload
-    inline void setArea(const UDim& xpos, const UDim& ypos,
-                        const UDim& width, const UDim& height)
+    void setArea(const UDim& xpos, const UDim& ypos, const UDim& width, const UDim& height)
     {
         setArea(UVector2(xpos, ypos), USize(width, height));
     }
 
     //! \overload
-    inline void setArea(const URect& area)
-    {
-        setArea(area.d_min, area.getSize());
-    }
+    void setArea(const UVector2& pos, const USize& size) { setArea(pos, size, true); }
+
+    //! \overload
+    void setArea(const URect& area) { setArea(area.d_min, area.getSize()); }
 
     /*!
     \brief
@@ -464,10 +313,7 @@ public:
 
     \see UDim
     */
-    inline const URect& getArea() const
-    {
-        return d_area;
-    }
+    const URect& getArea() const { return d_area; }
 
     /*!
     \brief
@@ -484,28 +330,19 @@ public:
     \see UDim
     \see Element::setArea(const UVector2& pos, const USize& size)
     */
-    inline void setPosition(const UVector2& pos)
-    {
-        setArea_impl(pos, d_area.getSize());
-    }
+    void setPosition(const UVector2& pos) { setArea(pos, getSize(), true); }
 
     //! \overload
-    inline void setXPosition(const UDim& pos)
-    {
-        setPosition(UVector2(pos, getYPosition()));
-    }
+    void setXPosition(const UDim& pos) { setPosition(UVector2(pos, getYPosition())); }
 
     //! \overload
-    inline void setYPosition(const UDim& pos)
-    {
-        setPosition(UVector2(getXPosition(), pos));
-    }
+    void setYPosition(const UDim& pos) { setPosition(UVector2(getXPosition(), pos)); }
 
     /*!
     \brief
         Get the element's position.
 
-        Sets the position of the area occupied by this element. The position is offset from
+        Gets the position of the area occupied by this element. The position is offset from
         one of the corners of this Element's parent element (depending on alignments)
         or from the top-left corner of the display if this element has no parent
         (i.e. it is the root element).
@@ -515,22 +352,13 @@ public:
 
     \see UDim
     */
-    inline const UVector2& getPosition() const
-    {
-        return d_area.getPosition();
-    }
+    const UVector2& getPosition() const { return d_area.getPosition(); }
 
     //! \overload
-    inline const UDim& getXPosition() const
-    {
-        return getPosition().d_x;
-    }
+    const UDim& getXPosition() const { return getPosition().d_x; }
 
     //! \overload
-    inline const UDim& getYPosition() const
-    {
-        return getPosition().d_y;
-    }
+    const UDim& getYPosition() const { return getPosition().d_y; }
 
     /*!
     \brief
@@ -554,10 +382,7 @@ public:
     \return
         One of the HorizontalAlignment enumerated values.
      */
-    inline HorizontalAlignment getHorizontalAlignment() const
-    {
-        return d_horizontalAlignment;
-    }
+    HorizontalAlignment getHorizontalAlignment() const { return d_horizontalAlignment; }
 
     /*!
     \brief
@@ -581,10 +406,7 @@ public:
     \return
         One of the VerticalAlignment enumerated values.
      */
-    inline VerticalAlignment getVerticalAlignment() const
-    {
-        return d_verticalAlignment;
-    }
+    VerticalAlignment getVerticalAlignment() const { return d_verticalAlignment; }
 
     /*!
     \brief
@@ -597,22 +419,35 @@ public:
 
     \see UDim
     */
-    inline void setSize(const USize& size)
+    void setSize(const USize& size) { setSize(size, true); }
+
+    /*!
+    \brief
+        Set the element's size.
+
+        Sets the size of the area occupied by this element.
+
+    \param size
+        USize describing the new size of the element's area.
+
+    \param adjust_size_to_content
+        If the size actually changes, should we call "AdjustSizeToContent"?
+        Normally, this should be true. However, if this function is called from
+        inside "AdjustSizeToContent", you must set this to false to prevent
+        infinite recursion.
+
+    \see UDim
+    */
+    void setSize(const USize& size, bool adjust_size_to_content)
     {
-        setArea(d_area.getPosition(), size);
+        setArea(getPosition(), size, adjust_size_to_content);
     }
 
     //! \overload
-    inline void setWidth(const UDim& width)
-    {
-        setSize(USize(width, getSize().d_height));
-    }
+    void setWidth(const UDim& width) { setSize(USize(width, getSize().d_height)); }
 
     //! \overload
-    inline void setHeight(const UDim& height)
-    {
-        setSize(USize(getSize().d_width, height));
-    }
+    void setHeight(const UDim& height) { setSize(USize(getSize().d_width, height)); }
 
     /*!
     \brief
@@ -625,22 +460,13 @@ public:
 
     \see UDim
     */
-    inline USize getSize() const
-    {
-        return d_area.getSize();
-    }
+    USize getSize() const { return d_area.getSize(); }
 
     //! \overload
-    inline UDim getWidth() const
-    {
-        return getSize().d_width;
-    }
+    UDim getWidth() const { return getSize().d_width; }
 
     //! \overload
-    inline UDim getHeight() const
-    {
-        return getSize().d_height;
-    }
+    UDim getHeight() const { return getSize().d_height; }
 
     /*!
     \brief
@@ -674,10 +500,7 @@ public:
 
     \see Element::setMinSize
     */
-    inline const USize& getMinSize() const
-    {
-        return d_minSize;
-    }
+    const USize& getMinSize() const { return d_minSize; }
 
     /*!
     \brief
@@ -713,10 +536,7 @@ public:
 
     \see Element::setMaxSize
      */
-    inline const USize& getMaxSize() const
-    {
-        return d_maxSize;
-    }
+    const USize& getMaxSize() const { return d_maxSize; }
 
     /*!
     \brief Sets current aspect mode and recalculates the area rect
@@ -734,10 +554,7 @@ public:
 
     \see Element::setAspectMode
     */
-    inline AspectMode getAspectMode() const
-    {
-        return d_aspectMode;
-    }
+    AspectMode getAspectMode() const { return d_aspectMode; }
 
     /*!
     \brief
@@ -748,7 +565,7 @@ public:
         16.0f / 9.0.f, ...
 
     \note
-        This is ignored if AspectMode is AM_IGNORE.
+        This is ignored if AspectMode is IGNORE.
 
     \see Element::setAspectMode
     */
@@ -760,15 +577,12 @@ public:
 
     \see Element::setAspectRatio
     */
-    inline float getAspectRatio() const
-    {
-        return d_aspectRatio;
-    }
+    float getAspectRatio() const { return d_aspectRatio; }
 
     /*!
     \brief
         Sets whether this Element is pixel aligned (both position and size, basically the 4 "corners").
-        
+
     \par Impact on the element tree
         Lets say we have Element A with child Element B, A is pixel aligned
         and it's position is 99.5, 99.5 px in screenspace. This gives us
@@ -791,26 +605,20 @@ public:
     /*!
     \brief
         Checks whether this Element is pixel aligned
-        
+
     \see
         Element::setPixelAligned
     */
-    inline bool isPixelAligned() const
-    {
-        return d_pixelAligned;
-    }
+    bool isPixelAligned() const { return d_pixelAligned; }
 
     /*!
     \brief
         Return the element's absolute (or screen, depending on the type of the element) position in pixels.
 
     \return
-        Vector2f object describing this element's absolute position in pixels.
+        glm::vec2 object describing this element's absolute position in pixels.
     */
-    inline const Vector2f& getPixelPosition() const
-    {
-        return getUnclippedOuterRect().get().d_min;
-    }
+    glm::vec2 getPixelPosition() const { return getUnclippedOuterRect().get().d_min; }
 
     /*!
     \brief
@@ -819,15 +627,12 @@ public:
     \return
         Size object describing this element's size in pixels.
     */
-    inline const Sizef& getPixelSize() const
-    {
-        return d_pixelSize;
-    }
+    const Sizef& getPixelSize() const { return d_pixelSize; }
 
     /*!
     \brief Calculates this element's pixel size
 
-    \param skipAllPixelAlignment 
+    \param skipAllPixelAlignment
         Should all pixel-alignment be skipped when calculating the pixel size?
 
     If you want to get the pixel size you most probably want to use the
@@ -848,6 +653,11 @@ public:
     Sizef getParentPixelSize(bool skipAllPixelAlignment = false) const;
 
     /*!
+    \brief Return the base pixel size for relative calculations.
+    */
+    Sizef getBasePixelSize(bool skipAllPixelAlignment = false) const;
+
+    /*!
     \brief sets rotation of this widget
 
     \param rotation
@@ -857,19 +667,42 @@ public:
         CEGUI used Euler angles previously. While these are easy to use and seem
         intuitive they cause Gimbal locks when animating and are overall the worse
         solution than using Quaternions. You can still use Euler angles, see
-        the CEGUI::Quaternion class for more info about that.
+        the glm::quat class for more info about that.
+
+    \see Element::getRotation
     */
-    void setRotation(const Quaternion& rotation);
+    void setRotation(const glm::quat& rotation);
 
     /*!
     \brief retrieves rotation of this widget
 
     \see Element::setRotation
     */
-    inline const Quaternion& getRotation() const
-    {
-        return d_rotation;
-    }
+    const glm::quat& getRotation() const { return d_rotation; }
+
+    /*!
+    \brief
+        Retrieves the pivot point (the point around which the widget is rotated).
+
+        The point is defined in 3D so you can also rotate around the Z axis.
+
+        The point is defined with "UDim"-s, so you can use relative dimensions. They're relative to the size of the widget. The depth of the widget is currently always 0.
+
+        The default is the widget's center.
+
+    \see Element::setPivot
+    \see Element::getRotation
+    */
+    const UVector3& getPivot() const { return d_pivot; }
+
+    /*!
+    \brief
+        Sets the pivot point (the point around which the widget is rotated).
+
+    \see Element::getPivot
+    \see Element::setRotation
+    */
+    void setPivot(const UVector3& pivot);
 
     /*!
     \brief
@@ -890,6 +723,9 @@ public:
     \exception InvalidRequestException
         thrown if Element \a element is an ancestor of this Element, to prevent
         cyclic Element structures.
+
+    \see
+        Element::removeChild
     */
     void addChild(Element* element);
 
@@ -907,6 +743,62 @@ public:
 
     /*!
     \brief
+        Adds a child to given position
+    */
+    virtual void addChildAtIndex(Element* element, size_t index);
+
+    /*!
+    \brief
+        Removes a child from given position
+    */
+    virtual void removeChildAtIndex(size_t index);
+
+    /*!
+    \brief
+        Moves an element that is already a child of this element
+        to given position (if the element is currently in a position
+        that is smaller than given position, given position is
+        automatically decremented)
+    */
+    virtual void moveChildToIndex(size_t indexFrom, size_t indexTo);
+
+    /*!
+    \brief
+        Moves a element that is already a child of this element
+        to given position (if the element is currently in a position
+        that is smaller than given position, given position is
+        automatically decremented)
+    */
+    void moveChildToIndex(Element* child, size_t index);
+
+    /*!
+    \brief
+        Moves an element forward or backward in the child list, depending on
+        delta (-1 moves it backward one step, 1 moves it forward one step)
+
+    \note
+        This method clamps resulting index rather than cycles.
+
+    \param delta
+        The amount of steps the element will be moved
+        (old index + delta = new index)
+    */
+    void moveChildByDelta(Element* child, int delta = 1);
+
+    /*!
+    \brief
+        Swaps child elements at given positions
+    */
+    void swapChildren(size_t index1, size_t index2);
+
+    /*!
+    \brief
+        Swaps positions of given elements
+    */
+    void swapChildren(Element* child1, Element* child2);
+
+    /*!
+    \brief
         return a pointer to the child element that is attached to 'this' at the
         given index.
 
@@ -918,22 +810,27 @@ public:
     \return
         Pointer to the child element currently attached at index position \a idx
     */
-    inline Element* getChildElementAtIdx(size_t idx) const
-    {
-        return d_children[idx];
-    }
+    Element* getChildElementAtIndex(size_t idx) const { return d_children[idx]; }
 
     /*!
-    \brief Returns number of child elements attached to this Element
-    */
-    inline size_t getChildCount() const
-    {
-        return d_children.size();
-    }
+    \brief
+        returns an index of the specified child element. Index is based on the
+        order in which the children were added and is stable.
 
-    /*!
-    \brief Checks whether given element is attached to this Element
+    \param child
+        A element whose index must be calculated.
+
+    \return
+        Returns a zero-based index of the element \a child. Any value that is not
+        less than the value returned by getChildCount() must be treated as invalid.
+        It means that the given element is not our child.
     */
+    size_t getChildIndex(const Element* child) const;
+
+    //! \brief Returns number of child elements attached to this Element
+    size_t getChildCount() const { return d_children.size(); }
+
+    //! \brief Checks whether given element is attached to this Element
     bool isChild(const Element* element) const;
 
     /*!
@@ -949,7 +846,13 @@ public:
           parent, etc) of this Element.
         - false if \a element is not an ancestor of this element.
     */
-    bool isAncestor(const Element* element) const;
+    bool isDescendantOf(const Element* element) const;
+
+    //! \brief Checks whether the element is in a subtree starting at the given root
+    bool isInHierarchyOf(const Element* root) const { return root && (root == this || isDescendantOf(root)); }
+
+    //! \brief Checks whether the element is in the parent-child chain between two windows, inclusive
+    bool isInChain(const Element* mostNested, const Element* leastNested) const;
 
     /*!
     \brief Set whether the Element is non-client.
@@ -971,10 +874,104 @@ public:
 
     \see Element::setNonClient
     */
-    inline bool isNonClient() const
-    {
-        return d_nonClient;
-    }
+    bool isNonClient() const { return d_nonClient; }
+
+    /*!
+    \brief
+        If set to "true", keep the width of the element at the minimal value in
+        which the whole element content is visible without the
+        need for a horizontal scrollbar (if possible), and while the content
+        remains "intact" (if possible).
+        
+        See the documentation of "isWidthAdjustedToContent" for more details.
+
+    \see isWidthAdjustedToContent
+    \see setAdjustHeightToContent
+    */
+    void setAdjustWidthToContent(bool value);
+
+    /*!
+    \brief
+        If set to "true", keep the height of the element at the minimal value in
+        which the whole element content is visible without the
+        need for a vertical scrollbar (if possible), and while the content
+        remains "intact" (if possible).
+        
+        See the documentation of "isHeightAdjustedToContent" for more details.
+
+    \see isHeightAdjustedToContent
+    \see setAdjustWidthToContent
+    */
+    void setAdjustHeightToContent(bool value);
+
+    /*!
+    \brief
+        If set to "true", keep the width of the element at the minimal value in
+        which the whole element content is visible without the
+        need for a horizontal scrollbar (if possible), and while the content
+        remains "intact" (if possible).
+
+        The meaning of "element content" and "intact" depends on the type of
+        element. For example, for a "FalagardStaticText" widget, the content is
+        the text, and "intact" means no single word is split between 2 or more
+        lines. So setting this property to "true" would keep the width of the
+        widget to the minimal value in which the whole text is visible without
+        the need for a horizontal scrollbar (if possible), and without the need
+        to split a word between 2 or more lines (if possible).
+
+        Whenever the size of the widget should be (re)adjusted to its content,
+        this is done by calling "adjustSizeToContent". This happens in the
+        default implementations of "onIsSizeAdjustedToContentChanged" and
+        "onSized".
+
+    \see adjustSizeToContent
+    \see isHeightAdjustedToContent
+    \see setAdjustWidthToContent
+    \see isSizeAdjustedToContent
+    \see onIsSizeAdjustedToContentChanged
+    \see onSized
+    */
+    bool isWidthAdjustedToContent() const { return d_isWidthAdjustedToContent; }
+
+    /*!
+    \brief
+        If set to "true", keep the height of the element at the minimal value in
+        which the whole element content is visible without the
+        need for a vertical scrollbar (if possible), and while the content
+        remains "intact" (if possible).
+
+        The meaning of "element content" and "intact" depends on the type of
+        element. For example, for a "FalagardStaticText" widget, the content is
+        the text, and "intact" means no single word is split between 2 or more
+        lines. So setting this property to "true" would keep the height of the
+        widget to the minimal value in which the whole text is visible without
+        the need for a vertical scrollbar (if possible), and without the need
+        to split a word between 2 or more lines (if possible).
+
+        Whenever the size of the widget should be (re)adjusted to its content,
+        this is done by calling "adjustSizeToContent". This happens in the
+        default implementations of "onIsSizeAdjustedToContentChanged" and
+        "onSized".
+
+    \see adjustSizeToContent
+    \see isWidthAdjustedToContent
+    \see setAdjustHeightToContent
+    \see isSizeAdjustedToContent
+    \see onContentSizeChanged
+    \see onIsSizeAdjustedToContentChanged
+    \see onSized
+    */
+    bool isHeightAdjustedToContent() const { return d_isHeightAdjustedToContent; }
+
+    /*!
+    \brief
+        Return whether any of the properties "AdjustWidthToContent" and
+        "AdjustHeightToContent" is set to true.
+
+    \see isWidthAdjustedToContent
+    \see isHeightAdjustedToContent
+    */
+    bool isSizeAdjustedToContent() const { return isWidthAdjustedToContent() || isHeightAdjustedToContent(); }
 
     /*!
     \brief Return a Rect that describes the unclipped outer rect area of the Element
@@ -989,10 +986,7 @@ public:
         If you take position of the result rectangle it is the same as pixel
         position of the Element in screenspace.
     */
-    inline const CachedRectf& getUnclippedOuterRect() const
-    {
-        return d_unclippedOuterRect;
-    }
+    const CachedRectf& getUnclippedOuterRect() const { return d_unclippedOuterRect; }
 
     /*!
     \brief Return a Rect that describes the unclipped inner rect area of the Element
@@ -1007,48 +1001,7 @@ public:
         Rect object that describes, in unclipped screen pixel co-ordinates, the
         element object's inner rect area.
     */
-    inline const CachedRectf& getUnclippedInnerRect() const
-    {
-        return d_unclippedInnerRect;
-    }
-
-    /*!
-    \brief Return a Rect that describes the unclipped area covered by the Element.
-
-    This function can return either the inner or outer area dependant upon
-    the boolean values passed in.
-
-    \param inner
-        - true if the inner rect area should be returned.
-        - false if the outer rect area should be returned.
-
-    \see Element::getUnclippedOuterRect
-    \see Element::getUnclippedInnerRect
-    */
-    inline const CachedRectf& getUnclippedRect(const bool inner) const
-    {
-        return inner ? getUnclippedInnerRect() : getUnclippedOuterRect();
-    }
-
-    /*!
-    \brief Return a Rect that is used by client child elements as content area
-
-    Client content area is used for relative sizing, positioning and clipping
-    of child elements that are client (their NonClient property is "false").
-
-    \see Element::getChildContentArea
-    */
-    virtual const CachedRectf& getClientChildContentArea() const;
-
-    /*!
-    \brief Return a Rect that is used by client child elements as content area
-
-    Client content area is used for relative sizing, positioning and clipping
-    of child elements that are non-client (their NonClient property is "true").
-
-    \see Element::getChildContentArea
-    */
-    virtual const CachedRectf& getNonClientChildContentArea() const;
+    const CachedRectf& getUnclippedInnerRect() const { return d_unclippedInnerRect; }
 
     /*!
     \brief Return a Rect that is used to position and size child elements
@@ -1062,34 +1015,39 @@ public:
         client content), although certain advanced uses will require
         alternative Rects to be returned.
 
-    \note
-        The behaviour of this function is modified by overriding the
-        protected Element::getClientChildContentArea and/or
-        Element::getNonClientChildContentArea functions.
-
     \param non_client
         - true to return the non-client child content area.
         - false to return the client child content area (default).
     */
-    inline const CachedRectf& getChildContentArea(const bool non_client = false) const
+    virtual const CachedRectf& getChildContentArea(const bool non_client = false) const
     {
-        return non_client ? getNonClientChildContentArea() : getClientChildContentArea();
+        return non_client ? d_unclippedOuterRect : d_unclippedInnerRect;
     }
 
     /*!
-    \brief Inform the element and (optionally) all children that screen area has changed
+    \brief Inform the element and all children that screen area has changed
 
     \note
         This will cause recomputation and recaching of various rectangles used.
         Such an action, especially if applied recursively, will impact performance
         before everything is cached again.
 
-    \param recursive
-        - true to recursively call notifyScreenAreaChanged on attached child
-          Element objects.
-        - false to just process \e this Element.
+    \param adjust_size_to_content
+        - true - call adjustSizeToContent() if our size is changed.
     */
-    virtual void notifyScreenAreaChanged(bool recursive = true);
+    void notifyScreenAreaChanged(bool adjust_size_to_content = true);
+
+    /*!
+    \brief
+        Layout child widgets inside our content areas.
+
+    \param client
+        - true to process client children
+
+    \param nonClient
+        - true to process non-client children
+    */
+    virtual void performChildLayout(bool client, bool nonClient);
 
     /*!
     \brief Return the size of the root container (such as screen size).
@@ -1100,79 +1058,355 @@ public:
     The value is significant and is used to size and position the root if
     it is using scale UDim component in position and/or size.
     */
-    virtual const Sizef& getRootContainerSize() const;
+    virtual Sizef getRootContainerSize() const;
 
-protected:
     /*!
     \brief
-        Add standard CEGUI::Element properties.
+        Set the size of the element to the minimal value in which the whole
+        element content is visible without the need for scrollbars
+        (if possible), and while the content remains "intact" (if possible).
+
+        The meaning of "element content" and "intact" depends on the type of
+        element. For example, for a "FalagardStaticText" widget, the content is
+        the text, and "intact" means no single word is split between 2 or more
+        lines. So setting this property to "true" would keep the width of the
+        widget to the minimal value in which the whole text is visible without
+        the need for scrollbars (if possible), and without the need to split a
+        word between 2 or more lines (if possible).
+
+        If the "AdjustWidthToContent" property is set to "true", the width is
+        adjusted. If the "AdjustHeightToContent" property is set to "true", the
+        height is adjusted. The exact behaviour of this method depends on the
+        combination of "AdjustWidthToContent" and "AdjustHeightToContent", as
+        well as on the type of widget, and possibly other properties. You might
+        want to look at the documentation for
+        "FalagardStaticText::adjustSizeToContent" for a detailed description on
+        how this method behaves for a "FalagardStaticText" widget, which serves
+        as a great example.
+    
+        There are 2 helper methods that you may want to use when implementing
+        this method:
+        1. "adjustSizeToContent_direct"
+        2. "getSizeAdjustedToContent_bisection"
+
+        The default implementations of "onIsSizeAdjustedToContentChanged" and
+        "onSized" call this method. Make sure you call this method whenever the
+        size should be re-adjusted to the content in any other case.
+    
+        The default implementation calls "adjustSizeToContent_direct".
+
+    \see FalagardStaticText::adjustSizeToContent
+    \see adjustSizeToContent_direct
+    \see getSizeAdjustedToContent_bisection
+    \see isWidthAdjustedToContent
+    \see isHeightAdjustedToContent
+    \see isSizeAdjustedToContent
     */
-    void addElementProperties();
+    virtual void adjustSizeToContent();
 
     /*!
     \brief
-        Implementation method to modify element area while correctly applying
-        min / max size processing, and firing any appropriate events.
+        Get width and height of the content of the element.
 
-    \note
-        This is the implementation function for setting size and position.
-        In order to simplify area management, from this point on, all
-        modifications to element size and position (area rect) should come
-        through here.
-
-    \param pos
-        UVector2 object describing the new area position.
-
-    \param size
-        USize object describing the new area size.
-
-    \param topLeftSizing
-        - true to indicate the the operation is a sizing operation on the top
-          and/or left edges of the area, and so element movement should be
-          inhibited if size is at max or min.
-        - false to indicate the operation is not a strict sizing operation on
-          the top and/or left edges and that the element position may change as
-          required
-
-    \param fireEvents
-        - true if events should be fired as normal.
-        - false to inhibit firing of events (required, for example, if you need
-          to call this from the onSize/onMove handlers).
-     */
-    virtual void setArea_impl(const UVector2& pos, const USize& size,
-                              bool topLeftSizing = false, bool fireEvents = true);
-
-    //! helper to return whether the inner rect size has changed
-    inline bool isInnerRectSizeChanged() const
-    {
-        const Sizef old_sz(d_unclippedInnerRect.get().getSize());
-        d_unclippedInnerRect.invalidateCache();
-        return old_sz != d_unclippedInnerRect.get().getSize();
-    }
-
+        The meaning of "content" depends on the type of element. For instance,
+        the content of a "FalagardStaticText" widget is its text.
+    */
+    virtual Sizef getContentSize() const;
+    
     /*!
     \brief
-        Set the parent element for this element object.
+        Get a lower bound for the width of the area of the element which is
+        reserved for content as an affine function of the element width.
 
-    \param parent
-        Pointer to a Element object that is to be assigned as the parent to this
-        Element.
+        An affine function means: "t" is an affine function of "m" if, for some
+        constants "a" and "b", it holds true that "t = a*m +b".
+
+        The meaning of "content" depends on the type of element. For instance,
+        the content of a "FalagardStaticText" widget is its text. The area
+        reserved for the content would then be the area reserved for the text,
+        which is defined by the Look'N'Feel, and usually equals the size of the
+        widget minus the size of the frame and scrollbars.
+
+        This method is used by "adjustSizeToContent".
 
     \return
-        Nothing
+        Let:
+            - "ret" be the value returned by this method.
+            - "t" be the width of the area of the element which is reserved for
+               content.
+            - "m" be the element width.
+        Then the following applies:
+            t >= ret.d_scale*m + ret.d_offset
+
+    \see adjustSizeToContent
+    \see getHeightOfAreaReservedForContentLowerBoundAsFuncOfElementHeight
+    \see getContentWidth
     */
-    virtual void setParent(Element* parent);
+    virtual UDim getWidthOfAreaReservedForContentLowerBoundAsFuncOfElementWidth() const;
+    
+    /*!
+    \brief
+        Get a lower bound for the height of the area of the element which is
+        reserved for content as an affine function of the element height.
+
+        An affine function means: "t" is an affine function of "m" if, for some
+        constants "a" and "b", it holds true that "t = a*m +b".
+
+        The meaning of "content" depends on the type of element. For instance,
+        the content of a "FalagardStaticText" widget is its text. The area
+        reserved for the content would then be the area reserved for the text,
+        which is defined by the Look'N'Feel, and usually equals the size of the
+        widget minus the size of the frame and scrollbars.
+
+        This method is used by "adjustSizeToContent".
+
+    \return
+        Let:
+            - "ret" be the value returned by this method.
+            - "t" be the height of the area of the element which is reserved for
+              content.
+            - "m" be the element height.
+        Then the following applies:
+            t >= ret.d_scale*m + ret.d_offset
+
+    \see adjustSizeToContent
+    \see getWidthOfAreaReservedForContentLowerBoundAsFuncOfElementWidth
+    \see getContentHeight
+    */
+    virtual UDim getHeightOfAreaReservedForContentLowerBoundAsFuncOfElementHeight() const;
 
     /*!
     \brief
-        Add given element to child list at an appropriate position
+        Get a lower bound for the element width as an affine function of the
+        width of the area of the element which is reserved for content.
+
+        An affine function means: "m" is an affine function of "t" if, for some
+        constants "a" and "b", it holds true that "m = a*t +b".
+
+        The meaning of "content" depends on the type of element. For instance,
+        the content of a "FalagardStaticText" widget is its text. The area
+        reserved for the content would then be the area reserved for the text,
+        which is defined by the Look'N'Feel, and usually equals the size of the
+        widget minus the size of the frame and scrollbars.
+
+        This method is used by "adjustSizeToContent".
+
+        The default implementaiton inverts the function returned by
+        "getWidthOfAreaReservedForContentLowerBoundAsFuncOfElementWidth". If the
+        scale of the value returned by
+        "getWidthOfAreaReservedForContentLowerBoundAsFuncOfElementWidth" is 0,
+        there's no solution, so an exception is thrown.
+
+    \return
+        Let:
+            - "ret" be the value returned by this method.
+            - "m" be the element width.
+            - "t" be the width of the area of the element which is reserved for
+              content.
+        Then the following applies: for every non-negative number "c", if
+        "m >= ret.d_scale*c + ret.d_offset" then "t >= c".
+
+    \see adjustSizeToContent
+    \see getWidthOfAreaReservedForContentLowerBoundAsFuncOfElementWidth
+    \see getElementHeightLowerBoundAsFuncOfHeightOfAreaReservedForContent
+    \see getContentWidth
     */
+    virtual UDim getElementWidthLowerBoundAsFuncOfWidthOfAreaReservedForContent() const;
+      
+    /*!
+    \brief
+        Get a lower bound for the element height as an affine function of the
+        height of the area of the element which is reserved for content.
+
+        An affine function means: "m" is an affine function of "t" if, for some
+        constants "a" and "b", it holds true that "m = a*t +b".
+
+        The meaning of "content" depends on the type of element. For instance,
+        the content of a "FalagardStaticText" widget is its text. The area
+        reserved for the content would then be the area reserved for the text,
+        which is defined by the Look'N'Feel, and usually equals the size of the
+        widget minus the size of the frame and scrollbars.
+
+        This method is used by "adjustSizeToContent".
+
+        The default implementaiton inverts the function returned by
+        "getWidthOfAreaReservedForContentLowerBoundAsFuncOfElementWidth". If the
+        scale of the value returned by
+        "getWidthOfAreaReservedForContentLowerBoundAsFuncOfElementWidth" is 0,
+        there's no solution, so an exception is thrown.
+
+    \return
+        Let:
+            - "ret" be the value returned by this method.
+            - "m" be the element height.
+            - "t" be the height of the area of the element which is reserved for
+              content.
+        Then the following applies: for every non-negative number "c", if
+        "m >= ret.d_scale*c + ret.d_offset" then "t >= c".
+
+    \see adjustSizeToContent
+    \see getHeightOfAreaReservedForContentLowerBoundAsFuncOfElementHeight
+    \see getElementWidthLowerBoundAsFuncOfWidthOfAreaReservedForContent
+    \see getContentHeight
+    */
+    virtual UDim getElementHeightLowerBoundAsFuncOfHeightOfAreaReservedForContent() const;
+      
+    /*!
+    \brief
+        An implementation of "adjustSizeToContent" that works for simple cases.
+
+        Set the size of the element using the following logic:
+        1) If the "AdjustWidthToContent" property is set to "true", do:
+            A. Compute the content width by calling "getContentWidth".
+            B. Compute a lower bound for the element width as a function of
+               width of the area reserved for the element content by calling
+               "getElementWidthLowerBoundAsFuncOfWidthOfAreaReservedForContent"
+            C. Use the results from "A" and "B" to compute a suitable element
+               width - that is, such as that the width of the area reserved for
+               the content be at least the result from "A".
+        2) Repeat the same steps of "1", replacing "width" with "height".
+
+        Note that in this implementation the width and height are treated
+        independently of each other.
+
+        If "getAspectMode() != IGNORE", this method respects the aspect ratio
+        using the following logic:
+            - If only "isWidthAdjustedToContent()" is true, compute the height
+              from the width and the aspect ratio.
+            - If only "isHeightAdjustedToContent()" is true, compute the width
+              from the height and the aspect ratio.
+            - If both "isWidthAdjustedToContent()" and
+              "isHeightAdjustedToContent()" are true, expand one of the width or
+              the height to comply with the aspect ratio.
+
+    \see adjustSizeToContent
+    \see getElementWidthLowerBoundAsFuncOfWidthOfAreaReservedForContent
+    \see getElementHeightLowerBoundAsFuncOfHeightOfAreaReservedForContent
+    \see getSizeAdjustedToContent_bisection
+    \see isWidthAdjustedToContent
+    \see isHeightAdjustedToContent
+    */
+    void adjustSizeToContent_direct();
+
+    /*!
+    \brief
+        Return a tiny number ("epsilon") serving as a "safety guard" for the
+        computations of "adjustSizeToContent".
+
+        The method "adjustSizeToContent" performs various computations to
+        determine the required size so that the whole element content is visible
+        without the need for scrollbars (if possible), and while the content
+        remains "intact" (if possible). However, due to computational errors,
+        it's possible that if we use the exact value obtained, we might not
+        achieve this goal fully. Therefore, we should, at some points of the
+        computation, add a tiny number ("epsilon") serving as a "safety guard".
+        This method returns the epsilon to use.
+
+        Normally there's no reason to override this method.
+
+    \see adjustSizeToContent
+    */
+    virtual float adjustSizeToContent_getEpsilon() const;
+
+    /*!
+    \brief
+        A helper method that can be used in the implementation of
+        "adjustSizeToContent" for non-simple cases.
+
+        This method tries to find a suitable size by try-and-error: It's given a
+        (mathematical) function "f(n)" whose domain is the integers between
+        "floor(domain_min)" and "ceil(domain_max)", and its codomain is R^2
+        (representing possible element sizes - i.e. of type "Sizef"). This
+        method finds the minimal "n" for which
+        "contentFitsForSpecifiedElementSize(f(n))" returns "true" - that is, for
+        which the whole element content is visible without the need for
+        scrollbars (if possible), and while the content remains "intact" (if
+        possible). The (mathematical) function "f(n)" is an affine function
+        defined by:
+            f(n) = (size_func.d_width.d_scale*n +size_func.d_width.d_offset,
+                    size_func.d_height.d_scale*n +size_func.d_height.d_offset)
+
+        Note: it's assumed that
+        "contentFitsForSpecifiedElementSize(f(domain_min))" returns "false" and
+        "contentFitsForSpecifiedElementSize(f(domain_max))" returns "true".
+
+        This method uses bisection to find the solution.
+
+        You might want to look at "FalagardStaticText::adjustSizeToContent" to
+        see an example of how this method is used.
+
+    \return
+        f(n)
+    
+    \see contentFitsForSpecifiedElementSize
+    \see adjustSizeToContent
+    \see FalagardStaticText::adjustSizeToContent
+    */
+    Sizef getSizeAdjustedToContent_bisection(const USize& size_func, float domain_min, float domain_max) const;
+
+    /*!
+    \brief
+        Return whether setting the element size to "element_size" would make the
+        whole element content visible without the need for scrollbars (if
+        possible), and while the content remains "intact" (if possible).
+
+        The meaning of "element content" and "intact" depends on the type of
+        element. For example, for a "FalagardStaticText" widget, the content is
+        the text, and "intact" means no single word is split between 2 or more
+        lines. So calling this method returns whether if we set the element size
+        to "element_size" the whole text would be visible, without the need for
+        scrollbars, and without having to split a single word between 2 or more
+        lines.
+
+        The default implementation calls
+        "contentFitsForSpecifiedElementSize_tryByResizing".
+
+        This method is used by "getSizeAdjustedToContent_bisection".
+
+    \see contentFitsForSpecifiedElementSize_tryByResizing
+    \see getSizeAdjustedToContent_bisection
+    */
+    virtual bool contentFitsForSpecifiedElementSize(const Sizef& element_size) const;
+      
+    /*!
+    \brief
+        A possible implementation of "contentFitsForSpecifiedElementSize".
+
+        This implementation actually sets (temporarily) the element size to
+        "element_size", and then calls "contentFits".
+
+    \see contentFits
+    \see contentFitsForSpecifiedElementSize
+    */
+    bool contentFitsForSpecifiedElementSize_tryByResizing(const Sizef& element_size) const;
+
+    /*!
+    \brief
+        Return whether the whole element content is visible without the need for
+        scrollbars (if possible), and while the content remains "intact" (if
+        possible).
+
+        The meaning of "element content" and "intact" depends on the type of
+        element. For example, for a "FalagardStaticText" widget, the content is
+        the text, and "intact" means no single word is split between 2 or more
+        lines.
+
+        This method is used by
+        "contentFitsForSpecifiedElementSize_tryByResizing"
+
+    \see contentFitsForSpecifiedElementSize_tryByResizing
+    */
+    virtual bool contentFits() const;
+
+protected:
+
+    //! \brief Add standard CEGUI::Element properties.
+    void addElementProperties();
+
+    //! \brief Add given element to child list at an appropriate position
     virtual void addChild_impl(Element* element);
 
-    /*!
-    \brief
-        Remove given element from child list
-    */
+    //! \brief Remove given element from child list
     virtual void removeChild_impl(Element* element);
 
     //! Default implementation of function to return Element's outer rect area.
@@ -1180,14 +1414,51 @@ protected:
     //! Default implementation of function to return Element's inner rect area.
     virtual Rectf getUnclippedInnerRect_impl(bool skipAllPixelAlignment) const;
 
-    //! helper to fire events based on changes to area rect
-    void fireAreaChangeEvents(const bool moved, const bool sized);
-    void notifyChildrenOfSizeChange(const bool non_client,
-                                    const bool client);
+    enum
+    {
+        ClientMoved = 0x01,
+        ClientSized = 0x02,
+        ClientClippingChanged = 0x04,
+        NonClientMoved = 0x08,
+        NonClientSized = 0x10,
+        NonClientClippingChanged = 0x20
+    };
+
+    /*!
+    \brief
+        Handles an actual screen area changes for this widget. This typically leads
+        to invalidation of cached imagery and areas.
+
+    \param movedOnScreen
+        - true if a widget moved on screen
+
+    \param movedInParent
+        - true if a widget moved inside its parent
+
+    \param sized
+        - true if a widget pixel size has changed
+
+    \return
+        Flags that represent child area changes (ClientMoved, ClientSized, ClientClippingChanged
+        NonClientMoved, NonClientSized, NonClientClippingChanged)
+    */
+    virtual uint8_t handleAreaChanges(bool movedOnScreen, bool movedInParent, bool sized);
+
+    /*!
+    \brief
+        Handles area changes for the widget and its sub-hierarchy without child layouting
+
+    \note
+        This is a lighter version of notifyScreenAreaChanged for widgets whose parent's size didn't change
+
+    \param movedOnScreen
+        - notification from the parent that this child could be moved on screen
+    */
+    void handleAreaChangesRecursively(bool movedOnScreen);
 
     /*************************************************************************
         Event trigger methods
-    *************************************************************************/
+    *************************************************************************/    
     /*!
     \brief
         Handler called when the element's size changes.
@@ -1197,19 +1468,6 @@ protected:
         that triggered the event.
     */
     virtual void onSized(ElementEventArgs& e);
-
-    /*!
-    \brief
-        Handler called when this element's parent element has been resized.  If
-        this element is the root / GUI Sheet element, this call will be made when
-        the display size changes.
-
-    \param e
-        ElementEventArgs object whose 'element' pointer field is set the the
-        element that caused the event; this is typically either this element's
-        parent element, or NULL to indicate the screen size has changed.
-    */
-    virtual void onParentSized(ElementEventArgs& e);
 
     /*!
     \brief
@@ -1277,6 +1535,15 @@ protected:
 
     /*!
     \brief
+        Handler called when children of this element gets rearranged in any way
+
+    \param e
+        ElementEventArgs object whose 'element' field is set to this element
+    */
+    virtual void onChildOrderChanged(ElementEventArgs& e);
+
+    /*!
+    \brief
         Handler called when the element's non-client setting, affecting it's
         position and size relative to it's parent is changed.
 
@@ -1287,58 +1554,84 @@ protected:
     */
     virtual void onNonClientChanged(ElementEventArgs& e);
 
+    //! \brief Called whenever "AdjustWidthToContent" or "AdjustHeightToContent" change.
+    virtual void onIsSizeAdjustedToContentChanged(ElementEventArgs&);
+
     /*************************************************************************
         Implementation Data
     *************************************************************************/
-    //! definition of type used for the list of attached child elements.
-    typedef std::vector<Element*
-        CEGUI_VECTOR_ALLOC(Element*)> ChildList;
 
     //! The list of child element objects attached to this.
-    ChildList d_children;
+    std::vector<Element*> d_children;
     //! Holds pointer to the parent element.
-    Element* d_parent;
+    Element* d_parent = nullptr;
 
-    //! true if element is in non-client (outside InnerRect) area of parent.
-    bool d_nonClient;
-
-    //! This element objects area as defined by a URect.
     URect d_area;
-    //! Specifies the base for horizontal alignment.
-    HorizontalAlignment d_horizontalAlignment;
-    //! Specifies the base for vertical alignment.
-    VerticalAlignment d_verticalAlignment;
     //! current minimum size for the element.
     USize d_minSize;
     //! current maximum size for the element.
     USize d_maxSize;
-    //! How to satisfy current aspect ratio
-    AspectMode d_aspectMode;
-    //! The target aspect ratio
-    float d_aspectRatio;
-    //! If true, the position and size are pixel aligned
-    bool d_pixelAligned;
     //! Current constrained pixel size of the element.
     Sizef d_pixelSize;
     //! Rotation of this element (relative to the parent)
-    Quaternion d_rotation;
+    glm::vec2 d_offsetInParent = glm::vec2(0.f, 0.f);
+    //! Rotation of this element (relative to the parent)
+    glm::quat d_rotation;
+    //! Pivot point (the point around which the widget is rotated).
+    UVector3 d_pivot;
+    //! The target aspect ratio
+    float d_aspectRatio = 1.f;
+
+    //! Specifies the base for horizontal alignment.
+    HorizontalAlignment d_horizontalAlignment = HorizontalAlignment::Left;
+    //! Specifies the base for vertical alignment.
+    VerticalAlignment d_verticalAlignment = VerticalAlignment::Top;
+    //! How to satisfy current aspect ratio
+    AspectMode d_aspectMode = AspectMode::Ignore;
 
     //! outer area rect in screen pixels
     CachedRectf d_unclippedOuterRect;
     //! inner area rect in screen pixels
     CachedRectf d_unclippedInnerRect;
 
-private:
-    /*************************************************************************
-        May not copy or assign Element objects
-    *************************************************************************/
-    Element(const Element&);
+    //! true if element is in non-client (outside InnerRect) area of parent.
+    bool d_nonClient = false;
 
-    Element& operator=(const Element&) {return *this;}
+    /*!
+    \brief
+        If set to "true", keep the width of the element at the minimal value in
+        which the whole element content is visible without the
+        need for a horizontal scrollbar (if possible), and while the content
+        remains "intact" (if possible).
+
+        See the documentation for "isWidthAdjustedToContent" for a more detailed
+        description.
+    
+    \see isWidthAdjustedToContent
+    \see d_isHeightAdjustedToContent
+    */
+    bool d_isWidthAdjustedToContent = false;
+
+    /*!
+    \brief
+        If set to "true", keep the height of the element at the minimal value in
+        which the whole element content is visible without the
+        need for a vertical scrollbar (if possible), and while the content
+        remains "intact" (if possible).
+
+        See the documentation for "isHeightAdjustedToContent" for a more
+        detailed description.
+    
+    \see isHeightAdjustedToContent
+    \see d_isWidthAdjustedToContent
+    */
+    bool d_isHeightAdjustedToContent = false;
+
+    //! If true, the position and size are pixel aligned
+    bool d_pixelAligned = true;
 };
 
 } // End of  CEGUI namespace section
-
 
 #if defined(_MSC_VER)
 #   pragma warning(pop)

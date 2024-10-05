@@ -1,33 +1,35 @@
-project "CEGUITinyXMLParser"
+project "CEGUITinyXML2Parser"
 	language "C++"
 	kind "SharedLib"
-	targetname "CEGUITinyXMLParser"
+	targetname "CEGUITinyXML2Parser"
 	targetdir(buildpath("mta"))
 
 	includedirs {
 		"../../include",
 		"../../../freetype/include",
-        "../../dependencies/pcre-8.12",
-        "../../dependencies/tinyxml-2.6.2"
+        "../../../pcre",
+        "../../dependencies/tinyxml2-9.0.0",
+        "../../dependencies/glm-0.9.4.5"
 	}
-    
+
     links {
+        "glm-0.9.4.5",
         "CEGUI-0.8.7",
-        "tinyxml-2.6.2",
+        "tinyxml2-9.0.0",
 		"freetype", 
-		"pcre-8.12",
+		"pcre",
 		"dbghelp",
         "winmm",
         "d3d9",
     }
 
 	defines {
-		"CEGUITINYXMLPARSER_EXPORTS",
+		"CEGUITINYXML2PARSER_EXPORTS",
 		"_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING"
 	}
 
 	vpaths {
-		["Headers/*"] = "../../include/CEGUI/XMLParserModules/TinyXML/**.h",
+		["Headers/*"] = "../../include/CEGUI/XMLParserModules/TinyXML2/**.h",
 		["Sources/*"] = "**.cpp",
 		["Sources/*"] = "**.c",
 		["*"] = "premake5.lua"
@@ -37,7 +39,7 @@ project "CEGUITinyXMLParser"
 		"premake5.lua",
 		"**.cpp",
 		"**.c",
-		"../../include/CEGUI/XMLParserModules/TinyXML/**.h",
+		"../../include/CEGUI/XMLParserModules/TinyXML2/**.h",
 	}
 
 	filter "architecture:x64"

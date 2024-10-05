@@ -47,7 +47,7 @@ namespace CEGUI
     An abstract base class providing common functionality and specifying the
     required interface for derived classes.
 
-    Layout Container provide means for automatic positioning based on sizes of
+    Layout Container provides means for automatic positioning based on sizes of
     it's child Windows. This is useful for dynamic UIs.
 */
 class CEGUIEXPORT LayoutContainer : public Window
@@ -73,54 +73,43 @@ public:
 
     /*!
     \brief
-        Destructor for Window base class
-    */
-    virtual ~LayoutContainer(void);
-
-    /*!
-    \brief
         marks this layout container for relayouting before drawing
     */
-    void markNeedsLayouting();
+    void markNeedsLayouting() { d_needsLayouting = true; }
 
     /*!
     \brief
         returns true if this layout container will be relayouted before drawing
     */
-    bool needsLayouting() const;
-
-    /*!
-    \brief
-        (re)layouts all windows inside this layout container immediately
-    */
-    virtual void layout() = 0;
+    bool needsLayouting() const { return d_needsLayouting; }
 
     /*!
     \brief
         (re)layouts all windows inside this layout container if it was marked
         necessary
     */
-    virtual void layoutIfNecessary();
+    void layoutIfNecessary();
+
+    /*!
+    \brief
+        Returns an actual layout child count not including auxiliary items
+    */
+    virtual size_t getActualChildCount() const { return getChildCount(); }
 
     /// @copydoc Window::update
-    virtual void update(float elapsed);
-    
-    virtual const CachedRectf& getClientChildContentArea() const;
+    void update(float elapsed) override;
 
-    virtual void notifyScreenAreaChanged(bool recursive);
+    const CachedRectf& getChildContentArea(const bool non_client = false) const override { (void)non_client; return d_childContentArea; }
 
 protected:
     /// @copydoc Window::getUnclippedInnerRect_impl
-    virtual Rectf getUnclippedInnerRect_impl(bool skipAllPixelAlignment) const;
-    
-    Rectf getClientChildContentArea_impl(bool skipAllPixelAlignment) const;
+    Rectf getUnclippedInnerRect_impl(bool skipAllPixelAlignment) const override;    
+    Rectf getChildContentArea_impl(bool skipAllPixelAlignment) const;
 
-    size_t getIdxOfChild(Window* wnd) const;
-
-    /// @copydoc Window::addChild_impl
-    virtual void addChild_impl(Element* element);
-    /// @copydoc Window::removeChild_impl
-    virtual void removeChild_impl(Element* element);
+    void addChild_impl(Element* element) override;
+    void removeChild_impl(Element* element) override;
+    void cleanupChildren(void) override;
+    uint8_t handleAreaChanges(bool movedOnScreen, bool movedInParent, bool sized) override;
 
     /*************************************************************************
         Event trigger methods
@@ -181,8 +170,14 @@ protected:
     */
     virtual UVector2 getBoundingSizeForWindow(Window* window) const;
 
+    /*!
+    \brief
+        (re)layouts all windows inside this layout container immediately
+    */
+    virtual void layout_impl() = 0;
+
     // overridden from parent class
-    void onParentSized(ElementEventArgs& e);
+    void onChildOrderChanged(ElementEventArgs& e) override;
 
     /*************************************************************************
         Implementation Data
@@ -190,11 +185,11 @@ protected:
     // if true, we will relayout before rendering of this window starts
     bool d_needsLayouting;
 
-    typedef std::multimap<Window*, Event::Connection>  ConnectionTracker;
+    typedef std::multimap<Window*, Event::Connection> ConnectionTracker;
     //! Tracks event connections we make.
     ConnectionTracker d_eventConnections;
     
-    CachedRectf d_clientChildContentArea;
+    CachedRectf d_childContentArea;
 };
 
 } // End of  CEGUI namespace section

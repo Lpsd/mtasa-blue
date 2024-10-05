@@ -28,17 +28,13 @@
 #define _CEGUIFalDimensions_h_
 
 #include "./Enums.h"
-#include "../String.h"
 #include "../UDim.h"
-#include "../Rect.h"
-#include "../XMLSerializer.h"
+#include "../Rectf.h"
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 //! Abstract interface for a generic 'dimension' class.
-class CEGUIEXPORT BaseDim :
-    public AllocatedObject<BaseDim>
+class CEGUIEXPORT BaseDim
 {
 public:
     BaseDim();
@@ -100,6 +96,61 @@ public:
     //! perform any processing required due to the given font having changed.
     virtual bool handleFontRenderSizeChange(Window& window,
                                             const Font* font) const;
+
+    /*!
+    \brief
+        Get a lower bound for this dimension as an affine function of "type".
+
+        An affine function means: "t" is an affine function of "m" if, for some
+        constants "a" and "b", it holds true that "t = a*m +b".
+
+        Let:
+            - "ret" be the value returned by this method.
+            - "t" be the value of this dimension.
+            - "m" be the value of "type". For instance, if "type" is "DimensionType::WIDTH",
+              "m" would be the width of the window.
+        Then:
+            t >= ret.d_scale*m + ret.d_offset
+
+        The default implementation simply returns "UDim(0.f, getValue(wnd))".
+
+        This method is used by
+        "ComponentArea::getWidthLowerBoundAsFuncOfWindowWidth" and
+        "ComponentArea::getHeightLowerBoundAsFuncOfWindowHeight".
+
+    \see getUpperBoundAsUDim
+    \see ComponentArea::getWidthLowerBoundAsFuncOfWindowWidth
+    \see ComponentArea::getHeightLowerBoundAsFuncOfWindowHeight
+    */
+    virtual UDim getLowerBoundAsUDim(const Window& wnd, DimensionType type) const;
+
+    /*!
+    \brief
+        Get a upper bound for this dimension as an affine function of "type".
+
+        An affine function means: "t" is an affine function of "m" if, for some
+        constants "a" and "b", it holds true that "t = a*m +b".
+
+        Let:
+            - "ret" be the value returned by this method.
+            - "t" be the value of this dimension.
+            - "m" be the value of "type". For instance, if "type" is "DimensionType::WIDTH",
+              "m" would be the width of the window.
+        Then:
+            t <= ret.d_scale*m +ret.d_offset
+
+        The default implementation simply returns "UDim(0.f, getValue(wnd))".
+
+        This method is used by
+        "ComponentArea::getWidthLowerBoundAsFuncOfWindowWidth" and
+        "ComponentArea::getHeightLowerBoundAsFuncOfWindowHeight".
+
+    \see getLowerBoundAsUDim
+    \see ComponentArea::getWidthLowerBoundAsFuncOfWindowWidth
+    \see ComponentArea::getHeightLowerBoundAsFuncOfWindowHeight
+    */
+    virtual UDim getUpperBoundAsUDim(const Window& wnd, DimensionType type) const;
+
 protected:
     //! Implementataion method to output real xml element name.
     virtual void writeXMLElementName_impl(XMLSerializer& xml_stream) const = 0;
@@ -119,7 +170,7 @@ public:
     OperatorDim();
     OperatorDim(DimensionOperator op);
     OperatorDim(DimensionOperator op, BaseDim* left, BaseDim* right);
-    ~OperatorDim();
+    ~OperatorDim() override;
 
     //! set the left hand side operand (passed object is cloned)
     void setLeftOperand(const BaseDim* operand);
@@ -142,21 +193,28 @@ public:
     //! helper to set the next free operand, will throw after 2 are set
     void setNextOperand(const BaseDim* operand);
 
+    bool handleFontRenderSizeChange(Window& window, const Font* font) const override;
+
     // Implementation of the base class interface
-    float getValue(const Window& wnd) const;
-    float getValue(const Window& wnd, const Rectf& container) const;
-    BaseDim* clone() const;
+    float getValue(const Window& wnd) const override;
+    float getValue(const Window& wnd, const Rectf& container) const override;
+    BaseDim* clone() const override;
+    UDim getLowerBoundAsUDim(const Window& wnd, DimensionType type) const override;
+    UDim getUpperBoundAsUDim(const Window& wnd, DimensionType type) const override;
 
 protected:
     float getValueImpl(const float lval, const float rval) const;
     // Implementation of the base class interface
-    void writeXMLToStream(XMLSerializer& xml_stream) const;
-    void writeXMLElementName_impl(XMLSerializer& xml_stream) const;
-    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const;
+    void writeXMLToStream(XMLSerializer& xml_stream) const override;
+    void writeXMLElementName_impl(XMLSerializer& xml_stream) const override;
+    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const override;
 
     BaseDim* d_left;
     BaseDim* d_right;
     DimensionOperator d_op;
+
+private:
+    UDim getBoundAsUDim(const UDim& lval, const UDim& rval) const;
 };
 
 /*!
@@ -167,7 +225,7 @@ protected:
 class CEGUIEXPORT AbsoluteDim : public BaseDim
 {
 public:
-    AbsoluteDim() {};
+    AbsoluteDim() : d_val(0.f) {}
     AbsoluteDim(float val);
 
     //! Get the current value of the AbsoluteDim.
@@ -177,14 +235,14 @@ public:
     void setBaseValue(float val);
 
     // Implementation of the base class interface
-    float getValue(const Window& wnd) const;
-    float getValue(const Window& wnd, const Rectf& container) const;
-    BaseDim* clone() const;
+    float getValue(const Window& wnd) const override;
+    float getValue(const Window& wnd, const Rectf& container) const override;
+    BaseDim* clone() const override;
 
 protected:
     // Implementation of the base class interface
-    void writeXMLElementName_impl(XMLSerializer& xml_stream) const;
-    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const;
+    void writeXMLElementName_impl(XMLSerializer& xml_stream) const override;
+    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const override;
 
 private:
     //! holds pixel value for the AbsoluteDim.
@@ -199,7 +257,7 @@ private:
 class CEGUIEXPORT ImageDimBase : public BaseDim
 {
 public:
-    ImageDimBase() {};
+    ImageDimBase() : d_what(DimensionType::Invalid) {}
 
     /*!
     \brief
@@ -232,15 +290,15 @@ public:
     void setSourceDimension(DimensionType dim);
 
     // Implementation of the base class interface
-    float getValue(const Window& wnd) const;
-    float getValue(const Window& wnd, const Rectf& container) const;
+    float getValue(const Window& wnd) const override;
+    float getValue(const Window& wnd, const Rectf& container) const override;
 
 protected:
     //! return the image instance to access
     virtual const Image* getSourceImage(const Window& wnd) const = 0;
 
     // Implementation of the base class interface
-    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const;
+    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const override;
 
     //! the dimension of the image that we are to represent.
     DimensionType d_what;
@@ -250,22 +308,22 @@ protected:
 class CEGUIEXPORT ImageDim : public ImageDimBase
 {
 public:
-    ImageDim() {};
+    ImageDim() {}
     ImageDim(const String& image_name, DimensionType dim);
 
     //! return the name of the image accessed by this ImageDim.
-    const String& getSourceImage() const;
+    const String& getSourceImageName() const;
     //! set the name of the image accessed by this ImageDim.
-    void setSourceImage(const String& image_name);
+    void setSourceImageName(const String& image_name);
 
     // Implementation of the base class interface
-    BaseDim* clone() const;
+    BaseDim* clone() const override;
 
 protected:
     // Implementation / overrides of functions in superclasses
-    const Image* getSourceImage(const Window& wnd) const;
-    void writeXMLElementName_impl(XMLSerializer& xml_stream) const;
-    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const;
+    const Image* getSourceImage(const Window& wnd) const override;
+    void writeXMLElementName_impl(XMLSerializer& xml_stream) const override;
+    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const override;
 
     //! name of the Image.
     String d_imageName;
@@ -275,7 +333,7 @@ protected:
 class CEGUIEXPORT ImagePropertyDim : public ImageDimBase
 {
 public:
-    ImagePropertyDim() {};
+    ImagePropertyDim() {}
 
     /*!
     \brief
@@ -298,13 +356,13 @@ public:
     void setSourceProperty(const String& property_name);
 
     // Implementation of the base class interface
-    BaseDim* clone() const;
+    BaseDim* clone() const override;
 
 protected:
     // Implementation / overrides of functions in superclasses
-    const Image* getSourceImage(const Window& wnd) const;
-    void writeXMLElementName_impl(XMLSerializer& xml_stream) const;
-    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const;
+    const Image* getSourceImage(const Window& wnd) const override;
+    void writeXMLElementName_impl(XMLSerializer& xml_stream) const override;
+    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const override;
 
     //! name of the property from which to fetch the image name.
     String d_propertyName;
@@ -323,7 +381,7 @@ protected:
 class CEGUIEXPORT WidgetDim : public BaseDim
 {
 public:
-    WidgetDim() {};
+    WidgetDim() : d_dimensionType(DimensionType::Invalid) {}
     /*!
     \brief
         Constructor.
@@ -379,20 +437,20 @@ public:
     void setSourceDimension(DimensionType dim);
 
     // Implementation of the base class interface
-    float getValue(const Window& wnd) const;
-    float getValue(const Window& wnd, const Rectf& container) const;
-    BaseDim* clone() const;
+    float getValue(const Window& wnd) const override;
+    float getValue(const Window& wnd, const Rectf& container) const override;
+    BaseDim* clone() const override;
 
 protected:
     // Implementation of the base class interface
-    void writeXMLElementName_impl(XMLSerializer& xml_stream) const;
-    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const;
+    void writeXMLElementName_impl(XMLSerializer& xml_stream) const override;
+    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const override;
 
 private:
     //! Holds target window name suffix.
     String d_widgetName;
     //! the dimension of the target window that we are to represent.
-    DimensionType d_what;
+    DimensionType d_dimensionType;
 };
 
 /*!
@@ -403,7 +461,7 @@ private:
 class CEGUIEXPORT UnifiedDim : public BaseDim
 {
 public:
-    UnifiedDim(){};
+    UnifiedDim() : d_what(DimensionType::Invalid) {}
     /*!
     \brief
         Constructor.
@@ -447,16 +505,22 @@ public:
     void setSourceDimension(DimensionType dim);
 
     // Implementation of the base class interface
-    float getValue(const Window& wnd) const;
-    float getValue(const Window& wnd, const Rectf& container) const;
-    BaseDim* clone() const;
+    float getValue(const Window& wnd) const override;
+    float getValue(const Window& wnd, const Rectf& container) const override;
+    BaseDim* clone() const override;
+
+    UDim getLowerBoundAsUDim(const Window& wnd, DimensionType type) const override;
+
+    UDim getUpperBoundAsUDim(const Window& wnd, DimensionType type) const override;
 
 protected:
     // Implementation of the base class interface
-    void writeXMLElementName_impl(XMLSerializer& xml_stream) const;
-    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const;
+    void writeXMLElementName_impl(XMLSerializer& xml_stream) const override;
+    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const override;
 
 private:
+    UDim getBoundAsUDim(const Window& wnd, DimensionType type, float round_err) const;
+
     //! The UDim value.
     UDim d_value;
     //! what to use as the base / reference for scale.
@@ -471,7 +535,7 @@ private:
 class CEGUIEXPORT FontDim : public BaseDim
 {
 public:
-    FontDim() {};
+    FontDim() : d_metric(FontMetricType::LineSpacing), d_padding(0.f) {}
     /*!
     \brief
         Constructor.
@@ -529,21 +593,19 @@ public:
     //! Set the current padding of the FontDim.
     void setPadding(float padding);
 
-    // overridden from BaseDim.
-    bool handleFontRenderSizeChange(Window& window,
-                                    const Font* font) const;
+    bool handleFontRenderSizeChange(Window& window, const Font* font) const override;
 
     // Implementation of the base class interface
-    float getValue(const Window& wnd) const;
-    float getValue(const Window& wnd, const Rectf& container) const;
-    BaseDim* clone() const;
+    float getValue(const Window& wnd) const override;
+    float getValue(const Window& wnd, const Rectf& container) const override;
+    BaseDim* clone() const override;
 
 protected:
     // Implementation of the base class interface
-    void writeXMLElementName_impl(XMLSerializer& xml_stream) const;
-    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const;
+    void writeXMLElementName_impl(XMLSerializer& xml_stream) const override;
+    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const override;
 
-    const Font* getFontObject(const Window& window) const;
+    Font* getFontObject(const Window& window) const;
 
 private:
     //! Name of Font.  If empty font will be taken from Window.
@@ -566,7 +628,7 @@ private:
 class CEGUIEXPORT PropertyDim : public BaseDim
 {
 public:
-    PropertyDim() {};
+    PropertyDim() : d_type(DimensionType::Invalid) {}
     /*!
     \brief
         Constructor.
@@ -584,10 +646,10 @@ public:
     \param type
         DimensionType value indicating what dimension named property
         represents.  The possible DimensionType values are as follows:
-        - DT_INVALID the property should represent a simple float value.
-        - DT_WIDTH the property should represent a UDim value where the
+        - DimensionType::INVALID the property should represent a simple float value.
+        - DimensionType::WIDTH the property should represent a UDim value where the
         scale is relative to the targetted Window's width.
-        - DT_HEIGHT the property should represent a UDim value where the
+        - DimensionType::HEIGHT the property should represent a UDim value where the
         scale is relative to the targetted Window's height.
         - All other values will cause an InvalidRequestException exception
         to be thrown.
@@ -643,9 +705,9 @@ public:
         DimensionType value indicating which dimension of the target window to
         use as the reference / base value when accessing a property that
         represents a unified dimension:
-            - DT_INVALID if the property does not represent a unified dim.
-            - DT_WIDTH to use target width as reference value.
-            - DT_HEIGHT to use target hight as reference value.
+            - DimensionType::INVALID if the property does not represent a unified dim.
+            - DimensionType::WIDTH to use target width as reference value.
+            - DimensionType::HEIGHT to use target hight as reference value.
     */
     DimensionType getSourceDimension() const;
 
@@ -657,21 +719,21 @@ public:
         DimensionType value indicating which dimension of the target window to
         use as the reference / base value when accessing a property that
         represents a unified dimension:
-            - DT_INVALID if the property does not represent a unified dim.
-            - DT_WIDTH to use target width as reference value.
-            - DT_HEIGHT to use target hight as reference value.
+            - DimensionType::INVALID if the property does not represent a unified dim.
+            - DimensionType::WIDTH to use target width as reference value.
+            - DimensionType::HEIGHT to use target hight as reference value.
     */
     void setSourceDimension(DimensionType dim);
 
     // Implementation of the base class interface
-    float getValue(const Window& wnd) const;
-    float getValue(const Window& wnd, const Rectf& container) const;
-    BaseDim* clone() const;
+    float getValue(const Window& wnd) const override;
+    float getValue(const Window& wnd, const Rectf& container) const override;
+    BaseDim* clone() const override;
 
 protected:
     // Implementation of the base class interface
-    void writeXMLElementName_impl(XMLSerializer& xml_stream) const;
-    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const;
+    void writeXMLElementName_impl(XMLSerializer& xml_stream) const override;
+    void writeXMLElementAttributes_impl(XMLSerializer& xml_stream) const override;
 
 private:
     //! Propery that this object represents.
@@ -690,8 +752,7 @@ private:
     dimensional value, but also a record of what the dimension value is supposed
     to represent. (e.g. a co-ordinate on the x axis, or the height of something).
 */
-class CEGUIEXPORT Dimension :
-    public AllocatedObject<Dimension>
+class CEGUIEXPORT Dimension
 {
 public:
     Dimension();
@@ -777,8 +838,7 @@ private:
     represent width and height depending upon what the assigned Dimension(s)
     represent.
 */
-class CEGUIEXPORT ComponentArea :
-    public AllocatedObject<ComponentArea>
+class CEGUIEXPORT ComponentArea
 {
 public:
     ComponentArea();
@@ -853,7 +913,7 @@ public:
         area for this ComponentArea.
 
     \note
-        Calling this will replace any existing souce, such as a named area.
+        Calling this will replace any existing source, such as a named area.
 
     \param property
         String object holding the name of a Propery.  The property should access
@@ -871,7 +931,7 @@ public:
     const String& getNamedAreaSourceLook() const;
 
     //! Set the named area source of the ComponentArea.
-    void setNamedAreaSouce(const String& widget_look, const String& area_name);
+    void setNamedAreaSource(const String& widget_look, const String& area_name);
 
     /*!
     \brief
@@ -886,6 +946,53 @@ public:
 
     //! perform any processing required due to the given font having changed.
     bool handleFontRenderSizeChange(Window& window, const Font* font) const;
+
+    /*!
+    \brief
+        Get a lower bound for the width of this area as an affine function of
+        the window width.
+
+        An affine function means: "t" is an affine function of "m" if, for some
+        constants "a" and "b", it holds true that "t = a*m +b".
+        the window width.
+
+        Let:
+            - "ret" be the value returned by this method.
+            - "t" be the width of this area.
+            - "m" be the window width.
+        Then:
+            t >= ret.d_scale*m +ret.d_offset
+
+        This method can be used to implement
+        "Window::getWidthOfAreaReservedForContentLowerBoundAsFuncOfElementWidth".
+
+    \see Window::getWidthOfAreaReservedForContentLowerBoundAsFuncOfElementWidth
+    \see getHeightLowerBoundAsFuncOfWindowHeight
+    */
+    UDim getWidthLowerBoundAsFuncOfWindowWidth(const Window& wnd) const;
+
+    /*!
+    \brief
+        Get a lower bound for the height of this area as an affine function of
+        the window height.
+
+        An affine function means: "t" is an affine function of "m" if, for some
+        constants "a" and "b", it holds true that "t = a*m +b".
+
+        Let:
+            - "ret" be the value returned by this method.
+            - "t" be the height of this area.
+            - "m" be the window height.
+        Then:
+            t >= ret.d_scale*m +ret.d_offset
+
+        This method can be used to implement
+        "Window::getHeightOfAreaReservedForContentLowerBoundAsFuncOfElementHeight".
+
+    \see Window::getHeightOfAreaReservedForContentLowerBoundAsFuncOfElementHeight
+    \see getWidthLowerBoundAsFuncOfWindowWidth
+    */
+    UDim getHeightLowerBoundAsFuncOfWindowHeight(const Window& wnd) const;
 
     //! Left edge of the area.
     Dimension d_left;

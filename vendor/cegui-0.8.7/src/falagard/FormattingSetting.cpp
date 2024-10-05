@@ -26,28 +26,18 @@
  ***************************************************************************/
 #include "CEGUI/falagard/FormattingSetting.h"
 #include "CEGUI/falagard/XMLHandler.h"
+#include "CEGUI/XMLSerializer.h"
 
 namespace CEGUI
 {
 //----------------------------------------------------------------------------//
 template<>
-void FormattingSetting<VerticalFormatting>::writeXMLTagToStream(XMLSerializer& xml_stream) const
+void FormattingSetting<VerticalImageFormatting>::writeXMLTagToStream(XMLSerializer& xml_stream) const
 {
     if (d_propertySource.empty())
         xml_stream.openTag(Falagard_xmlHandler::VertFormatElement);
     else
         xml_stream.openTag(Falagard_xmlHandler::VertFormatPropertyElement);
-}
-
-//----------------------------------------------------------------------------//
-template<>
-void FormattingSetting<VerticalFormatting>::writeXMLAttributesToStream(XMLSerializer& xml_stream) const
-{
-    if (d_propertySource.empty())
-        xml_stream.attribute(Falagard_xmlHandler::TypeAttribute,
-            FalagardXMLHelper<VerticalFormatting>::toString(d_value));
-    else
-        xml_stream.attribute(Falagard_xmlHandler::NameAttribute, d_propertySource);
 }
 
 //----------------------------------------------------------------------------//
@@ -62,34 +52,12 @@ void FormattingSetting<HorizontalFormatting>::writeXMLTagToStream(XMLSerializer&
 
 //----------------------------------------------------------------------------//
 template<>
-void FormattingSetting<HorizontalFormatting>::writeXMLAttributesToStream(XMLSerializer& xml_stream) const
-{
-    if (d_propertySource.empty())
-        xml_stream.attribute(Falagard_xmlHandler::TypeAttribute,
-            FalagardXMLHelper<HorizontalFormatting>::toString(d_value));
-    else
-        xml_stream.attribute(Falagard_xmlHandler::NameAttribute, d_propertySource);
-}
-
-//----------------------------------------------------------------------------//
-template<>
 void FormattingSetting<VerticalTextFormatting>::writeXMLTagToStream(XMLSerializer& xml_stream) const
 {
     if (d_propertySource.empty())
         xml_stream.openTag(Falagard_xmlHandler::VertFormatElement);
     else
         xml_stream.openTag(Falagard_xmlHandler::VertFormatPropertyElement);
-}
-
-//----------------------------------------------------------------------------//
-template<>
-void FormattingSetting<VerticalTextFormatting>::writeXMLAttributesToStream(XMLSerializer& xml_stream) const
-{
-    if (d_propertySource.empty())
-        xml_stream.attribute(Falagard_xmlHandler::TypeAttribute,
-            FalagardXMLHelper<VerticalTextFormatting>::toString(d_value));
-    else
-        xml_stream.attribute(Falagard_xmlHandler::NameAttribute, d_propertySource);
 }
 
 //----------------------------------------------------------------------------//
@@ -104,16 +72,13 @@ void FormattingSetting<HorizontalTextFormatting>::writeXMLTagToStream(XMLSeriali
 
 //----------------------------------------------------------------------------//
 template<>
-void FormattingSetting<HorizontalTextFormatting>::writeXMLAttributesToStream(XMLSerializer& xml_stream) const
+void FormattingSetting<DefaultParagraphDirection>::writeXMLTagToStream(XMLSerializer& xml_stream) const
 {
     if (d_propertySource.empty())
-        xml_stream.attribute(Falagard_xmlHandler::TypeAttribute,
-            FalagardXMLHelper<HorizontalTextFormatting>::toString(d_value));
+        xml_stream.openTag(Falagard_xmlHandler::ParagraphDirElement);
     else
-        xml_stream.attribute(Falagard_xmlHandler::NameAttribute, d_propertySource);
+        xml_stream.openTag(Falagard_xmlHandler::ParagraphDirPropertyElement);
 }
-
-//----------------------------------------------------------------------------//
 
 }
 

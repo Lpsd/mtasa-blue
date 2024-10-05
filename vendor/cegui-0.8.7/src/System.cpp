@@ -1,8 +1,8 @@
 /***********************************************************************
-	created:	20/2/2004
-	author:		Paul D Turner
+    created:    20/2/2004
+    author:        Paul D Turner
 
-	purpose:	Implementation of main system object
+    purpose:    Implementation of main system object
 *************************************************************************/
 /***************************************************************************
  *   Copyright (C) 2004 - 2013 Paul D Turner & The CEGUI Development Team
@@ -27,7 +27,7 @@
  *   OTHER DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
 #include "CEGUI/System.h"
-#include "CEGUI/Clipboard.h"
+#include "CEGUI/Renderer.h"
 #include "CEGUI/DefaultLogger.h"
 #include "CEGUI/ImageManager.h"
 #include "CEGUI/FontManager.h"
@@ -36,31 +36,25 @@
 #include "CEGUI/SchemeManager.h"
 #include "CEGUI/RenderEffectManager.h"
 #include "CEGUI/AnimationManager.h"
-#include "CEGUI/MouseCursor.h"
-#include "CEGUI/Window.h"
-#include "CEGUI/Exceptions.h"
+#include "CEGUI/GUIContext.h"
+#include "CEGUI/Clipboard.h"
 #include "CEGUI/ScriptModule.h"
 #include "CEGUI/Config_xmlHandler.h"
-#include "CEGUI/DataContainer.h"
-#include "CEGUI/ResourceProvider.h"
 #include "CEGUI/GlobalEventSet.h"
 #include "CEGUI/falagard/WidgetLookManager.h"
-#include "CEGUI/PropertyHelper.h"
 #include "CEGUI/WindowRendererManager.h"
 #include "CEGUI/DynamicModule.h"
 #include "CEGUI/XMLParser.h"
-#include "CEGUI/GUIContext.h"
+#include "CEGUI/text/LegacyTextParser.h"
 #include "CEGUI/RenderingWindow.h"
-#include "CEGUI/RenderingContext.h"
 #include "CEGUI/DefaultResourceProvider.h"
 #include "CEGUI/ImageCodec.h"
 #include "CEGUI/widgets/All.h"
-#include "CEGUI/RegexMatcher.h"
-#ifdef CEGUI_HAS_PCRE_REGEX
-#   include "CEGUI/PCRERegexMatcher.h"
+#include "CEGUI/SharedStringStream.h"
+#include "CEGUI/svg/SVGDataManager.h"
+#if defined(__WIN32__) || defined(_WIN32)
+#    include "CEGUI/Win32ClipboardProvider.h"
 #endif
-#include <ctime>
-#include <clocale>
 
 // declare create / destroy functions used for XMLParser and ImageCodec
 // modules as extern when static linking
@@ -85,10 +79,10 @@ namespace CEGUI
 const String System::EventNamespace("System");
 
 /*************************************************************************
-	Static Data Definitions
+    Static Data Definitions
 *************************************************************************/
 // singleton instance pointer
-template<> System* Singleton<System>::ms_Singleton	= 0;
+template<> System* Singleton<System>::ms_Singleton    = nullptr;
 // instance of class that can convert string encodings
 #if defined(__WIN32__) || defined(_WIN32)
 const Win32StringTranscoder System::d_stringTranscoder;
@@ -98,14 +92,12 @@ const IconvStringTranscoder System::d_stringTranscoder;
 
 // event names
 const String System::EventDisplaySizeChanged( "DisplaySizeChanged" );
-const String System::EventRenderedStringParserChanged("RenderedStringParserChanged");
+const String System::EventTextParserChanged("TextParserChanged");
 
 // Holds name of default XMLParser
 String System::d_defaultXMLParserName(STRINGIZE(CEGUI_DEFAULT_XMLPARSER));
 // Holds name of default ImageCodec
 String System::d_defaultImageCodecName(STRINGIZE(CEGUI_DEFAULT_IMAGE_CODEC));
-// Holds path of the module directory
-String System::d_moduleDir("");
 
 
 /*************************************************************************
@@ -117,22 +109,24 @@ System::System(Renderer& renderer,
                ImageCodec* imageCodec,
                ScriptModule* scriptModule,
                const String& configFile,
-               const String& logFile)
-
-: d_renderer(&renderer),
-  d_resourceProvider(resourceProvider),
-  d_ourResourceProvider(false),
-  d_clipboard(CEGUI_NEW_AO Clipboard()),
-  d_scriptModule(scriptModule),
-  d_xmlParser(xmlParser),
-  d_ourXmlParser(false),
-  d_parserModule(0),
-  d_imageCodec(imageCodec),
-  d_ourImageCodec(false),
-  d_imageCodecModule(0),
-  d_ourLogger(Logger::getSingletonPtr() == 0),
-  d_customRenderedStringParser(0)
+               const String& logFile):
+    d_renderer(&renderer),
+    d_resourceProvider(resourceProvider),
+    d_ourResourceProvider(false),
+    d_clipboard(new Clipboard()),
+    d_nativeClipboardProvider(nullptr),
+    d_scriptModule(scriptModule),
+    d_xmlParser(xmlParser),
+    d_ourXmlParser(false),
+    d_parserModule(nullptr),
+    d_imageCodec(imageCodec),
+    d_ourImageCodec(false),
+    d_imageCodecModule(nullptr),
+    d_ourLogger(Logger::getSingletonPtr() == nullptr),
+    d_fallbackTextParser(std::make_unique<LegacyTextParser>())
 {
+    d_defaultTextParser = d_fallbackTextParser.get();
+
     // Start out by fixing the numeric locale to C (we depend on this behaviour)
     // consider a UVector2 as a property {{0.5,0},{0.5,0}} could become {{0,5,0},{0,5,0}}
     setlocale(LC_NUMERIC, "C");
@@ -144,9 +138,15 @@ System::System(Renderer& renderer,
     // constructor, we mark it as so and leave the logger untouched. This allows
     // the user to fully customize the logger as he sees fit without fear of
     // seeing its configuration overwritten by this.
-#ifdef CEGUI_HAS_DEFAULT_LOGGER
+#ifdef CEGUI_USE_DEFAULT_LOGGER
     if (d_ourLogger)
-        CEGUI_NEW_AO DefaultLogger();
+        new DefaultLogger();
+#endif
+
+#if defined(__WIN32__) || defined(_WIN32)
+    d_nativeClipboardProvider = new Win32ClipboardProvider;
+    // set the default win 32 clipboard provider
+    d_clipboard->setNativeProvider(d_nativeClipboardProvider);
 #endif
 
     Logger& logger(Logger::getSingleton());
@@ -154,7 +154,7 @@ System::System(Renderer& renderer,
     // create default resource provider, unless one was already provided
     if (!d_resourceProvider)
     {
-        d_resourceProvider = CEGUI_NEW_AO DefaultResourceProvider();
+        d_resourceProvider = new DefaultResourceProvider();
         d_ourResourceProvider = true;
     }
 
@@ -165,18 +165,18 @@ System::System(Renderer& renderer,
     Config_xmlHandler config;
     if (!configFile.empty())
     {
-        CEGUI_TRY
+        try
         {
             d_xmlParser->parseXMLFile(config, configFile,
                                       config.CEGUIConfigSchemaName,
                                       "");
         }
-        CEGUI_CATCH(...)
+        catch (...)
         {
             // cleanup XML stuff
             d_xmlParser->cleanup();
-            CEGUI_DELETE_AO d_xmlParser;
-            CEGUI_RETHROW;
+            delete d_xmlParser;
+            throw;
         }
     }
 
@@ -203,21 +203,16 @@ System::System(Renderer& renderer,
     outputLogHeader();
 
     // beginning main init
-    logger.logEvent("---- Begining CEGUI System initialisation ----");
+    logger.logEvent("---- Beginning CEGUI System initialisation ----");
 
     // create the core system singleton objects
     createSingletons();
 
-    // create the first GUIContext using the renderers default target,
-    // this will become the default GUIContext.
-    createGUIContext(d_renderer->getDefaultRenderTarget());
-
     // add the window factories for the core window types
     addStandardWindowFactories();
 
-    char addr_buff[32];
-    sprintf(addr_buff, "(%p)", static_cast<void*>(this));
-    logger.logEvent("CEGUI::System singleton created. " + String(addr_buff));
+    String addressStr = SharedStringstream::GetPointerAddressAsString(this);
+    logger.logEvent("CEGUI::System Singleton created. (" + addressStr + ")");
     logger.logEvent("---- CEGUI System initialisation completed ----");
     logger.logEvent("");
 
@@ -226,7 +221,7 @@ System::System(Renderer& renderer,
 
     // set up defaults
     config.initialiseDefaultFont();
-    config.initialiseDefaultMouseCursor();
+    config.initialiseDefaultCursor();
     config.initialiseDefaulTooltip();
 
     // scripting available?
@@ -240,22 +235,25 @@ System::System(Renderer& renderer,
 
 
 /*************************************************************************
-	Destructor
+    Destructor
 *************************************************************************/
 System::~System(void)
 {
-	Logger::getSingleton().logEvent("---- Begining CEGUI System destruction ----");
+    Logger::getSingleton().logEvent("---- Beginning CEGUI System destruction ----");
 
-	// execute shut-down script
-	if (!d_termScriptName.empty())
-	{
-		CEGUI_TRY
-		{
-			executeScriptFile(d_termScriptName);
-		}
-		CEGUI_CATCH (...) {}  // catch all exceptions and continue system shutdown
+    // execute shut-down script
+    if (!d_termScriptName.empty())
+    {
+        try
+        {
+            executeScriptFile(d_termScriptName);
+        }
+        catch (...) {}  // catch all exceptions and continue system shutdown
 
-	}
+    }
+
+    if (d_nativeClipboardProvider != nullptr)
+        delete d_nativeClipboardProvider;
 
     cleanupImageCodec();
 
@@ -263,24 +261,28 @@ System::~System(void)
     cleanupXMLParser();
 
     //
-	// perform cleanup in correct sequence
-	//
+    // perform cleanup in correct sequence
+    //
     // ensure no windows get created during destruction.  NB: I'm allowing the
     // potential exception to escape here so as to make it obvious that client
     // code should really be adjusted to not create windows during cleanup.
     WindowManager::getSingleton().lock();
-	// destroy windows so it's safe to destroy factories
+    // destroy windows so it's safe to destroy factories
+    for(auto* i : d_guiContexts)
+    {
+       i->destroyTooltips();
+    }
     WindowManager::getSingleton().destroyAllWindows();
     WindowManager::getSingleton().cleanDeadPool();
 
     // remove factories so it's safe to unload GUI modules
-	WindowFactoryManager::getSingleton().removeAllFactories();
+    WindowFactoryManager::getSingleton().removeAllFactories();
 
     // Cleanup script module bindings
     if (d_scriptModule)
         d_scriptModule->destroyBindings();
 
-	// cleanup singletons
+    // cleanup singletons
     destroySingletons();
 
     // delete all the GUIContexts
@@ -288,26 +290,24 @@ System::~System(void)
          i != d_guiContexts.end();
          ++i)
     {
-        CEGUI_DELETE_AO *i;
+        delete *i;
     }
 
     // cleanup resource provider if we own it
     if (d_ourResourceProvider)
-        CEGUI_DELETE_AO d_resourceProvider;
+        delete d_resourceProvider;
 
-    char addr_buff[32];
-    sprintf(addr_buff, "(%p)", static_cast<void*>(this));
-	Logger::getSingleton().logEvent("CEGUI::System singleton destroyed. " +
-       String(addr_buff));
-	Logger::getSingleton().logEvent("---- CEGUI System destruction completed ----");
+    String addressStr = SharedStringstream::GetPointerAddressAsString(this);
+    Logger::getSingleton().logEvent("CEGUI::System singleton destroyed. " + addressStr);
+    Logger::getSingleton().logEvent("---- CEGUI System destruction completed ----");
 
-#ifdef CEGUI_HAS_DEFAULT_LOGGER
+#ifdef CEGUI_USE_DEFAULT_LOGGER
     // delete the Logger object only if we created it.
     if (d_ourLogger)
-        CEGUI_DELETE_AO Logger::getSingletonPtr();
+        delete Logger::getSingletonPtr();
 #endif
-    
-    CEGUI_DELETE_AO d_clipboard;
+
+    delete d_clipboard;
 }
 
 //---------------------------------------------------------------------------//
@@ -342,9 +342,9 @@ const String& System::getVerboseVersion()
 
     if (ret.empty())
     {
-        ret = PropertyHelper<uint>::toString(CEGUI_VERSION_MAJOR) + "." +
-              PropertyHelper<uint>::toString(CEGUI_VERSION_MINOR) + "." +
-              PropertyHelper<uint>::toString(CEGUI_VERSION_PATCH);
+        ret = PropertyHelper<std::uint32_t>::toString(CEGUI_VERSION_MAJOR) + "." +
+              PropertyHelper<std::uint32_t>::toString(CEGUI_VERSION_MINOR) + "." +
+              PropertyHelper<std::uint32_t>::toString(CEGUI_VERSION_PATCH);
 
         ret += " (Build: " __DATE__;
 
@@ -377,10 +377,8 @@ const String& System::getVerboseVersion()
 
 #elif defined(_MSC_VER)
         ret += " MSVC++ ";
-#if _MSC_VER < 1500
+#if _MSC_VER < 1600
         ret += "(Note: Compiler version is old and not officially supported)";
-#elif _MSC_VER == 1500
-        ret += "9.0 (2008)";
 #elif _MSC_VER == 1600
         ret += "10.0 (2010)";
 #elif _MSC_VER == 1700
@@ -425,14 +423,32 @@ void System::renderAllGUIContexts()
     WindowManager::getSingleton().cleanDeadPool();
 }
 
+void System::renderAllGUIContextsOnTarget(Renderer* /*contained_in*/)
+{
+    d_renderer->beginRendering();
+
+    for (GUIContextCollection::iterator i = d_guiContexts.begin();
+        i != d_guiContexts.end();
+        ++i)
+    {
+        // Add a check here to see if the renderer of context matches
+        // contained_in
+        (*i)->draw();
+    }
+
+    d_renderer->endRendering();
+
+    // do final destruction on dead-pool windows
+    WindowManager::getSingleton().cleanDeadPool();
+}
 
 /*************************************************************************
-	Return a pointer to the ScriptModule being used for scripting within
-	the GUI system.
+    Return a pointer to the ScriptModule being used for scripting within
+    the GUI system.
 *************************************************************************/
 ScriptModule* System::getScriptingModule(void) const
 {
-	return d_scriptModule;
+    return d_scriptModule;
 }
 
 /*************************************************************************
@@ -458,75 +474,75 @@ void System::setScriptingModule(ScriptModule* scriptModule)
 }
 
 /*************************************************************************
-	Return a pointer to the ResourceProvider being used for within the GUI
+    Return a pointer to the ResourceProvider being used for within the GUI
     system.
 *************************************************************************/
 ResourceProvider* System::getResourceProvider(void) const
 {
-	return d_resourceProvider;
+    return d_resourceProvider;
 }
 
 /*************************************************************************
-	Execute a script file if possible.
+    Execute a script file if possible.
 *************************************************************************/
 void System::executeScriptFile(const String& filename, const String& resourceGroup) const
 {
-	if (d_scriptModule)
-	{
-		CEGUI_TRY
-		{
-			d_scriptModule->executeScriptFile(filename, resourceGroup);
-		}
-        // Forward script exceptions with line number and file info
-        CEGUI_CATCH(ScriptException& e)
+    if (d_scriptModule)
+    {
+        try
         {
-            CEGUI_RETHROW;
+            d_scriptModule->executeScriptFile(filename, resourceGroup);
         }
-		CEGUI_CATCH(...)
-		{
-			CEGUI_THROW(GenericException(
-                "An exception was thrown during the execution of the script file."));
-		}
+        // Forward script exceptions with line number and file info
+        catch (ScriptException&)
+        {
+            throw;
+        }
+        catch (...)
+        {
+            throw GenericException(
+                "An exception was thrown during the execution of the script file.");
+        }
 
-	}
-	else
-	{
-		Logger::getSingleton().logEvent("System::executeScriptFile - the script named '" + filename +"' could not be executed as no ScriptModule is available.", Errors);
-	}
+    }
+    else
+    {
+        Logger::getSingleton().logEvent("System::executeScriptFile - the script named '" + filename +"' could not be executed as no ScriptModule is available.", LoggingLevel::Error);
+    }
 
 }
 
 
 /*************************************************************************
-	Execute a scripted global function if possible.  The function should
-	not take any parameters and should return an integer.
+    Execute a scripted global function if possible.  The function should
+    not take any parameters and should return an integer.
 *************************************************************************/
-int	System::executeScriptGlobal(const String& function_name) const
+int    System::executeScriptGlobal(const String& function_name) const
 {
-	if (d_scriptModule)
-	{
-		CEGUI_TRY
-		{
-			return d_scriptModule->executeScriptGlobal(function_name);
-		}
-        // Forward script exceptions with line number and file info
-        CEGUI_CATCH(ScriptException& e)
+    if (d_scriptModule)
+    {
+        try
         {
-            CEGUI_RETHROW;
+            return d_scriptModule->executeScriptGlobal(function_name);
         }
-		CEGUI_CATCH(...)
-		{
-			CEGUI_THROW(GenericException(
-                "An exception was thrown during execution of the scripted function."));
-		}
+        // Forward script exceptions with line number and file info
+        catch (ScriptException&)
+        {
+            throw;
+        }
+        catch (...)
+        {
+            throw GenericException(
+                "An exception was thrown during execution of the scripted function.");
+        }
 
-	}
-	else
-	{
-		Logger::getSingleton().logEvent("System::executeScriptGlobal - the global script function named '" + function_name +"' could not be executed as no ScriptModule is available.", Errors);
-	}
+    }
+    else
+    {
+        Logger::getSingleton().logEvent("System::executeScriptGlobal - the global script function named '" + function_name +"' could not be executed as no ScriptModule is available.", LoggingLevel::Error);
+    }
 
-	return 0;
+    return 0;
 }
 
 
@@ -538,30 +554,30 @@ void System::executeScriptString(const String& str) const
 {
     if (d_scriptModule)
     {
-        CEGUI_TRY
+        try
         {
             d_scriptModule->executeString(str);
         }
         // Forward script exceptions with line number and file info
-        CEGUI_CATCH(ScriptException& e)
+        catch (ScriptException&)
         {
-            CEGUI_RETHROW;
+            throw;
         }
-        CEGUI_CATCH(...)
+        catch (...)
         {
-            CEGUI_THROW(GenericException(
-                "An exception was thrown during execution of the script code."));
+            throw GenericException(
+                "An exception was thrown during execution of the script code.");
         }
 
     }
     else
     {
-        Logger::getSingleton().logEvent("System::executeScriptString - the script code could not be executed as no ScriptModule is available.", Errors);
+        Logger::getSingleton().logEvent("System::executeScriptString - the script code could not be executed as no ScriptModule is available.", LoggingLevel::Error);
     }
 }
 
 /*************************************************************************
-	Method to inject time pulses into the system.
+    Method to inject time pulses into the system.
 *************************************************************************/
 bool System::injectTimePulse(float timeElapsed)
 {
@@ -569,19 +585,19 @@ bool System::injectTimePulse(float timeElapsed)
     return true;
 }
 
-System&	System::getSingleton(void)
+System&    System::getSingleton(void)
 {
-	return Singleton<System>::getSingleton();
+    return Singleton<System>::getSingleton();
 }
 
 
-System*	System::getSingletonPtr(void)
+System*    System::getSingletonPtr(void)
 {
-	return Singleton<System>::getSingletonPtr();
+    return Singleton<System>::getSingletonPtr();
 }
 
 /*************************************************************************
-	Handler method for display size change notifications
+    Handler method for display size change notifications
 *************************************************************************/
 void System::notifyDisplaySizeChanged(const Sizef& new_size)
 {
@@ -634,7 +650,6 @@ void System::addStandardWindowFactories()
     WindowFactoryManager::addWindowType<DefaultWindow>();
     WindowFactoryManager::addWindowType<DragContainer>();
     WindowFactoryManager::addWindowType<ScrolledContainer>();
-    WindowFactoryManager::addWindowType<ClippedContainer>();
     WindowFactoryManager::addWindowType<PushButton>();
     WindowFactoryManager::addWindowType<RadioButton>();
     WindowFactoryManager::addWindowType<Combobox>();
@@ -642,9 +657,9 @@ void System::addStandardWindowFactories()
     WindowFactoryManager::addWindowType<Editbox>();
     WindowFactoryManager::addWindowType<FrameWindow>();
     WindowFactoryManager::addWindowType<ItemEntry>();
-    WindowFactoryManager::addWindowType<Listbox>();
     WindowFactoryManager::addWindowType<ListHeader>();
     WindowFactoryManager::addWindowType<ListHeaderSegment>();
+    WindowFactoryManager::addWindowType<ListWidget>();
     WindowFactoryManager::addWindowType<Menubar>();
     WindowFactoryManager::addWindowType<PopupMenu>();
     WindowFactoryManager::addWindowType<MenuItem>();
@@ -661,42 +676,45 @@ void System::addStandardWindowFactories()
     WindowFactoryManager::addWindowType<Titlebar>();
     WindowFactoryManager::addWindowType<ToggleButton>();
     WindowFactoryManager::addWindowType<Tooltip>();
-    WindowFactoryManager::addWindowType<ItemListbox>();
-    WindowFactoryManager::addWindowType<GroupBox>();
-    WindowFactoryManager::addWindowType<Tree>();
-    WindowFactoryManager::addWindowType<LayoutCell>();
+    WindowFactoryManager::addWindowType<TreeWidget>();
     WindowFactoryManager::addWindowType<HorizontalLayoutContainer>();
     WindowFactoryManager::addWindowType<VerticalLayoutContainer>();
     WindowFactoryManager::addWindowType<GridLayoutContainer>();
+
+    // views
+    WindowFactoryManager::addWindowType<ListView>();
+    WindowFactoryManager::addWindowType<TreeView>();
 }
 
 void System::createSingletons()
 {
     // cause creation of other singleton objects
-    CEGUI_NEW_AO ImageManager();
-    CEGUI_NEW_AO FontManager();
-    CEGUI_NEW_AO WindowFactoryManager();
-    CEGUI_NEW_AO WindowManager();
-    CEGUI_NEW_AO SchemeManager();
-    CEGUI_NEW_AO GlobalEventSet();
-    CEGUI_NEW_AO AnimationManager();
-    CEGUI_NEW_AO WidgetLookManager();
-    CEGUI_NEW_AO WindowRendererManager();
-    CEGUI_NEW_AO RenderEffectManager();
+    new ImageManager();
+    new FontManager();
+    new WindowFactoryManager();
+    new WindowManager();
+    new SchemeManager();
+    new GlobalEventSet();
+    new AnimationManager();
+    new WidgetLookManager();
+    new WindowRendererManager();
+    new RenderEffectManager();
+    new SVGDataManager();
 }
 
 void System::destroySingletons()
 {
-    CEGUI_DELETE_AO SchemeManager::getSingletonPtr();
-    CEGUI_DELETE_AO WindowManager::getSingletonPtr();
-    CEGUI_DELETE_AO WindowFactoryManager::getSingletonPtr();
-    CEGUI_DELETE_AO WidgetLookManager::getSingletonPtr();
-    CEGUI_DELETE_AO WindowRendererManager::getSingletonPtr();
-    CEGUI_DELETE_AO AnimationManager::getSingletonPtr();
-    CEGUI_DELETE_AO RenderEffectManager::getSingletonPtr();
-    CEGUI_DELETE_AO FontManager::getSingletonPtr();
-    CEGUI_DELETE_AO ImageManager::getSingletonPtr();
-    CEGUI_DELETE_AO GlobalEventSet::getSingletonPtr();
+    delete SchemeManager::getSingletonPtr();
+    delete WindowManager::getSingletonPtr();
+    delete WindowFactoryManager::getSingletonPtr();
+    delete WidgetLookManager::getSingletonPtr();
+    delete WindowRendererManager::getSingletonPtr();
+    delete AnimationManager::getSingletonPtr();
+    delete RenderEffectManager::getSingletonPtr();
+    delete FontManager::getSingletonPtr();
+    delete ImageManager::getSingletonPtr();
+    delete GlobalEventSet::getSingletonPtr();
+    delete SVGDataManager::getSingletonPtr();
 }
 
 //----------------------------------------------------------------------------//
@@ -712,7 +730,7 @@ void System::setupXMLParser()
         d_xmlParser = createParser();
         // make sure we know to cleanup afterwards.
         d_ourXmlParser = true;
-		d_xmlParser->initialise();
+        d_xmlParser->initialise();
 #endif
     }
     // parser object already set, just initialise it.
@@ -738,14 +756,14 @@ void System::cleanupXMLParser()
     if (d_parserModule)
     {
         // get pointer to parser deletion function
-        void(*deleteFunc)(XMLParser*) = (void(*)(XMLParser*))d_parserModule->
-            getSymbolAddress("destroyParser");
+        void(*deleteFunc)(XMLParser*) = reinterpret_cast<void(*)(XMLParser*)>(d_parserModule->
+            getSymbolAddress("destroyParser"));
         // cleanup the xml parser object
         deleteFunc(d_xmlParser);
 
         // delete the dynamic module for the xml parser
-        CEGUI_DELETE_AO d_parserModule;
-        d_parserModule = 0;
+        delete d_parserModule;
+        d_parserModule = nullptr;
     }
 #ifdef CEGUI_STATIC
     else
@@ -753,32 +771,19 @@ void System::cleanupXMLParser()
         destroyParser(d_xmlParser);
 #endif
 
-    d_xmlParser = 0;
+    d_xmlParser = nullptr;
 }
 
 //----------------------------------------------------------------------------//
-
-void System::setModuleDirEnvVar(const String& moduleDir)
-{
-    d_moduleDir = moduleDir;
-}
-
-const String System::getModuleDirEnvVar()
-{
-    return d_moduleDir;
-}
-
-//----------------------------------------------------------------------------//
-
 void System::setXMLParser(const String& parserName)
 {
 #ifndef CEGUI_STATIC
     cleanupXMLParser();
     // load dynamic module
-    d_parserModule = CEGUI_NEW_AO DynamicModule(String("CEGUI") + parserName, getModuleDirEnvVar());
+    d_parserModule = new DynamicModule(String("CEGUI") + parserName);
     // get pointer to parser creation function
     XMLParser* (*createFunc)(void) =
-        (XMLParser* (*)(void))d_parserModule->getSymbolAddress("createParser");
+        reinterpret_cast<XMLParser* (*)(void)>(d_parserModule->getSymbolAddress("createParser"));
     // create the parser object
     d_xmlParser = createFunc();
     // make sure we know to cleanup afterwards.
@@ -789,7 +794,7 @@ void System::setXMLParser(const String& parserName)
     CEGUI_UNUSED(parserName);
     Logger::getSingleton().logEvent(
         "System::setXMLParser(const String& parserName) called from statically "
-        "linked CEGUI library - unable to load dynamic module!", Errors);
+        "linked CEGUI library - unable to load dynamic module!", LoggingLevel::Error);
 #endif
 }
 
@@ -808,7 +813,7 @@ void System::setDefaultXMLParserName(const String& parserName)
     d_defaultXMLParserName = parserName;
 }
 
-const String System::getDefaultXMLParserName()
+String System::getDefaultXMLParserName()
 {
     return d_defaultXMLParserName;
 }
@@ -831,7 +836,7 @@ void System::setImageCodec(ImageCodec& codec)
     cleanupImageCodec();
     d_imageCodec = &codec;
     d_ourImageCodec = false;
-    d_imageCodecModule = 0;
+    d_imageCodecModule = nullptr;
 }
 
 //----------------------------------------------------------------------------//
@@ -847,11 +852,11 @@ void System::setupImageCodec(const String& codecName)
 #    else
         // load the appropriate image codec module
         d_imageCodecModule = codecName.empty() ?
-            CEGUI_NEW_AO DynamicModule(String("CEGUI") + d_defaultImageCodecName, getModuleDirEnvVar()) :
-            CEGUI_NEW_AO DynamicModule(String("CEGUI") + codecName, getModuleDirEnvVar());
+            new DynamicModule(String("CEGUI") + d_defaultImageCodecName) :
+            new DynamicModule(String("CEGUI") + codecName);
 
         // use function from module to create the codec object.
-        d_imageCodec = ((ImageCodec*(*)(void))d_imageCodecModule->
+        d_imageCodec = reinterpret_cast<ImageCodec*(*)(void)>(d_imageCodecModule->
             getSymbolAddress("createImageCodec"))();
 #    endif
 
@@ -868,18 +873,18 @@ void System::cleanupImageCodec()
 
     if (d_imageCodecModule)
     {
-        ((void(*)(ImageCodec*))d_imageCodecModule->
+        reinterpret_cast<void(*)(ImageCodec*)>(d_imageCodecModule->
             getSymbolAddress("destroyImageCodec"))(d_imageCodec);
 
-        CEGUI_DELETE_AO d_imageCodecModule;
-        d_imageCodecModule = 0;
+        delete d_imageCodecModule;
+        d_imageCodecModule = nullptr;
     }
 #if defined(CEGUI_STATIC)
     else
         destroyImageCodec(d_imageCodec);
 #endif
 
-    d_imageCodec = 0;
+    d_imageCodec = nullptr;
 }
 
 //----------------------------------------------------------------------------//
@@ -902,7 +907,7 @@ System& System::create(Renderer& renderer, ResourceProvider* resourceProvider,
 {
     performVersionTest(CEGUI_VERSION_ABI, abi, CEGUI_FUNCTION_NAME);
 
-    return *CEGUI_NEW_AO System(renderer, resourceProvider, xmlParser, imageCodec,
+    return *new System(renderer, resourceProvider, xmlParser, imageCodec,
                        scriptModule, configFile, logFile);
 }
 
@@ -911,46 +916,44 @@ void System::performVersionTest(const int expected, const int received,
                                 const String& func)
 {
     if (expected != received)
-        CEGUI_THROW(InvalidRequestException("Version mismatch detected! "
+        throw InvalidRequestException("Version mismatch detected! "
             "Called from function: " + func +
-            " Expected abi: " + PropertyHelper<int>::toString(expected) +
-            " received abi: " + PropertyHelper<int>::toString(received) +
+            " Expected abi: " + PropertyHelper<std::int32_t>::toString(expected) +
+            " received abi: " + PropertyHelper<std::int32_t>::toString(received) +
             ". This means that the code calling the function was compiled "
             "against a CEGUI version that is incompatible with the library "
             "containing the function. Usually this means that you have "
-            "old binary library versions that have been used by mistake."));
+            "old binary library versions that have been used by mistake.");
 }
 
 //----------------------------------------------------------------------------//
 void System::destroy()
 {
-    CEGUI_DELETE_AO System::getSingletonPtr();
+    delete System::getSingletonPtr();
 }
 
 //----------------------------------------------------------------------------//
-RenderedStringParser* System::getDefaultCustomRenderedStringParser() const
+TextParser* System::getDefaultTextParser() const
 {
-    return d_customRenderedStringParser;
+    return d_defaultTextParser;
 }
 
 //----------------------------------------------------------------------------//
-void System::setDefaultCustomRenderedStringParser(RenderedStringParser* parser)
+void System::setDefaultTextParser(TextParser* parser)
 {
-    if (parser != d_customRenderedStringParser)
-    {
-        d_customRenderedStringParser = parser;
-        
-        // fire event
-        EventArgs args;
-        fireEvent(EventRenderedStringParserChanged, args, EventNamespace);
-    }
+    if (parser == d_defaultTextParser)
+        return;
+
+    d_defaultTextParser = parser ? parser : d_fallbackTextParser.get();
+
+    EventArgs args;
+    fireEvent(EventTextParserChanged, args, EventNamespace);
 }
 
 //----------------------------------------------------------------------------//
 void System::invalidateAllCachedRendering()
 {
     invalidateAllWindows();
-    //MouseCursor::getSingleton().invalidate();
 }
 
 //----------------------------------------------------------------------------//
@@ -965,43 +968,42 @@ void System::invalidateAllWindows()
         // invalidate window itself
         wnd->invalidate();
         // if window has rendering window surface, invalidate it's geometry
-        RenderingSurface* rs;
-        if ((rs = wnd->getRenderingSurface()) && rs->isRenderingWindow())
+        RenderingSurface* rs = wnd->getRenderingSurface();
+        if (rs != nullptr && rs->isRenderingWindow())
             static_cast<RenderingWindow*>(rs)->invalidateGeometry();
     }
 }
 
 //----------------------------------------------------------------------------//
-RegexMatcher* System::createRegexMatcher() const
+void System::setDefaultFontName(const String& name)
 {
-#ifdef CEGUI_HAS_PCRE_REGEX
-    return CEGUI_NEW_AO PCRERegexMatcher();
-#else
-    return 0;
-#endif
+    d_defaultFontName = name;
 }
 
 //----------------------------------------------------------------------------//
-void System::destroyRegexMatcher(RegexMatcher* rm) const
+void System::setDefaultCursorName(const String& name)
 {
-    CEGUI_DELETE_AO rm;
+    d_defaultCursorName = name;
 }
 
 //----------------------------------------------------------------------------//
-GUIContext& System::getDefaultGUIContext() const
+void System::setDefaultTooltipType(const String& tooltip_type)
 {
-    if (d_guiContexts.empty())
-        CEGUI_THROW(InvalidRequestException("Requesting the DefaultGUIContext, but no DefaultGUIContext is available. "
-        "The list of GUIContexts is empty."));
-
-    return *d_guiContexts.front();
+    d_defaultTooltipType = tooltip_type;
 }
 
 //----------------------------------------------------------------------------//
 GUIContext& System::createGUIContext(RenderTarget& rt)
 {
-    GUIContext* c = CEGUI_NEW_AO GUIContext(rt);
+    GUIContext* c = new GUIContext(rt);
     d_guiContexts.push_back(c);
+
+    if (!d_defaultFontName.empty())
+        c->setDefaultFont(d_defaultFontName);
+    if (!d_defaultCursorName.empty())
+        c->setDefaultCursorImage(&ImageManager::getSingleton().get(d_defaultCursorName));
+    if (!d_defaultTooltipType.empty())
+        c->setDefaultTooltipType(d_defaultTooltipType);
 
     return *c;
 }
@@ -1015,7 +1017,7 @@ void System::destroyGUIContext(GUIContext& context)
     {
         if (*i == &context)
         {
-            CEGUI_DELETE_AO *i;
+            delete *i;
             d_guiContexts.erase(i);
             return;
         }

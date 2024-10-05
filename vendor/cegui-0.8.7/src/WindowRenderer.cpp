@@ -27,9 +27,11 @@
  *   OTHER DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
 #include "CEGUI/WindowRenderer.h"
+#include "CEGUI/Window.h"
 #include "CEGUI/falagard/WidgetLookManager.h"
+#include "CEGUI/falagard/WidgetLookFeel.h"
+#include "CEGUI/falagard/NamedArea.h"
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 
@@ -37,7 +39,7 @@ namespace CEGUI
     Constructor
 *************************************************************************/
 WindowRenderer::WindowRenderer(const String& name, const String& class_name) :
-    d_window(0),
+    d_window(nullptr),
     d_name(name),
     d_class(class_name)
 {
@@ -58,16 +60,24 @@ const WidgetLookFeel& WindowRenderer::getLookNFeel() const
     return WidgetLookManager::getSingleton().getWidgetLook(d_window->getLookNFeel());
 }
 
+//----------------------------------------------------------------------------//
+ColourRect WindowRenderer::getOptionalColour(const String& propertyName, const Colour& defaultColour) const
+{
+    ColourRect rect(defaultColour);
+    if (d_window->isPropertyPresent(propertyName))
+        rect = d_window->getProperty<ColourRect>(propertyName);
+    return rect;
+}
+
 /************************************************************************
     Get unclipped inner rectangle.
 *************************************************************************/
 Rectf WindowRenderer::getUnclippedInnerRect() const
 {
-    const WidgetLookFeel& lf(getLookNFeel());
+    const WidgetLookFeel& wlf(getLookNFeel());
 
-    if (lf.isNamedAreaDefined("inner_rect"))
-        return lf.getNamedArea("inner_rect").getArea().
-            getPixelRect(*d_window, d_window->getUnclippedOuterRect().get());
+    if(wlf.isNamedAreaPresent("inner_rect", true))
+        return wlf.getNamedArea("inner_rect").getArea().getPixelRect(*d_window, d_window->getUnclippedOuterRect().get());
     else
         return d_window->getUnclippedOuterRect().get();
 }
@@ -92,15 +102,12 @@ void WindowRenderer::registerProperty(Property* property)
 *************************************************************************/
 void WindowRenderer::onAttach()
 {
-    PropertyList::iterator i = d_properties.begin();
-    while (i != d_properties.end())
+    for (const auto& pair : d_properties)
     {
-        d_window->addProperty((*i).first);
+        d_window->addProperty(pair.first);
         // ban from xml if neccessary
-        if ((*i).second)
-            d_window->banPropertyFromXML((*i).first);
-
-        ++i;
+        if (pair.second)
+            d_window->banPropertyFromXML(pair.first->getName());
     }
 }
 
@@ -109,15 +116,13 @@ void WindowRenderer::onAttach()
 *************************************************************************/
 void WindowRenderer::onDetach()
 {
-    PropertyList::reverse_iterator i = d_properties.rbegin();
-    while (i != d_properties.rend())
+    for (const auto& pair : d_properties)
     {
         // unban from xml if neccessary
-        if ((*i).second)
-            d_window->unbanPropertyFromXML((*i).first);
+        if (pair.second)
+            d_window->unbanPropertyFromXML(pair.first->getName());
 
-        d_window->removeProperty((*i).first->getName());
-        ++i;
+        d_window->removeProperty(pair.first->getName());
     }
 }
 
@@ -131,8 +136,43 @@ void WindowRenderer::getRenderingContext(RenderingContext& ctx) const
 //----------------------------------------------------------------------------//
 bool WindowRenderer::handleFontRenderSizeChange(const Font* const font)
 {
-    const WidgetLookFeel& lf(getLookNFeel());
-    return lf.handleFontRenderSizeChange(*d_window, font);
+    return getLookNFeel().handleFontRenderSizeChange(*d_window, font);
+}
+
+//----------------------------------------------------------------------------//
+Sizef WindowRenderer::getContentSize() const
+{
+    throw InvalidRequestException("This function isn't implemented for this type of window renderer.");
+}
+
+//----------------------------------------------------------------------------//
+UDim WindowRenderer::getWidthOfAreaReservedForContentLowerBoundAsFuncOfWindowWidth() const
+{
+    throw InvalidRequestException("This function isn't implemented for this type of window renderer.");
+}
+
+//----------------------------------------------------------------------------//
+UDim WindowRenderer::getHeightOfAreaReservedForContentLowerBoundAsFuncOfWindowHeight() const
+{
+    throw InvalidRequestException("This function isn't implemented for this type of window renderer.");
+}
+
+//----------------------------------------------------------------------------//
+void WindowRenderer::adjustSizeToContent()
+{
+    getWindow()->adjustSizeToContent_direct();
+}
+
+//----------------------------------------------------------------------------//
+bool WindowRenderer::contentFitsForSpecifiedWindowSize(const Sizef& /*window_size*/) const
+{
+    throw InvalidRequestException("This function isn't implemented for this type of window renderer.");
+}
+
+//----------------------------------------------------------------------------//
+bool WindowRenderer::contentFits() const
+{
+    throw InvalidRequestException("This function isn't implemented for this type of window renderer.");
 }
 
 //----------------------------------------------------------------------------//

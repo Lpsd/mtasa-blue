@@ -8,14 +8,20 @@ project "CEGUISILLYImageCodec"
 		"../../include",
 		"../../dependencies/SILLY/include",
 		"../../../freetype/include",
-		"../../dependencies/pcre-8.12"
+		"../../../pcre",
+		"../../../libpng",
+		"../../../jpeg-9f",
+        "../../dependencies/glm-0.9.4.5"
 	}
-    
+
     links {
+        "glm-0.9.4.5",
         "CEGUISILLYModule",
         "CEGUI-0.8.7",
 		"freetype", 
-		"pcre-8.12",
+		"pcre",
+        "libpng",
+        "jpeg",
 		"dbghelp",
 		"winmm"
     }

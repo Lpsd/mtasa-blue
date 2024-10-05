@@ -28,9 +28,12 @@
 #define _CEGUIScheme_xmlHandler_h_
 
 #include "CEGUI/XMLHandler.h"
-#include "CEGUI/String.h"
 
-// Start of CEGUI namespace section
+#if defined(_MSC_VER)
+#   pragma warning(push)
+#   pragma warning(disable : 4251)
+#endif
+
 namespace CEGUI
 {
 //! Handler class used to parse the Scheme XML files using SAX2
@@ -50,10 +53,10 @@ public:
     Scheme& getObject() const;
 
     // XMLHandler overrides
-    const String& getSchemaName() const;
-    const String& getDefaultResourceGroup() const;
-    void elementStart(const String& element, const XMLAttributes& attributes);
-    void elementEnd(const String& element);
+    const String& getSchemaName() const override;
+    const String& getDefaultResourceGroup() const override;
+    void elementStart(const String& element, const XMLAttributes& attributes) override;
+    void elementEnd(const String& element) override;
 
 private:
     //! Filename of the XML schema used for validating GUIScheme files.
@@ -138,5 +141,9 @@ private:
 };
 
 } // End of  CEGUI namespace section
+
+#if defined(_MSC_VER)
+#   pragma warning(pop)
+#endif
 
 #endif  // end of guard _CEGUIScheme_xmlHandler_h_

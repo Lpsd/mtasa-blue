@@ -6,7 +6,7 @@
 				colour values within the system
 *************************************************************************/
 /***************************************************************************
- *   Copyright (C) 2004 - 2006 Paul D Turner & The CEGUI Development Team
+ *   Copyright (C) 2004 - 2015 Paul D Turner & The CEGUI Development Team
  *
  *   Permission is hereby granted, free of charge, to any person obtaining
  *   a copy of this software and associated documentation files (the
@@ -32,17 +32,15 @@
 
 #include "CEGUI/Base.h"
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
-typedef uint32 argb_t;    //!< 32 bit ARGB representation of a colour.
+typedef std::uint32_t argb_t;    //!< 32 bit ARGB representation of a colour.
 
 /*!
 \brief
 	Class representing colour values within the system.
 */
-class CEGUIEXPORT Colour : 
-    public AllocatedObject<Colour>
+class CEGUIEXPORT Colour
 {
 public:
 	/*************************************************************************
@@ -278,10 +276,32 @@ public:
         return !(*this == rhs);
     }
 
+    /*!
+    \brief Writes a Colour to a stream
+    */
+    friend std::ostream& operator << (std::ostream& s, const Colour& val);
+
+    /*!
+    \brief Extracts a Colour from a stream
+    */
+    friend std::istream& operator >> (std::istream& inStream, Colour& val);
+
 	//
 	// Conversion operators
 	//
 	operator argb_t() const		{return getARGB();}
+
+    static argb_t calculateArgb(std::uint8_t alpha, std::uint8_t red,
+        std::uint8_t green, std::uint8_t blue)
+    {
+        return (
+            static_cast<argb_t>(alpha) << 24 |
+            static_cast<argb_t>(red) << 16 |
+            static_cast<argb_t>(green) << 8 |
+            static_cast<argb_t>(blue)
+            );
+    }
+
 
 private:
 	/*************************************************************************
@@ -300,6 +320,14 @@ private:
 	mutable argb_t d_argb;						//!< Colour as ARGB value.
 	mutable bool d_argbValid;					//!< True if argb value is valid.
 };
+
+inline Colour operator *(const Colour& a, const Colour& b)
+{
+    return Colour(a.getRed() * b.getRed(),
+        a.getGreen() * b.getGreen(),
+        a.getBlue() * b.getBlue(),
+        a.getAlpha() * b.getAlpha());
+}
 
 } // End of  CEGUI namespace section
 

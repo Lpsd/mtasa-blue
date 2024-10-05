@@ -28,316 +28,366 @@
  ***************************************************************************/
 #include "CEGUI/widgets/Slider.h"
 #include "CEGUI/widgets/Thumb.h"
-#include "CEGUI/WindowManager.h"
-#include "CEGUI/Exceptions.h"
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 const String Slider::EventNamespace("Slider");
 const String Slider::WidgetTypeName("CEGUI/Slider");
-
 /*************************************************************************
-    SliderWindowRenderer
+    Event name constants
 *************************************************************************/
+const String Slider::EventValueChanged("ValueChanged");
+const String Slider::EventMinimumValueChanged("MinimumValueChanged");
+const String Slider::EventMaximumValueChanged("MaximumValueChanged");
+const String Slider::EventStepChanged("StepChanged");
+const String Slider::EventThumbTrackStarted("ThumbTrackStarted");
+const String Slider::EventThumbTrackEnded("ThumbTrackEnded");
+/*************************************************************************
+    Child Widget name constants
+*************************************************************************/
+const String Slider::ThumbName("__auto_thumb__");
+
+//----------------------------------------------------------------------------//
 SliderWindowRenderer::SliderWindowRenderer(const String& name) :
     WindowRenderer(name, Slider::EventNamespace)
 {
 }
 
-/*************************************************************************
-	Event name constants
-*************************************************************************/
-const String Slider::EventValueChanged( "ValueChanged" );
-const String Slider::EventThumbTrackStarted( "ThumbTrackStarted" );
-const String Slider::EventThumbTrackEnded( "ThumbTrackEnded" );
-
-/*************************************************************************
-    Child Widget name constants
-*************************************************************************/
-const String Slider::ThumbName( "__auto_thumb__" );
-
-/*************************************************************************
-	Slider base class constructor
-*************************************************************************/
+//----------------------------------------------------------------------------//
 Slider::Slider(const String& type, const String& name) :
-	Window(type, name),
-	d_value(0.0f),
-	d_maxValue(1.0f),
-	d_step(0.01f)
+	Window(type, name)
 {
 	addSliderProperties();
 }
 
-
-/*************************************************************************
-	Slider base class destructor
-*************************************************************************/
-Slider::~Slider(void)
+//----------------------------------------------------------------------------//
+void Slider::initialiseComponents()
 {
-}
-
-
-/*************************************************************************
-	Initialises the Window based object ready for use.
-*************************************************************************/
-void Slider::initialiseComponents(void)
-{
-	// get thumb
 	Thumb* thumb = getThumb();
-
-	// bind handler to thumb events
 	thumb->subscribeEvent(Thumb::EventThumbPositionChanged, Event::Subscriber(&CEGUI::Slider::handleThumbMoved, this));
 	thumb->subscribeEvent(Thumb::EventThumbTrackStarted, Event::Subscriber(&CEGUI::Slider::handleThumbTrackStarted, this));
 	thumb->subscribeEvent(Thumb::EventThumbTrackEnded, Event::Subscriber(&CEGUI::Slider::handleThumbTrackEnded, this));
 
-	performChildWindowLayout();
+    Window::initialiseComponents();
 }
 
-
-/*************************************************************************
-	set the maximum value for the slider.
-	Note that the minimum value is fixed at 0.
-*************************************************************************/
-void Slider::setMaxValue(float maxVal)
+//----------------------------------------------------------------------------//
+Slider::value_type Slider::roundToStep(value_type value) const
 {
-	d_maxValue = maxVal;
-
-	float oldval = d_value;
-
-	// limit current value to be within new max
-	if (d_value > d_maxValue) {
-		d_value = d_maxValue;
-	}
-
-	updateThumb();
-
-	// send notification if slider value changed.
-	if (d_value != oldval)
-	{
-		WindowEventArgs args(this);
-		onValueChanged(args);
-	}
-
+    const auto rem = std::fmod(value - d_minValue, d_stepSize);
+    value -= rem;
+    if (rem > 0.5 * d_stepSize)
+        value += d_stepSize;
+    return value;
 }
 
-
-/*************************************************************************
-	set the current slider value.
-*************************************************************************/
-void Slider::setCurrentValue(float value)
+//----------------------------------------------------------------------------//
+void Slider::setCurrentValue(value_type value)
 {
-	float oldval = d_value;
+    bool needUpdateThumb = false;
+    if (d_discrete)
+    {
+        const auto srcValue = value;
+        value = roundToStep(value);
+        needUpdateThumb = (value != srcValue);
+    }
 
-	// range for value: 0 <= value <= maxValue
-	d_value = (value >= 0.0f) ? ((value <= d_maxValue) ? value : d_maxValue) : 0.0f;
+    value = std::max(std::min(value, d_maxValue), d_minValue);
 
-	updateThumb();
+    if (value != d_currentValue)
+    {
+        d_currentValue = value;
+        needUpdateThumb = true;
 
-	// send notification if slider value changed.
-	if (d_value != oldval)
-	{
-		WindowEventArgs args(this);
-		onValueChanged(args);
-	}
+        WindowEventArgs args(this);
+        onValueChanged(args);
+    }
 
+    if (needUpdateThumb)
+    {
+        Thumb* thumb = getThumb();
+        const bool prevMuted = thumb->isMuted();
+        thumb->setMutedState(true);
+
+        updateThumb();
+
+        thumb->setMutedState(prevMuted);
+    }
 }
 
-bool Slider::validateWindowRenderer(const WindowRenderer* renderer) const
+//----------------------------------------------------------------------------//
+void Slider::setMinimumValue(value_type minValue)
 {
-	return dynamic_cast<const SliderWindowRenderer*>(renderer) != 0;
+    // FIXME: correctness vs freedom in the order of calls
+    //if (minValue > d_maxValue)
+    //    minValue = d_maxValue;
+
+    if (minValue != d_minValue)
+    {
+        d_minValue = minValue;
+        updateThumb();
+
+        WindowEventArgs args(this);
+        onMinimumValueChanged(args);
+    }
 }
 
-/*************************************************************************
-	Handler triggered when the slider value changes
-*************************************************************************/
+//----------------------------------------------------------------------------//
+void Slider::setMaximumValue(value_type maxValue)
+{
+    // FIXME: correctness vs freedom in the order of calls
+    //if (maxValue < d_minValue)
+    //    maxValue = d_minValue;
+
+    if (maxValue != d_maxValue)
+    {
+        d_maxValue = maxValue;
+        updateThumb();
+
+        WindowEventArgs args(this);
+        onMaximumValueChanged(args);
+    }
+}
+
+//----------------------------------------------------------------------------//
+void Slider::setDiscrete(bool discrete)
+{
+    if (d_discrete == discrete)
+        return;
+
+    d_discrete = discrete;
+
+    if (discrete)
+        setCurrentValue(d_currentValue);
+}
+
+//----------------------------------------------------------------------------//
+bool Slider::isVertical() const
+{
+    return d_windowRenderer && static_cast<SliderWindowRenderer*>(d_windowRenderer)->isVertical();
+}
+
+//----------------------------------------------------------------------------//
 void Slider::onValueChanged(WindowEventArgs& e)
 {
 	fireEvent(EventValueChanged, e, EventNamespace);
 }
 
+//----------------------------------------------------------------------------//
+void Slider::onMinimumValueChanged(WindowEventArgs& e)
+{
+    fireEvent(EventMinimumValueChanged, e, EventNamespace);
 
-/*************************************************************************
-	Handler triggered when the user begins to drag the slider thumb.
-*************************************************************************/
+    if (d_currentValue < d_minValue)
+        setCurrentValue(d_minValue);
+}
+
+//----------------------------------------------------------------------------//
+void Slider::onMaximumValueChanged(WindowEventArgs& e)
+{
+    fireEvent(EventMaximumValueChanged, e, EventNamespace);
+
+    if (d_currentValue > d_maxValue)
+        setCurrentValue(d_maxValue);
+}
+
+//----------------------------------------------------------------------------//
+void Slider::onStepChanged(WindowEventArgs& e)
+{
+    fireEvent(EventStepChanged, e, EventNamespace);
+}
+
+//----------------------------------------------------------------------------//
 void Slider::onThumbTrackStarted(WindowEventArgs& e)
 {
 	fireEvent(EventThumbTrackStarted, e, EventNamespace);
 }
 
-
-/*************************************************************************
-	Handler triggered when the slider thumb is released
-*************************************************************************/
+//----------------------------------------------------------------------------//
 void Slider::onThumbTrackEnded(WindowEventArgs& e)
 {
 	fireEvent(EventThumbTrackEnded, e, EventNamespace);
 }
 
-
-/*************************************************************************
-	Handler for when a mouse button is pressed
-*************************************************************************/
-void Slider::onMouseButtonDown(MouseEventArgs& e)
+//----------------------------------------------------------------------------//
+void Slider::onMouseButtonDown(MouseButtonEventArgs& e)
 {
-	// base class processing
-	Window::onMouseButtonDown(e);
+    Window::onMouseButtonDown(e);
 
-	if (e.button == LeftButton)
+    if (e.d_button == MouseButton::Left)
 	{
-		float adj = getAdjustDirectionFromPoint(e.position);
-
-		// adjust slider position in whichever direction as required.
-		if (adj != 0)
-		{
-			setCurrentValue(d_value + (adj * d_step));
-		}
+        // adjust slider position in whichever direction as required.
+        const float adj = getAdjustDirectionFromPoint(e.d_surfacePos);
+		if (adj != 0.f)
+			setCurrentValue(d_currentValue + adj * d_stepSize);
 
 		++e.handled;
 	}
-
 }
 
-
-/*************************************************************************
-	Handler for scroll wheel changes
-*************************************************************************/
-void Slider::onMouseWheel(MouseEventArgs& e)
+//----------------------------------------------------------------------------//
+void Slider::onScroll(ScrollEventArgs& e)
 {
-	// base class processing
-	Window::onMouseWheel(e);
+    Window::onScroll(e);
 
-	// scroll by e.wheelChange * stepSize
-	setCurrentValue(d_value + d_step * e.wheelChange);
-
-	// ensure the message does not go to our parent.
-	++e.handled;
+    const value_type prevValue = d_currentValue;
+    setCurrentValue(d_currentValue + d_stepSize * e.d_delta);
+    if (prevValue != d_currentValue)
+        ++e.handled;
 }
 
+//----------------------------------------------------------------------------//
+void Slider::onKeyDown(KeyEventArgs& e)
+{
+    float multiplier = 1.f;
+    if (e.d_modifiers.hasCtrl())
+        multiplier *= 10.f;
+    if (e.d_modifiers.hasShift())
+        multiplier *= 100.f;
+    if (e.d_modifiers.hasAlt())
+        multiplier *= 0.1f;
 
-/*************************************************************************
-	handler function for when thumb moves.
-*************************************************************************/
+    const value_type step = static_cast<value_type>(d_stepSize * multiplier);
+
+    switch (e.d_key)
+    {
+        case Key::Scan::ArrowUp:
+            if (isVertical())
+            {
+                setCurrentValue(d_currentValue + step);
+                ++e.handled;
+            }
+            break;
+
+        case Key::Scan::ArrowDown:
+            if (isVertical())
+            {
+                setCurrentValue(d_currentValue - step);
+                ++e.handled;
+            }
+            break;
+
+        case Key::Scan::ArrowLeft:
+            if (!isVertical())
+            {
+                setCurrentValue(d_currentValue - step);
+                ++e.handled;
+            }
+            break;
+
+        case Key::Scan::ArrowRight:
+            if (!isVertical())
+            {
+                setCurrentValue(d_currentValue + step);
+                ++e.handled;
+            }
+            break;
+    }
+
+    Window::onKeyDown(e);
+}
+
+//----------------------------------------------------------------------------//
 bool Slider::handleThumbMoved(const EventArgs&)
 {
 	setCurrentValue(getValueFromThumb());
-
 	return true;
 }
 
-
-/*************************************************************************
-	handler function for when thumb tracking begins
-*************************************************************************/
+//----------------------------------------------------------------------------//
 bool Slider::handleThumbTrackStarted(const EventArgs&)
 {
-	// simply trigger our own version of this event
 	WindowEventArgs args(this);
 	onThumbTrackStarted(args);
-
 	return true;
 }
 
-
-/*************************************************************************
-	handler function for when thumb tracking begins
-*************************************************************************/
+//----------------------------------------------------------------------------//
 bool Slider::handleThumbTrackEnded(const EventArgs&)
 {
-	// simply trigger our own version of this event
 	WindowEventArgs args(this);
 	onThumbTrackEnded(args);
-
 	return true;
 }
 
-
-/*************************************************************************
-	Add properties for the slider
-*************************************************************************/
-void Slider::addSliderProperties(void)
-{
-    const String& propertyOrigin = WidgetTypeName;
-
-    CEGUI_DEFINE_PROPERTY(Slider, float,
-        "CurrentValue", "Property to get/set the current value of the slider.  Value is a float.",
-        &Slider::setCurrentValue, &Slider::getCurrentValue, 0.0f
-    );
-    
-    CEGUI_DEFINE_PROPERTY(Slider, float,
-        "MaximumValue", "Property to get/set the maximum value of the slider.  Value is a float.",
-        &Slider::setMaxValue, &Slider::getMaxValue, 1.0f /* TODO: Inconsistency */
-    );
-    
-    CEGUI_DEFINE_PROPERTY(Slider, float,
-        "ClickStepSize", "Property to get/set the click-step size for the slider.  Value is a float.",
-        &Slider::setClickStep, &Slider::getClickStep, 0.01f /* TODO: Inconsistency */
-    );
-}
-
-/*************************************************************************
-    Return a pointer to the Thumb component widget..
-*************************************************************************/
+//----------------------------------------------------------------------------//
 Thumb* Slider::getThumb() const
 {
     return static_cast<Thumb*>(getChild(ThumbName));
 }
 
-/*************************************************************************
-    update the size and location of the thumb to properly represent the
-    current state of the scroll bar
-*************************************************************************/
-void Slider::updateThumb(void)
+//----------------------------------------------------------------------------//
+void Slider::updateThumb()
 {
-    if (d_windowRenderer != 0)
-    {
-        SliderWindowRenderer* wr = (SliderWindowRenderer*)d_windowRenderer;
-        wr->updateThumb();
-    }
-    else
-    {
-        //updateThumb_impl();
-        CEGUI_THROW(InvalidRequestException(
-            "This function must be implemented by the window renderer module"));
-    }
+    if (!d_windowRenderer)
+        throw InvalidRequestException(
+            "This function must be implemented by the window renderer module");
+
+    static_cast<SliderWindowRenderer*>(d_windowRenderer)->updateThumb();
 }
 
-/*************************************************************************
-    return value that best represents current scroll bar position given
-    the current location of the thumb.
-*************************************************************************/
-float Slider::getValueFromThumb(void) const
+//----------------------------------------------------------------------------//
+Slider::value_type Slider::getValueFromThumb() const
 {
-    if (d_windowRenderer != 0)
-    {
-        SliderWindowRenderer* wr = (SliderWindowRenderer*)d_windowRenderer;
-        return wr->getValueFromThumb();
-    }
-    else
-    {
-        //return getValueFromThumb_impl();
-        CEGUI_THROW(InvalidRequestException(
-            "This function must be implemented by the window renderer module"));
-    }
+    if (!d_windowRenderer)
+        throw InvalidRequestException(
+            "This function must be implemented by the window renderer module");
+
+    return static_cast<SliderWindowRenderer*>(d_windowRenderer)->getValueFromThumb();
 }
 
-/*************************************************************************
-    Given window location 'pt', return a value indicating what change
-    should be made to the scroll bar.
-*************************************************************************/
-float Slider::getAdjustDirectionFromPoint(const Vector2f& pt) const
+//----------------------------------------------------------------------------//
+float Slider::getAdjustDirectionFromPoint(const glm::vec2& pt) const
 {
-    if (d_windowRenderer != 0)
-    {
-        SliderWindowRenderer* wr = (SliderWindowRenderer*)d_windowRenderer;
-        return wr->getAdjustDirectionFromPoint(pt);
-    }
-    else
-    {
-        //return getAdjustDirectionFromPoint_impl(pt);
-        CEGUI_THROW(InvalidRequestException(
-            "This function must be implemented by the window renderer module"));
-    }
+    if (!d_windowRenderer)
+        throw InvalidRequestException(
+            "This function must be implemented by the window renderer module");
+
+    return static_cast<SliderWindowRenderer*>(d_windowRenderer)->getAdjustDirectionFromPoint(pt);
+}
+
+//----------------------------------------------------------------------------//
+bool Slider::validateWindowRenderer(const WindowRenderer* renderer) const
+{
+    return dynamic_cast<const SliderWindowRenderer*>(renderer) != nullptr;
+}
+
+//----------------------------------------------------------------------------//
+void Slider::addSliderProperties()
+{
+    const String& propertyOrigin = WidgetTypeName;
+
+    CEGUI_DEFINE_PROPERTY(Slider, value_type,
+        "CurrentValue", "Property to get/set the current value of the slider.  Value is a float.",
+        &Slider::setCurrentValue, &Slider::getCurrentValue, 0.0
+    );
+
+    CEGUI_DEFINE_PROPERTY(Slider, value_type,
+        "MinimumValue", "Property to get/set the minimum value of the slider.  Value is a float.",
+        &Slider::setMinimumValue, &Slider::getMinimumValue, 0.0
+    );
+
+    CEGUI_DEFINE_PROPERTY(Slider, value_type,
+        "MaximumValue", "Property to get/set the maximum value of the slider.  Value is a float.",
+        &Slider::setMaximumValue, &Slider::getMaximumValue, 1.0
+    );
+
+    // TODO: remove when most of users resave their sliders with StepSize
+    CEGUI_DEFINE_PROPERTY(Slider, value_type,
+        "ClickStepSize", "DEPRECATED, use StepSize instead",
+        &Slider::setStepSize, &Slider::getStepSize, 0.01
+    );
+    banPropertyFromXML("ClickStepSize"); // Read only, resaved as StepSize
+
+    CEGUI_DEFINE_PROPERTY(Slider, value_type,
+        "StepSize", "Property to get/set the step size of the slider.  Value is a float.",
+        &Slider::setStepSize, &Slider::getStepSize, 0.01
+    );
+
+    CEGUI_DEFINE_PROPERTY(Slider, bool,
+        "Discrete", "When true, the value will change only by discrete steps.",
+        &Slider::setDiscrete, &Slider::isDiscrete, false
+    );
 }
 
 } // End of  CEGUI namespace section

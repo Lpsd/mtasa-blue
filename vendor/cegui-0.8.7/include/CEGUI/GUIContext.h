@@ -29,8 +29,8 @@
 
 #include "CEGUI/RenderingSurface.h"
 #include "CEGUI/InjectedInputReceiver.h"
-#include "CEGUI/MouseCursor.h"
-#include "CEGUI/SystemKeys.h"
+#include "CEGUI/URect.h"
+#include <chrono>
 
 #if defined (_MSC_VER)
 #   pragma warning(push)
@@ -39,199 +39,240 @@
 
 namespace CEGUI
 {
-struct MouseClickTracker;
+class WindowNavigator;
 
 //! EventArgs class passed to subscribers for (most) GUIContext events.
 class CEGUIEXPORT GUIContextEventArgs : public EventArgs
 {
 public:
-    GUIContextEventArgs(GUIContext* context):
-        context(context)
-    {}
+
+    GUIContextEventArgs(GUIContext* context) : context(context) {}
 
     //! pointer to the GUIContext that triggered the event.
-    GUIContext* context;
+    GUIContext* context = nullptr;
 };
 
-//! EventArgs class passed for GUIContext RenderTarget related events.
-class CEGUIEXPORT GUIContextRenderTargetEventArgs : public GUIContextEventArgs
+class CEGUIEXPORT GUIContext : public RenderingSurface, public InjectedInputReceiver
 {
 public:
-    GUIContextRenderTargetEventArgs(GUIContext* context, RenderTarget* target) :
-        GUIContextEventArgs(context),
-        renderTarget(target)
-    {}
-
-    RenderTarget* renderTarget;
-};
-
-class CEGUIEXPORT GUIContext : public RenderingSurface,
-                               public InjectedInputReceiver
-{
-public:
-    static const float DefaultMouseButtonClickTimeout;
-    static const float DefaultMouseButtonMultiClickTimeout;
-    static const Sizef DefaultMouseButtonMultiClickTolerance;
-
-    /** Name of Event fired when the root window is changed to a different
-     * Window.
+    /** Name of Event fired when the root window is changed to a different Window.
      * Handlers are passed a const WindowEventArgs reference with
      * WindowEventArgs::window set to the @e old root window (the new one is
      * obtained by calling GUIContext::getRootWindow).
      */
     static const String EventRootWindowChanged;
-    /** Name of Event fired when the mouse movement scaling factor is changed.
-     * Handlers are passed a const reference to a GUIContextEventArgs struct.
+    /** Name of Event fired when the cursor image is changed.
+     * Handlers are passed a const GUIContextEventArgs reference
      */
-    static const String EventMouseMoveScalingFactorChanged;
-    /** Name of Event fired when the mouse click timeout is changed.
-     * Handlers are passed a const reference to a GUIContextEventArgs struct.
+    static const String EventCursorImageChanged;
+    /** Name of Event fired when the default cursor image is changed.
+     * Handlers are passed a const GUIContextEventArgs reference
      */
-    static const String EventMouseButtonClickTimeoutChanged;
-    /** Name of Event fired when the mouse multi-click timeout is changed.
-     * Handlers are passed a const reference to a GUIContextEventArgs struct.
-     */
-    static const String EventMouseButtonMultiClickTimeoutChanged;
-    /** Name of Event fired when the mouse multi-click movement tolerance area
-     * size is changed.
-     * Handlers are passed a const reference to a GUIContextEventArgs struct.
-     */
-    static const String EventMouseButtonMultiClickToleranceChanged;
-    /** Name of Event fired when the RenderTarget for the GUIContext is changed.
-     * Handlers are passed a const GUIContextRenderTargetEventArgs struct, with
-     * the renderTarget member set to the old RenderTarget.
-     */
-    static const String EventRenderTargetChanged;
+    static const String EventDefaultCursorImageChanged;
     /** Event fired when the default font changes.
-     * Handlers are passed a const reference to a generic EventArgs struct.
+     * Handlers are passed a const GUIContextEventArgs reference
      */
-	static const String EventDefaultFontChanged;
+    static const String EventDefaultFontChanged;
+    /** Event fired when the tooltip is about to get activated.
+        * Handlers are passed a const WindowEventArgs reference with
+        * WindowEventArgs::window set to the Tooltip that is about to become
+        * active.
+        */
+    static const String EventTooltipActive;
+    /** Event fired when the tooltip has been deactivated.
+        * Handlers are passed a const WindowEventArgs reference with
+        * WindowEventArgs::window set to the Tooltip that has become inactive.
+        */
+    static const String EventTooltipInactive;
+    /** Event fired when the tooltip changes target window but stays active.
+        * Handlers are passed a const WindowEventArgs reference with
+        * WindowEventArgs::window set to the Tooltip that has transitioned.
+        */
+    static const String EventTooltipTransition;
+
+    //! A rect that is used to unset cursor constraints
+    static const URect NoCursorConstraint;
+
+    static constexpr float DEFAULT_CLICK_DISTANCE = 5.f;
+    static constexpr float DEFAULT_CLICK_TIMEOUT = 0.25f;
 
     GUIContext(RenderTarget& target);
-    ~GUIContext();
+    virtual ~GUIContext() override;
 
-    Window* getRootWindow() const;
+    void destroyTooltips();
+
+    void draw(std::uint32_t drawMode = DrawModeMaskAll) override;
+
+    void setRenderTarget(RenderTarget& target);
+
+    //! call to indicate that some redrawing is required.
+    void markAsDirty(std::uint32_t drawModeMask = DrawModeMaskAll) { d_dirtyDrawModeMask |= drawModeMask; }
+    bool isDirty() const { return d_dirtyDrawModeMask != 0; }
+    std::uint32_t getDirtyDrawModeMask() const { return d_dirtyDrawModeMask; }
+
+    /*!
+    \brief
+        Function to inject time pulses into the context.
+
+    \param timeElapsed
+        float value indicating the amount of time passed, in seconds, since the last time this method was called.
+
+    \return
+        Currently, this method always returns true unless there is no root window or it is not visible
+    */
+    bool injectTimePulse(float timeElapsed);
+
+    // Implementation of InjectedInputReceiver interface
+    bool injectMousePosition(float x, float y) override;
+    bool injectMouseMove(float dx, float dy) override;
+    bool injectMouseLeaves() override;
+    bool injectMouseWheelChange(float delta) override;
+    bool injectMouseButtonDown(MouseButton button) override;
+    bool injectMouseButtonUp(MouseButton button) override;
+    bool injectMouseButtonClick(MouseButton button) override;
+    bool injectMouseButtonDoubleClick(MouseButton button) override;
+    bool injectMouseButtonTripleClick(MouseButton button) override;
+    bool injectKeyDown(Key::Scan scanCode) override;
+    bool injectKeyUp(Key::Scan scanCode) override;
+    bool injectChar(char32_t codePoint) override;
+
+    /*!
+    \brief
+        Set automatic mouse button click event generation mode. Click is generated when the same window
+        receives down and up events for the same mouse button within time and cursor offset threshold.
+
+    \param maxClicksToGenerate
+        - 0 to disable auto-generation of clicks. Typically accompanies explicit injectMouseButtonClick calls.
+        - 1 to generate only single click events (onClick).
+        - 2 or 3 to also generate double (onDoubleClick) and triple clicks (onTripleClick).
+        - higher values trigger onClick, d_generatedClickEventOrder can be examined to know the order of the click generated.
+    */
+    void setMouseClickEventGeneration(int maxClicksToGenerate) { d_clickLimit = maxClicksToGenerate; }
+    //! \brief Returns automatic mouse button click event generation mode. See setMouseClickEventGeneration.
+    int getMouseClickEventGeneration() const { return d_clickLimit; }
+
+    void setMouseButtonMultiClickTimeout(float seconds) { d_multiClickTimeout = seconds; }
+    float getMouseButtonMultiClickTimeout() const { return d_multiClickTimeout; }
+    void setMouseButtonMultiClickTolerance(float pixels) { d_multiClickDistance = pixels; }
+    float getMouseButtonMultiClickTolerance() const { return d_multiClickDistance; }
+
+    // TODO StringAtom!
+    void initDefaultInputSemantics();
+    void registerInputSemantic(const String& value, Key::Scan scanCode, ModifierKeyRule modifiers = {});
+    void registerInputSemantic(const String& value, MouseButton button, ModifierKeyRule modifiers = {}, int clickOrder = 0, MouseButtons buttons = {});
+    void unregisterInputSemantic(const String& value);
+    void unregisterAllInputSemantics();
+    bool isInputSemantic(const String& value, const KeyEventArgs& args) const;
+    bool isInputSemantic(const String& value, const MouseButtonEventArgs& args) const;
+
+    Window* getRootWindow() const { return d_rootWindow; }
     void setRootWindow(Window* new_root);
 
     /*!
     \brief
-        Internal function to directly set the current modal window.
+        Activate the window giving it input focus.
 
-    \note
-        This function is called internally by Window, and should not be called
-        by client code.  Doing so will likely not give the expected results.
-    */
-    void setModalWindow(Window* window);
-
-    //! Return a pointer to the Window that is currently set as modal.
-    Window* getModalWindow() const;
-
-    Window* getWindowContainingMouse() const;
-
-    const Sizef& getSurfaceSize() const;
-
-    const SystemKeys& getSystemKeys() const;
-
-    //! call to indicate that some redrawing is required.
-    void markAsDirty();
-    bool isDirty() const;
-
-    /*!
-    \brief
-        Retrieves MouseCursor used in this GUIContext
-
-    \note
-        Please note that each GUIContext has exactly one MouseCursor. The MouseCursor
-        class holds position, as well as other properties. If you want to modify
-        the MouseCursor (for example change its default image), you can retrieve
-        a reference via this method and call a method on the reference
-        (in our example that's setDefaultImage).
-    */
-    MouseCursor& getMouseCursor();
-    const MouseCursor& getMouseCursor() const;
-
-    void setMouseMoveScalingFactor(float factor);
-    float getMouseMoveScalingFactor() const;
-
-    void setMouseButtonClickTimeout(float seconds);
-    float getMouseButtonClickTimeout() const;
-
-    void setMouseButtonMultiClickTimeout(float seconds);
-    float getMouseButtonMultiClickTimeout() const;
-
-    void setMouseButtonMultiClickTolerance(const Sizef& sz);
-    const Sizef& getMouseButtonMultiClickTolerance() const;
-
-    /*!
-    \brief
-        Set whether automatic mouse button click and multi-click (i.e.
-        double-click and treble-click) event generation will occur.
-
-    \param enable
-        - true to have mouse button click and multi-click events automatically
-        generated by the system from the basic button up and down event
-        injections.
-        - false if no automatic generation of events should occur.  In this
-        instance the user may wish to use the additional event injectors to
-        manually inform the system of such events.
-    */
-    void setMouseClickEventGenerationEnabled(const bool enable);
-
-    /*!
-    \brief
-        Return whether automatic mouse button click and multi-click (i.e.
-        double-click and treble-click) event generation is enabled.
+    \param window
+        Window to activate or nullptr to clear an active window.
 
     \return
-        - true if mouse button click and multi-click events will be
-        automatically generated by the system from the basic button up and down
-        event injections.
-        - false if no automatic generation of events will occur.  In this
-        instance the user may wish to use the additional event injectors to
-        manually inform the system of such events.
+        true if activation led to changes in Z-order
     */
-    bool isMouseClickEventGenerationEnabled() const;
+    bool setActiveWindow(Window* window, bool moveToFront);
 
-    //! Tell the context to reconsider which window it thinks the mouse is in.
-    void updateWindowContainingMouse();
+    //! Gets an active leaf window that owns an input focus when not overridden.
+    Window* getActiveWindow() const { return d_activeWindow; }
 
-    Window* getInputCaptureWindow() const;
-    void setInputCaptureWindow(Window* window);
+    //! Checks if a window is in an active branch of the tree
+    bool isWindowActive(const Window* window) const;
+
+    //! \brief Controls rising windows to frontmost Z-order on activation
+    void setMoveToFrontOnActivateAllowed(bool value) { d_moveToFrontOnActivateAllowed = value; }
 
     /*!
     \brief
-        Set the default Tooltip object for this GUIContext. This value may be 0
-        to indicate that no default Tooltip object will be available.
-
-    \param tooltip
-        Pointer to a valid Tooltip based object which should be used as the
-        default tooltip for the GUIContext, or 0 to indicate that no default
-        Tooltip is required.
+        Set the modal state for this Window.
 
     \note
-        When passing a pointer to a Tooltip object, ownership of the Tooltip
-        does not pass to the GUIContext.
+        This returns the previous modal window into normal state.
+
+    \param state
+        Boolean value defining if this Window should be the modal target.
+        - true if this Window should be activated and set as the modal target.
+        - false if the modal target should be cleared if this Window is
+          currently the modal target.
+
+    \return
+        true if the \a window became modal for this context
     */
-    void setDefaultTooltipObject(Tooltip* tooltip);
+    bool setModalWindow(Window* window);
+
+    //! Return a pointer to the Window that is currently set as modal.
+    Window* getModalWindow() const { return d_modalWindow; }
+
+    Window* getInputCaptureWindow() const { return d_captureWindow; }
+    bool captureInput(Window* window);
+    void releaseInputCapture(bool allowRestoreOld = true, Window* exactWindow = nullptr);
+
+    Window* getWindowContainingCursor();
+    //! Tell the context to reconsider which window it thinks the cursor is in.
+    void updateWindowContainingCursor() { d_windowContainingCursorIsUpToDate = false; }
+
+    //! Return currently pressed modifier keys
+    ModifierKeys getModifierKeys() const { return d_modifierKeys; }
+    //! Return currently pressed mouse buttons
+    MouseButtons getMouseButtons() const { return d_mouseButtons; }
+
+    void setCursorImage(const Image* image);
+    const Image* getCursorImage() const { return d_cursorImage; }
 
     /*!
     \brief
-        Set the default Tooltip to be used by specifying a Window type.
+        Set the image to be used as the default cursor.
 
-        The GUIContext will internally attempt to create an instance of the
-        specified window type (which must be derived from the base Tooltip
-        class).  If the Tooltip creation fails, the error is logged and no
-        default Tooltip will be available on the GUIContext.
-
-    \param tooltipType
-        String holding the name of a Tooltip based Window type.
+    \param image
+        Pointer to an image object that is to be used as the default cursor
+        indicator. To have no indicator rendered by default, you can specify nullptr here.
     */
-    void setDefaultTooltipType(const String& tooltip_type);
+    void setDefaultCursorImage(const Image* image);
+    void setDefaultCursorImage(const String& name);
+    const Image* getDefaultCursorImage() const { return d_defaultCursorImage; }
 
-    //! Returns a pointer to the context's default tooltip object.  May return 0.
-    Tooltip* getDefaultTooltipObject() const;
+    void setCursorVisible(bool visible) { d_cursorVisible = visible; }
+    bool isCursorVisible() const { return d_cursorVisible; }
 
-    void setRenderTarget(RenderTarget& target);
+    /*!
+    \brief
+        Set an explicit size for the cursor image to be drawn at.
+        Set any dimension to 0 to use an original image size for it.
+    */
+    void setCursorSize(float w, float h);
+    const Sizef& getCursorSize() const { return d_cursorSize; }
+
+    /*!
+    \brief
+        Set the current cursor position
+
+    \param position
+        Point object describing the new location for the cursor. This will
+        be clipped to within the renderer screen area.
+    */
+    void setCursorPosition(const glm::vec2& position);
+    const glm::vec2& getCursorPosition() const { return d_cursorPosition; }
+
+    /*!
+    \brief
+        Set the area that the cursor is constrained to.
+
+    \param area
+        Pointer to a URect object that describes the area of the display that
+        the cursor is allowed to occupy. The given area will be clipped to the
+        current Renderer screen area - it is never possible for the cursor to
+        leave this area. If this parameter is NULL, the constraint is set to
+        the size of the current Renderer screen area.
+    */
+    void setCursorConstraintArea(const URect& area = NoCursorConstraint);
+    const URect& getCursorConstraintArea() const { return d_cursorConstraints; }
 
     /*!
     \brief
@@ -261,99 +302,147 @@ public:
     */
     Font* getDefaultFont() const;
 
-    // Implementation of InjectedInputReceiver interface
-    bool injectMouseMove(float delta_x, float delta_y);
-    bool injectMouseLeaves(void);
-    bool injectMouseButtonDown(MouseButton button);
-    bool injectMouseButtonUp(MouseButton button);
-    bool injectKeyDown(Key::Scan scan_code);
-    bool injectKeyUp(Key::Scan scan_code);
-    bool injectChar(String::value_type code_point);
-    bool injectMouseWheelChange(float delta);
-    bool injectMousePosition(float x_pos, float y_pos);
-    bool injectTimePulse(float timeElapsed);
-    bool injectMouseButtonClick(const MouseButton button);
-    bool injectMouseButtonDoubleClick(const MouseButton button);
-    bool injectMouseButtonTripleClick(const MouseButton button);
-    bool injectCopyRequest();
-    bool injectCutRequest();
-    bool injectPasteRequest();
+    /*!
+    \brief
+        Set the default Tooltip to be used by specifying a Window type.
 
-    // public overrides
-    void draw();
+    \param tooltipType
+        String holding the name of a Tooltip based Window type.
+    */
+    void setDefaultTooltipType(const String& tooltip_type) { d_defaultTooltipType = tooltip_type; }
+
+    const String& getDefaultTooltipType() const { return d_defaultTooltipType; }
+    Window* getTooltipObject(const String& type) const;
+    Window* getOrCreateTooltipObject(const String& type);
+
+    /*!
+    \brief
+        Return the number of seconds the cursor should hover stationary
+        over the target window before the tooltip gets activated.
+    */
+    float getTooltipHoverTime() const { return d_tooltipHoverTime; }
+
+    /*!
+    \brief
+        Set the number of seconds the cursor should hover stationary over
+        the target window before the tooltip gets activated.
+    */
+    void setTooltipHoverTime(float seconds) { d_tooltipHoverTime = seconds; }
+
+    /*!
+    \brief
+        Return the number of seconds the tooltip should be displayed for before it automatically
+        de-activates itself. 0 indicates that the tooltip never timeout and auto-deactivates.
+    */
+    float getTooltipDisplayTime() const { return d_tooltipDisplayTime; }
+
+    /*!
+    \brief
+        Set the number of seconds the tooltip should be displayed for before it automatically
+        de-activates itself. 0 indicates that the tooltip should never timeout and auto-deactivate.
+    */
+    void setTooltipDisplayTime(float seconds) { d_tooltipDisplayTime = seconds; }
+
+    //! \brief Controls whether the tooltip will follow the cursor
+    void setTooltipFollowsCursor(bool value) { d_tooltipFollowsCursor = value; }
+
+    //! \brief Immediately updates a tooltip position according to the cursor
+    void positionTooltip();
+
+    //! \brief Sets a window navigator to be used for navigating in this context
+    void setWindowNavigator(WindowNavigator* navigator) { d_windowNavigator = navigator; }
+
+    const Sizef& getSurfaceSize() const { return d_surfaceSize; }
+
+    void onWindowDetached(Window* window);
 
 protected:
-    void updateRootWindowAreaRects() const;
-    void drawWindowContentToTarget();
-    void renderWindowHierarchyToSurfaces();
 
-    void createDefaultTooltipWindowInstance() const;
-    void destroyDefaultTooltipWindowInstance();
+    Window* getInputTargetWindow() const;
+    void updateInputAutoRepeating(float timeElapsed);
+    bool sendScrollEvent(float delta, Window* window);
 
-    //! notify windows in a hierarchy using default font, when font changes.
-    void notifyDefaultFontChanged(Window* hierarchy_root) const;
+    void drawWindowContentToTarget(std::uint32_t drawModeMask);
+    void drawContent(std::uint32_t drawModeMask = DrawModeMaskAll) override;
 
-    bool mouseMoveInjection_impl(MouseEventArgs& ma);
-    Window* getTargetWindow(const Vector2f& pt, const bool allow_disabled) const;
-    Window* getKeyboardTargetWindow() const;
-    Window* getCommonAncestor(Window* w1, Window* w2) const;
     //! call some function for a chain of windows: (top, bottom]
-    void notifyMouseTransition(Window* top, Window* bottom,
-                               void (Window::*func)(MouseEventArgs&),
-                               MouseEventArgs& args) const;
+    void notifyCursorTransition(Window* top, Window* bottom, void (Window::* func)(CursorInputEventArgs&), CursorInputEventArgs& args) const;
+    bool checkClickLocality() const;
+    void resetClickTracker();
+
+    void showTooltip(bool force);
+    void hideTooltip(bool force);
+    void updateTooltipState(float timeElapsed);
 
     bool areaChangedHandler(const EventArgs& args);
-    bool windowDestroyedHandler(const EventArgs& args);
-    
-    //! returns whether the window containing the mouse had changed.
-    bool updateWindowContainingMouse_impl() const;
-    void resetWindowContainingMouse();
+    bool fontRenderSizeChangedHandler(const EventArgs& args);
 
-    // event trigger functions.
-    virtual void onRootWindowChanged(WindowEventArgs& args);
-    virtual void onMouseMoveScalingFactorChanged(GUIContextEventArgs& args);
-    virtual void onMouseButtonClickTimeoutChanged(GUIContextEventArgs& args);
-    virtual void onMouseButtonMultiClickTimeoutChanged(GUIContextEventArgs& args);
-    virtual void onMouseButtonMultiClickToleranceChanged(GUIContextEventArgs& args);
-    virtual void onRenderTargetChanged(GUIContextRenderTargetEventArgs& args);
-    virtual void onDefaultFontChanged(EventArgs& args);
+    //! returns whether the window containing the cursor had changed.
+    void updateWindowContainingCursorInternal(Window* windowWithCursor);
+    Window* getCursorTargetWindow(const glm::vec2& pt, bool allow_disabled) const;
 
-    // protected overrides
-    void drawContent();
+    Window* d_rootWindow = nullptr;
+    Window* d_windowContainingCursor = nullptr;
+    Window* d_modalWindow = nullptr;
+    Window* d_captureWindow = nullptr;
+    Window* d_oldCaptureWindow = nullptr;
+    Window* d_tooltipWindow = nullptr;
+    Window* d_tooltipSource = nullptr;
+    Window* d_activeWindow = nullptr;
+    WindowNavigator* d_windowNavigator = nullptr;
 
-    Window* d_rootWindow;
-    bool d_isDirty;
-    MouseCursor d_mouseCursor;
-    //! Scaling factor applied to injected mouse move deltas.
-    float d_mouseMovementScalingFactor;
-    //! should mouse click/multi-click events be automatically generated.
-    bool d_generateMouseClickEvents;
-    //! Timeout used to when detecting a single-click.
-    float d_mouseButtonClickTimeout;
-    //! Timeout used when detecting multi-click events.
-    float d_mouseButtonMultiClickTimeout;
-    //! Movement tolerance used when detecting multi-click events.
-    Sizef d_mouseButtonMultiClickTolerance;
+    Font* d_defaultFont = nullptr;
+    const Image* d_cursorImage = nullptr;
+    const Image* d_defaultCursorImage = nullptr;
+    std::vector<GeometryBuffer*> d_cursorGeometry;
 
-    mutable Tooltip* d_defaultTooltipObject;
-    mutable bool d_weCreatedTooltipObject;
     String d_defaultTooltipType;
+    std::map<String, Window*> d_tooltips;
 
-    Font* d_defaultFont;
+    MouseButtons d_mouseButtons;
+    ModifierKeys d_modifierKeys;
+    std::vector<KeySemanticMapping> d_keySemantics;
+    std::vector<MouseButtonSemanticMapping> d_mouseSemantics;
 
-    //! a cache of the target surface size, allows returning by ref.
-    Sizef d_surfaceSize;
+    float d_multiClickDistance = DEFAULT_CLICK_DISTANCE;
+    float d_multiClickTimeout = DEFAULT_CLICK_TIMEOUT;   //!< Zero means no timeout
+    int d_clickLimit = 3;                                //!< Use 0 to disable click events, 1 to enable only single clicks
 
-    mutable Window* d_windowContainingMouse;
-    mutable bool    d_windowContainingMouseIsUpToDate;
-    Window* d_modalWindow;
-    Window* d_captureWindow;
+    struct ClickTracker
+    {
+        Window* firstWindow = nullptr;
+        Window* lastWindow = nullptr;
+        glm::vec2 downPos;
+        std::chrono::time_point<std::chrono::steady_clock> downTime;
+        int clickCount = 0;
+        MouseButton button = MouseButton::Invalid;
+    };
+    ClickTracker d_clickTracker;
 
-    SystemKeys d_systemKeys;
-    MouseClickTracker* d_mouseClickTrackers;
+    Sizef d_surfaceSize; //!< a cache of the target surface size, allows returning by ref.
+    Sizef d_cursorSize;
+    glm::vec2 d_cursorPosition;
+    URect d_cursorConstraints;
+
+    std::uint32_t d_dirtyDrawModeMask = 0; //!< the mask of draw modes that must be redrawn
+
+    float d_tooltipTimer = 0.f;
+    float d_tooltipHoverTime = 0.4f;   //!< seconds cursor must stay stationary before tip shows
+    float d_tooltipDisplayTime = 7.5f; //!< seconds that tip is shown for
 
     Event::ScopedConnection d_areaChangedEventConnection;
-    Event::ScopedConnection d_windowDestroyedEventConnection;
+    Event::ScopedConnection d_fontRenderSizeChangeConnection;
+    std::vector<Event::ScopedConnection> d_tooltipEventConnections;
+
+    float d_autoRepeatElapsed = 0.f;
+    MouseButton d_autoRepeatMouseButton = MouseButton::Invalid;
+    bool d_autoRepeating = false;
+
+    bool d_cursorVisible = true;
+    bool d_cursorDirty = false;
+    bool d_windowContainingCursorIsUpToDate = true;
+    bool d_tooltipFollowsCursor = false;
+    bool d_moveToFrontOnActivateAllowed = true;
 };
 
 }
@@ -363,4 +452,3 @@ protected:
 #endif
 
 #endif
-

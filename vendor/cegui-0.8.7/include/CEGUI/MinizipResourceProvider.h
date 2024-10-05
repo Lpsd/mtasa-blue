@@ -29,13 +29,7 @@
 #ifndef _CEGUIMinizipResourceProvider_h_
 #define _CEGUIMinizipResourceProvider_h_
 
-#include "CEGUI/Base.h"
 #include "CEGUI/DefaultResourceProvider.h"
-
-#if defined(_MSC_VER)
-#   pragma warning(push)
-#   pragma warning(disable : 4251)
-#endif
 
 // NOTE: While the DefaultResourceProvider (DRP) was not originally intended
 // to be derived from, the purpose of this class is to extend the behavior of
@@ -64,14 +58,15 @@ public:
         The filepath to the archive
     */
     void setArchive(const String& archive);
+    void setPassword(const String& password);
     void setLoadLocal(bool load = true);
 
     void loadRawDataContainer(const String& filename,
                               RawDataContainer& output,
-                              const String& resourceGroup);
+                              const String& resourceGroup) override;
     size_t getResourceGroupFileNames(std::vector<String>& out_vec,
                                      const String& file_pattern,
-                                     const String& resource_group);
+                                     const String& resource_group) override;
 protected:
     bool doesFileExist(const String& filename);
     void openArchive();
@@ -83,9 +78,5 @@ protected:
 
 } // End of  CEGUI namespace section
 
-#if defined(_MSC_VER)
-#   pragma warning(pop)
 #endif
-
-#endif  // end of guard _CEGUIMinizipResourceProvider_h_
 

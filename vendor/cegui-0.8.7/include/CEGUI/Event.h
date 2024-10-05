@@ -29,9 +29,7 @@
 
 #include "CEGUI/String.h"
 #include "CEGUI/BoundSlot.h"
-#include "CEGUI/SubscriberSlot.h"
 #include "CEGUI/RefCounted.h"
-
 #include <map>
 
 #if defined(_MSC_VER)
@@ -39,9 +37,9 @@
 #   pragma warning(disable : 4251)
 #endif
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
+
 /*!
 \brief
     Defines an 'event' which can be subscribed to by interested parties.
@@ -54,8 +52,7 @@ namespace CEGUI
     \note
         An Event object may not be copied.
 */
-class CEGUIEXPORT Event :
-    public AllocatedObject<Event>
+class CEGUIEXPORT Event
 {
 public:
     /*!
@@ -88,37 +85,77 @@ public:
         Event::Connection wrapper that automatically disconnects the connection
         when the object is deleted (or goes out of scope).
     */
-    class ScopedConnection : public Connection
+    class ScopedConnection final
     {
     public:
-        ScopedConnection() {}
 
-        ~ScopedConnection()
+        ScopedConnection() = default;
+        ScopedConnection(const ScopedConnection& other) : d_connection(other.d_connection) {}
+        ScopedConnection(ScopedConnection&& other) noexcept : d_connection(std::move(other.d_connection)) {}
+        ScopedConnection(const Event::Connection& connection) : d_connection(connection) {}
+        ScopedConnection(Event::Connection&& connection) noexcept : d_connection(std::move(connection)) {}
+        ~ScopedConnection() { disconnect(); }
+
+        ScopedConnection& operator =(const ScopedConnection& other)
         {
-            disconnect();
-        }
-
-        ScopedConnection(const Event::Connection& connection) :
-            d_connection(connection)
-        {}
-
-        ScopedConnection& operator=(const Event::Connection& connection)
-        {
-            d_connection = connection;
+            if (this != &other)
+            {
+                disconnect();
+                d_connection = other.d_connection;
+            }
             return *this;
         }
 
-        bool connected() const
+        ScopedConnection& operator =(ScopedConnection&& other) noexcept
         {
-            return d_connection.isValid() ? d_connection->connected() : false;
+            if (this != &other)
+            {
+                disconnect();
+                d_connection = std::move(other.d_connection);
+            }
+            return *this;
         }
+
+        ScopedConnection& operator =(const Event::Connection& connection)
+        {
+            if (d_connection != connection)
+            {
+                disconnect();
+                d_connection = connection;
+            }
+            return *this;
+        }
+
+        ScopedConnection& operator =(Event::Connection&& connection)
+        {
+            if (d_connection != connection)
+            {
+                disconnect();
+                d_connection = std::move(connection);
+            }
+            return *this;
+        }
+
+        bool connected() const { return d_connection && d_connection->connected(); }
 
         void disconnect()
         {
-            if (d_connection.isValid()) d_connection->disconnect();
+            if (d_connection)
+            {
+                d_connection->disconnect();
+                d_connection = nullptr;
+            }
+        }
+
+        Event::Connection release()
+        {
+            Event::Connection ret;
+            std::swap(ret, d_connection);
+            return ret;
         }
 
     private:
+
         Event::Connection d_connection;
     };
 
@@ -142,10 +179,7 @@ public:
     \return
         String object containing the name of the Event object.
     */
-    const String& getName(void) const
-    {
-        return d_name;
-    }
+    const String& getName() const { return d_name; }
 
     /*!
     \brief
@@ -184,6 +218,9 @@ public:
     */
     Connection subscribe(Group group, const Subscriber& slot);
 
+    //! \brief Unsubscribes all listeners from this event
+    void unsubscribeAll();
+
     /*!
     \brief
         Fires the event.  All event subscribers get called in the appropriate
@@ -193,12 +230,11 @@ public:
         An object derived from EventArgs to be passed to each event subscriber.
         The 'handled' field will be set to true if any of the called subscribers
         return that they handled the event.
-
-    \return
-        Nothing.
     */
     void operator()(EventArgs& args);
 
+    //! \brief Returns the number of connections to this event
+    bool getConnectionCount() const { return d_slots.size(); }
 
 protected:
     friend void CEGUI::BoundSlot::disconnect();
@@ -214,17 +250,13 @@ protected:
     */
     void unsubscribe(const BoundSlot& slot);
 
-    // Copy constructor and assignment are not allowed for events
-    Event(const Event&) {}
-    Event& operator=(const Event&)
-    {
-        return *this;
-    }
+    // Copy constructor is used only by subclasses
+    Event(const Event&) = default;
+    Event& operator =(const Event&) = delete;
 
-    typedef std::multimap<Group, Connection, std::less<Group>
-        CEGUI_MULTIMAP_ALLOC(Group, Connection)> SlotContainer;
-    SlotContainer d_slots;  //!< Collection holding ref-counted bound slots
+    std::multimap<Group, Connection, std::less<Group>> d_slots;  //!< Collection holding ref-counted bound slots
     const String d_name;    //!< Name of this event
+    bool d_isBeingInvoked = false;
 };
 
 } // End of  CEGUI namespace section

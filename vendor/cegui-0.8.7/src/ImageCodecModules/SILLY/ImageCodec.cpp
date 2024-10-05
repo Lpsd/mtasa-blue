@@ -26,13 +26,14 @@
  *   ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  *   OTHER DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
-#include "CEGUI/Exceptions.h"
 #include "CEGUI/ImageCodecModules/SILLY/ImageCodec.h"
-#include <SILLY.h>
+#include "CEGUI/DataContainer.h"
+#include "CEGUI/Sizef.h"
+#include "CEGUI/Texture.h"
+#include "CEGUI/Exceptions.h"
 #include "CEGUI/Logger.h"
-#include "CEGUI/Size.h"
+#include <SILLY.h>
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 SILLYImageCodec::SILLYImageCodec()
@@ -40,7 +41,7 @@ SILLYImageCodec::SILLYImageCodec()
 {
     d_supportedFormat = "tga jpg png";
     if (! SILLY::SILLYInit())
-        CEGUI_THROW(GenericException("Unable to initialize SILLY library"));
+        throw GenericException("Unable to initialize SILLY library");
 
 }
 
@@ -55,8 +56,8 @@ Texture* SILLYImageCodec::load(const RawDataContainer& data, Texture* result)
     SILLY::Image img(md);
     if (!img.loadImageHeader())
     {
-        Logger::getSingletonPtr()->logEvent("SILLYImageCodec::load - Invalid image header", Errors);
-        return 0;
+        Logger::getSingletonPtr()->logEvent("SILLYImageCodec::load - Invalid image header", LoggingLevel::Error);
+        return nullptr;
     }
 
     SILLY::PixelFormat dstfmt;
@@ -65,22 +66,22 @@ Texture* SILLYImageCodec::load(const RawDataContainer& data, Texture* result)
     {
     case SILLY::PF_RGB:
         dstfmt = SILLY::PF_RGB;
-        cefmt = Texture::PF_RGB;
+        cefmt = Texture::PixelFormat::Rgb;
         break;
     case SILLY::PF_RGBA:
     case SILLY::PF_A1B5G5R5:
         dstfmt = SILLY::PF_RGBA;
-        cefmt = Texture::PF_RGBA;
+        cefmt = Texture::PixelFormat::Rgba;
         break;
     default:
-        Logger::getSingletonPtr()->logEvent("SILLYImageCodec::load - Unsupported pixel format", Errors);
-        return 0;
+        Logger::getSingletonPtr()->logEvent("SILLYImageCodec::load - Unsupported pixel format", LoggingLevel::Error);
+        return nullptr;
     }
 
     if (!img.loadImageData(dstfmt, SILLY::PO_TOP_LEFT))
     { 
-        Logger::getSingletonPtr()->logEvent("SILLYImageCodec::load - Invalid image data", Errors);
-        return 0;
+        Logger::getSingletonPtr()->logEvent("SILLYImageCodec::load - Invalid image data", LoggingLevel::Error);
+        return nullptr;
     }
 
     result->loadFromMemory(img.getPixelsDataPtr(),

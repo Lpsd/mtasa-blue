@@ -1,8 +1,8 @@
 /***********************************************************************
-	created:	20/2/2004
-	author:		Paul D Turner
+    created:    20/2/2004
+    author:        Paul D Turner
 
-	purpose:	Defines interface for main GUI system class
+    purpose:    Defines interface for main GUI system class
 *************************************************************************/
 /***************************************************************************
  *   Copyright (C) 2004 - 2012 Paul D Turner & The CEGUI Development Team
@@ -29,13 +29,8 @@
 #ifndef _CEGUISystem_h_
 #define _CEGUISystem_h_
 
-#include "CEGUI/Base.h"
-#include "CEGUI/String.h"
 #include "CEGUI/Singleton.h"
 #include "CEGUI/EventSet.h"
-#include "CEGUI/Renderer.h"
-#include "CEGUI/InputEvent.h"
-#include "CEGUI/ResourceProvider.h"
 #include <vector>
 
 #if defined(__WIN32__) || defined(_WIN32)
@@ -45,49 +40,48 @@
 #endif
 
 #if defined(_MSC_VER)
-#	pragma warning(push)
-#	pragma warning(disable : 4275)
-#	pragma warning(disable : 4251)
+#    pragma warning(push)
+#    pragma warning(disable : 4251)
 #endif
 
-
-// Start of CEGUI namespace section
 namespace CEGUI
 {
+class TextParser;
+class LegacyTextParser;
+
 /*!
 \brief
-	The System class is the CEGUI class that provides access to all other elements in this system.
+    The System class is the CEGUI class that provides access to all other elements in this system.
 
-	This object must be created by the client application.  The System object requires that you pass it
-	an initialised Renderer object which it can use to interface to whatever rendering system will be
-	used to display the GUI imagery.
+    This object must be created by the client application.  The System object requires that you pass it
+    an initialised Renderer object which it can use to interface to whatever rendering system will be
+    used to display the GUI imagery.
 */
 class CEGUIEXPORT System :
     public Singleton<System>,
-    public EventSet,
-    public AllocatedObject<System>
+    public EventSet
 {
 public:
-	static const String EventNamespace;				//!< Namespace for global events
+    static const String EventNamespace;                //!< Namespace for global events
 
-	/*************************************************************************
-		Constants
-	*************************************************************************/
-	// event names
+    /*************************************************************************
+        Constants
+    *************************************************************************/
+    // event names
     /** Event fired for display size changes (as notified by client code).
      * Handlers are passed a const DisplayEventArgs reference with
      * DisplayEventArgs::size set to the pixel size that was notifiied to the
      * system.
      */
     static const String EventDisplaySizeChanged;
-    /** Event fired when global custom RenderedStringParser is set.
+    /** Event fired when global custom TextParser is set.
      * Handlers are passed a const reference to a generic EventArgs struct.
      */
-    static const String EventRenderedStringParserChanged;
+    static const String EventTextParserChanged;
 
-	/*************************************************************************
-		Construction and Destruction
-	*************************************************************************/
+    /*************************************************************************
+        Construction and Destruction
+    *************************************************************************/
     /*!
     \brief
         Create the System object and return a reference to it.
@@ -121,10 +115,10 @@ public:
         This must be set to CEGUI_VERSION_ABI
     */
     static System& create(Renderer& renderer,
-                          ResourceProvider* resourceProvider = 0,
-                          XMLParser* xmlParser = 0,
-                          ImageCodec* imageCodec = 0,
-                          ScriptModule* scriptModule = 0,
+                          ResourceProvider* resourceProvider = nullptr,
+                          XMLParser* xmlParser = nullptr,
+                          ImageCodec* imageCodec = nullptr,
+                          ScriptModule* scriptModule = nullptr,
                           const String& configFile = "",
                           const String& logFile = "CEGUI.log",
                           const int abi = CEGUI_VERSION_ABI);
@@ -182,34 +176,34 @@ public:
     */
     static const String& getVerboseVersion();
 
-	/*!
-	\brief
-		Return a pointer to the Renderer object being used by the system
+    /*!
+    \brief
+        Return a pointer to the Renderer object being used by the system
 
-	\return
-		Pointer to the Renderer object used by the system.
-	*/
-	Renderer*	getRenderer(void) const			{return d_renderer;}
-
-
-	/*!
-	\brief
-		Return singleton System object
-
-	\return
-		Singleton System object
-	*/
-	static	System&	getSingleton(void);
+    \return
+        Pointer to the Renderer object used by the system.
+    */
+    Renderer*    getRenderer(void) const            {return d_renderer;}
 
 
-	/*!
-	\brief
-		Return pointer to singleton System object
+    /*!
+    \brief
+        Return singleton System object
 
-	\return
-		Pointer to singleton System object
-	*/
-	static	System*	getSingletonPtr(void);
+    \return
+        Singleton System object
+    */
+    static    System&    getSingleton(void);
+
+
+    /*!
+    \brief
+        Return pointer to singleton System object
+
+    \return
+        Pointer to singleton System object
+    */
+    static    System*    getSingletonPtr(void);
 
     /*!
     \brief
@@ -217,7 +211,8 @@ public:
     */
     Clipboard* getClipboard() const         {return d_clipboard;}
 
-    GUIContext& getDefaultGUIContext() const;
+    typedef std::vector<GUIContext*> GUIContextCollection;
+    GUIContextCollection& getGUIContexts()         {return d_guiContexts;}
 
     /*!
     \brief
@@ -227,15 +222,24 @@ public:
     */
     void renderAllGUIContexts();
 
+    /*!
+    \brief
+        Renders the contexts associated with the renderer
+    \todo
+        This needs to be actually made to check if context matches the renderer
+        and for that to work all the contexts need to know their renderer
+    \see renderAllGUIContexts
+    */
+    void renderAllGUIContextsOnTarget(Renderer* contained_in);
 
-	/*!
-	\brief
-		Return a pointer to the ScriptModule being used for scripting within the GUI system.
+    /*!
+    \brief
+        Return a pointer to the ScriptModule being used for scripting within the GUI system.
 
-	\return
-		Pointer to a ScriptModule based object.
-	*/
-	ScriptModule*	getScriptingModule(void) const;
+    \return
+        Pointer to a ScriptModule based object.
+    */
+    ScriptModule*    getScriptingModule(void) const;
 
     /*!
     \brief
@@ -249,40 +253,40 @@ public:
     */
     void setScriptingModule(ScriptModule* scriptModule);
 
-	/*!
-	\brief
-		Return a pointer to the ResourceProvider being used within the GUI system.
+    /*!
+    \brief
+        Return a pointer to the ResourceProvider being used within the GUI system.
 
-	\return
-		Pointer to a ResourceProvider based object.
-	*/
-	ResourceProvider* getResourceProvider(void) const;
+    \return
+        Pointer to a ResourceProvider based object.
+    */
+    ResourceProvider* getResourceProvider(void) const;
 
-	/*!
-	\brief
-		Execute a script file if possible.
+    /*!
+    \brief
+        Execute a script file if possible.
 
-	\param filename
-		String object holding the filename of the script file that is to be executed
+    \param filename
+        String object holding the filename of the script file that is to be executed
 
-	\param resourceGroup
-		Resource group identifier to be passed to the ResourceProvider when loading the script file.
-	*/
-	void	executeScriptFile(const String& filename, const String& resourceGroup = "") const;
+    \param resourceGroup
+        Resource group identifier to be passed to the ResourceProvider when loading the script file.
+    */
+    void    executeScriptFile(const String& filename, const String& resourceGroup = "") const;
 
 
-	/*!
-	\brief
-		Execute a scripted global function if possible.  The function should not take any parameters and should return an integer.
+    /*!
+    \brief
+        Execute a scripted global function if possible.  The function should not take any parameters and should return an integer.
 
-	\param function_name
-		String object holding the name of the function, in the global script environment, that
-		is to be executed.
+    \param function_name
+        String object holding the name of the function, in the global script environment, that
+        is to be executed.
 
-	\return
-		The integer value returned from the script function.
-	*/
-	int		executeScriptGlobal(const String& function_name) const;
+    \return
+        The integer value returned from the script function.
+    */
+    int        executeScriptGlobal(const String& function_name) const;
 
 
     /*!
@@ -393,8 +397,8 @@ public:
         this name has been changed after instantiating the system, the name
         returned may not actually correspond to the module in use.
     */
-    static const String getDefaultXMLParserName();
-    
+    static String getDefaultXMLParserName();
+
     /*!
     \brief
         Retrieve the image codec to be used by the system.
@@ -433,13 +437,40 @@ public:
 
     /*!
     \brief
+    Set the default font to be used by all new GUIContext instances
+
+    \param name
+    String object containing the name of the font
+    */
+    void setDefaultFontName(const String& name);
+
+    /*!
+    \brief
+    Set the default cursor to be used by all new GUIContext instances
+
+    \param name
+    String object containing the name of the cursor
+    */
+    void setDefaultCursorName(const String& name);
+
+    /*!
+    \brief
+    Set the default tooltip type to be used by all new GUIContext instances
+
+    \param name
+    String object containing the type name of the tooltip
+    */
+    void setDefaultTooltipType(const String& tooltip_type);
+
+    /*!
+    \brief
         Notification function to be called when the main display changes size.
         Client code should call this function when the host window changes size,
         or if the display resolution is changed in full-screen mode.
 
         Calling this function ensures that any other parts of the system that
         need to know about display size changes are notified.  This affects
-        things such as the MouseCursor default constraint area, and also the
+        things such as the Cursor default constraint area, and also the
         auto-scale functioning of Imagesets and Fonts.
 
     \note
@@ -452,34 +483,30 @@ public:
 
     /*!
     \brief
-        Return pointer to the currently set global default custom
-        RenderedStringParser object.
+        Return pointer to the currently set global default
+        TextParser object.
 
-        The returned RenderedStringParser is used for all windows that have
-        parsing enabled and no custom RenderedStringParser set on the window
+        The returned TextParser is used for all windows that have
+        parsing enabled and no custom TextParser set on the window
         itself.
 
-        If this global custom RenderedStringParser is set to 0, then all windows
-        with parsing enabled and no custom RenderedStringParser set on the
-        window itself will use the systems BasicRenderedStringParser. 
+        If this global custom TextParser is set to 0, then all windows
+        with parsing enabled and no custom TextParser set on the
+        window itself will use the system's default LegacyTextParser.
     */
-    RenderedStringParser* getDefaultCustomRenderedStringParser() const;
+    TextParser* getDefaultTextParser() const;
 
     /*!
     \brief
-        Set the global default custom RenderedStringParser object.  This change
+        Set the global default custom TextParser object.  This change
         is reflected the next time an affected window reparses it's text.  This
-        may be set to 0 for no system wide custom parser (which is the default).
+        may be set to nullptr to use default CEGUI text parser.
 
-        The set RenderedStringParser is used for all windows that have
-        parsing enabled and no custom RenderedStringParser set on the window
+        The set TextParser is used for all windows that have
+        parsing enabled and no custom TextParser set on the window
         itself.
-
-        If this global custom RenderedStringParser is set to 0, then all windows
-        with parsing enabled and no custom RenderedStringParser set on the
-        window itself will use the systems BasicRenderedStringParser. 
     */
-    void setDefaultCustomRenderedStringParser(RenderedStringParser* parser);
+    void setDefaultTextParser(TextParser* parser);
 
     /*!
     \brief
@@ -487,29 +514,11 @@ public:
 
         This function will invalidate the caches used for both imagery and
         geometry for all content that is managed by the core CEGUI manager
-        objects, causing a full and total redraw of that content.  This
+        objects, causing a full and total redraw of that content. This
         includes Window object's cached geometry, rendering surfaces and
-        rendering windows and the mouse pointer geometry.
+        rendering windows and the pointer geometry.
     */
     void invalidateAllCachedRendering();
-
-    /*!
-    \brief
-        Create a RegexMatcher instance if support is available.
-
-    \return
-        Pointer to an object that implements the RegexMatcher interface, or 0
-        if the system has no built in support for RegexMatcher creation.
-
-    \note
-        The created RegexMatcher is not tracked in any way, and it is the
-        resposibility of the caller to destroy the RegexMatcher when it is no
-        longer needed by calling System::destroyRegexMatcher.
-    */
-    RegexMatcher* createRegexMatcher() const;
-
-    //! destroy a RegexMatcher instance returned by System::createRegexMatcher.
-    void destroyRegexMatcher(RegexMatcher* rm) const;
 
     //! call this to ensure system-level time based updates occur.
     bool injectTimePulse(float timeElapsed);
@@ -534,18 +543,10 @@ public:
     static void performVersionTest(const int expected, const int received,
                                    const String& func);
 
-    static void setModuleDirEnvVar(const String& moduleDir);
-    static const String getModuleDirEnvVar();
-
-private:
-    // unimplemented constructors / assignment
-    System(const System& obj);
-    System& operator=(const System& obj);
-
 protected:
-	/*************************************************************************
-		Implementation Functions
-	*************************************************************************/
+    /*************************************************************************
+        Implementation Functions
+    *************************************************************************/
     /*!
     \brief
         Construct a new System object
@@ -580,11 +581,14 @@ protected:
            ScriptModule* scriptModule, const String& configFile,
            const String& logFile);
 
+    System(const System& obj) = delete;
+    System& operator =(const System& obj) = delete;
+
     /*!
     \brief
         Destructor for System objects.
     */
-    ~System(void);
+    ~System();
 
     //! output the standard log header
     void outputLogHeader();
@@ -601,27 +605,28 @@ protected:
     //! handle cleanup of the XML parser
     void cleanupXMLParser();
 
-    //! setup image codec 
+    //! setup image codec
     void setupImageCodec(const String& codecName);
 
-    //! cleanup image codec 
+    //! cleanup image codec
     void cleanupImageCodec();
 
     //! invalidate all windows and any rendering surfaces they may be using.
     void invalidateAllWindows();
 
-	/*************************************************************************
-		Implementation Data
-	*************************************************************************/
-	Renderer*	d_renderer;			//!< Holds the pointer to the Renderer object given to us in the constructor
+    /*************************************************************************
+        Implementation Data
+    *************************************************************************/
+    Renderer*    d_renderer;            //!< Holds the pointer to the Renderer object given to us in the constructor
     ResourceProvider* d_resourceProvider;      //!< Holds the pointer to the ResourceProvider object given to us by the renderer or the System constructor.
-	bool d_ourResourceProvider;
+    bool d_ourResourceProvider;
 
     Clipboard* d_clipboard;         //!< Internal clipboard with optional sync with native clipboard
+    NativeClipboardProvider* d_nativeClipboardProvider; //!< the default native clipboard provider (only on Win32 for now)
 
-	// scripting
-	ScriptModule*	d_scriptModule;			//!< Points to the scripting support module.
-	String			d_termScriptName;		//!< Name of the script to run upon system shutdown.
+    // scripting
+    ScriptModule*    d_scriptModule;            //!< Points to the scripting support module.
+    String            d_termScriptName;        //!< Name of the script to run upon system shutdown.
 
     XMLParser*  d_xmlParser;        //!< XMLParser object we use to process xml files.
     bool        d_ourXmlParser;     //!< true when we created the xml parser.
@@ -641,12 +646,16 @@ protected:
     static String d_defaultImageCodecName;
     //! true when we created the CEGUI::Logger based object.
     bool d_ourLogger;
-    //! currently set global RenderedStringParser.
-    RenderedStringParser* d_customRenderedStringParser;
 
-    static String d_moduleDir;
+    //! Shared instance of a parser to be used in CEGUI by default.
+    std::unique_ptr<LegacyTextParser> d_fallbackTextParser;
+    //! Currently set global text parser.
+    TextParser* d_defaultTextParser = nullptr;
 
-    typedef std::vector<GUIContext* CEGUI_VECTOR_ALLOC(GUIContext*)> GUIContextCollection;
+    String d_defaultFontName;
+    String d_defaultCursorName;
+    String d_defaultTooltipType;
+
     GUIContextCollection d_guiContexts;
     //! instance of class that can convert string encodings
 #if defined(__WIN32__) || defined(_WIN32)
@@ -660,7 +669,7 @@ protected:
 
 
 #if defined(_MSC_VER)
-#	pragma warning(pop)
+#    pragma warning(pop)
 #endif
 
-#endif	// end of guard _CEGUISystem_h_
+#endif    // end of guard _CEGUISystem_h_

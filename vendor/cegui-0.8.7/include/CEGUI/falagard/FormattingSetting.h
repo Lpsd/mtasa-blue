@@ -29,6 +29,8 @@
 
 #include "CEGUI/Window.h"
 #include "CEGUI/falagard/XMLEnumHelper.h"
+#include "CEGUI/falagard/XMLHandler.h"
+#include "CEGUI/XMLSerializer.h"
 
 namespace CEGUI
 {
@@ -102,17 +104,9 @@ public:
         xml_stream.closeTag();
     }
 
-    //------------------------------------------------------------------------//
-    virtual void writeXMLTagToStream(XMLSerializer& /*xml_stream*/) const
-    {
-        // This does nothing and needs to be specialised or overridden
-    }
+    virtual void writeXMLTagToStream(XMLSerializer& /*xml_stream*/) const;
 
-    //------------------------------------------------------------------------//
-    virtual void writeXMLAttributesToStream(XMLSerializer& /*xml_stream*/) const
-    {
-        // This does nothing and needs to be specialised or overridden
-    }
+    virtual void writeXMLAttributesToStream(XMLSerializer& /*xml_stream*/) const;
 
     //------------------------------------------------------------------------//
     bool operator==(const FormattingSetting<T>& rhs) const
@@ -132,21 +126,30 @@ protected:
     String d_propertySource;
 };
 
-template<> void CEGUIEXPORT FormattingSetting<VerticalFormatting>::writeXMLTagToStream(
-                                            XMLSerializer& xml_stream) const;
-template<> void CEGUIEXPORT FormattingSetting<VerticalFormatting>::writeXMLAttributesToStream(
+template<typename T>
+void FormattingSetting<T>::writeXMLTagToStream(XMLSerializer& /*xml_stream*/) const
+{
+    // This does nothing and needs to be specialised or overridden
+}
+
+template<typename T>
+void FormattingSetting<T>::writeXMLAttributesToStream(XMLSerializer& xml_stream) const
+{
+    if (d_propertySource.empty())
+        xml_stream.attribute(Falagard_xmlHandler::TypeAttribute, FalagardXMLHelper<T>::toString(d_value));
+    else
+        xml_stream.attribute(Falagard_xmlHandler::NameAttribute, d_propertySource);
+}
+
+template<> void CEGUIEXPORT FormattingSetting<VerticalImageFormatting>::writeXMLTagToStream(
                                             XMLSerializer& xml_stream) const;
 template<> void CEGUIEXPORT FormattingSetting<HorizontalFormatting>::writeXMLTagToStream(
                                             XMLSerializer& xml_stream) const;
-template<> void CEGUIEXPORT FormattingSetting<HorizontalFormatting>::writeXMLAttributesToStream(
-                                            XMLSerializer& xml_stream) const;
 template<> void CEGUIEXPORT FormattingSetting<VerticalTextFormatting>::writeXMLTagToStream(
-                                            XMLSerializer& xml_stream) const;
-template<> void CEGUIEXPORT FormattingSetting<VerticalTextFormatting>::writeXMLAttributesToStream(
                                             XMLSerializer& xml_stream) const;
 template<> void CEGUIEXPORT FormattingSetting<HorizontalTextFormatting>::writeXMLTagToStream(
                                             XMLSerializer& xml_stream) const;
-template<> void CEGUIEXPORT FormattingSetting<HorizontalTextFormatting>::writeXMLAttributesToStream(
+template<> void CEGUIEXPORT FormattingSetting<DefaultParagraphDirection>::writeXMLTagToStream(
                                             XMLSerializer& xml_stream) const;
 }
 

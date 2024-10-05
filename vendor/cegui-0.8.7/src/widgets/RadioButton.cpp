@@ -44,7 +44,7 @@ void RadioButton::addRadioButtonProperties(void)
 {
     const String& propertyOrigin(WidgetTypeName);
 
-    CEGUI_DEFINE_PROPERTY(RadioButton, ulong,
+    CEGUI_DEFINE_PROPERTY(RadioButton, std::uint32_t,
         "GroupID",
         "Property to access the radio button group ID. "
         "Value is an unsigned integer number.",
@@ -53,7 +53,7 @@ void RadioButton::addRadioButtonProperties(void)
 }
 
 //----------------------------------------------------------------------------//
-void RadioButton::setGroupID(ulong group)
+void RadioButton::setGroupID(std::uint32_t group)
 {
     d_groupID = group;
 
@@ -71,7 +71,7 @@ void RadioButton::deselectSiblingRadioButtonsInGroup() const
     for (size_t child = 0; child < child_count; ++child)
     {
         if (RadioButton* rb = dynamic_cast<RadioButton*>(
-                getParent()->getChildAtIdx(child)))
+                getParent()->getChildAtIndex(child)))
         {
             if (rb->isSelected() && (rb != this) &&
                 (rb->getGroupID() == d_groupID))
@@ -94,9 +94,9 @@ RadioButton* RadioButton::getSelectedButtonInGroup() const
         for (size_t child = 0; child < child_count; ++child)
         {
             // is this child same type as we are?
-            if (getParent()->getChildAtIdx(child)->getType() == getType())
+            if (getParent()->getChildAtIndex(child)->getType() == getType())
             {
-                RadioButton* rb = (RadioButton*)getParent()->getChildAtIdx(child);
+                RadioButton* rb = static_cast<RadioButton*>(getParent()->getChildAtIndex(child));
 
                 // is child same group and selected?
                 if (rb->isSelected() && (rb->getGroupID() == d_groupID))
@@ -112,7 +112,7 @@ RadioButton* RadioButton::getSelectedButtonInGroup() const
     }
 
     // no selected button attached to this window is in same group
-    return 0;
+    return nullptr;
 }
 
 //----------------------------------------------------------------------------//

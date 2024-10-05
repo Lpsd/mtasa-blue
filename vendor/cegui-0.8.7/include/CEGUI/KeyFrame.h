@@ -46,26 +46,25 @@ namespace CEGUI
 \see
     Affector
 */
-class CEGUIEXPORT KeyFrame :
-    public AllocatedObject<KeyFrame>
+class CEGUIEXPORT KeyFrame
 {
 public:
     //! enumerates possible progression methods, IE how the value progresses
-    //! TOWARS this key frames, this means that progression method of the first
+    //! TOWARDS this key frames, this means that progression method of the first
     //! key frame won't be used for anything!
-    enum Progression
+    enum class Progression : int
     {
         //! linear progression
-        P_Linear,
+        Linear,
         //! progress is accelerated, starts slow and speeds up
-        P_QuadraticAccelerating,
+        QuadraticAccelerating,
         //! progress is decelerated, starts fast and slows down
-        P_QuadraticDecelerating,
+        QuadraticDecelerating,
         /** left neighbour's value is picked if interpolation position is lower
          * than 1.0, right is only picked when interpolation position is exactly
          * 1.0
          */
-        P_Discrete
+        Discrete
     };
 
     //! internal constructor, please use Affector::createKeyFrame
@@ -87,7 +86,7 @@ public:
     \note
         The index is only valid as long as the list of affectors is unchanged in animation!
     */
-    size_t getIdxInParent() const;
+    size_t getIndexInParent() const;
 
     /*!
     \brief

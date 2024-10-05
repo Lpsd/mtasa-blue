@@ -25,158 +25,70 @@
  *   OTHER DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
 #include "CEGUI/CoordConverter.h"
-#include "CEGUI/Window.h"
+#include "CEGUI/Element.h"
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 
 //----------------------------------------------------------------------------//
 
-float CoordConverter::screenToWindowX(const Window& window, const UDim& x)
+float CoordConverter::screenToWindowX(const Element& element, const UDim& x)
 {
-    return asAbsolute(x,
-        window.getRootContainerSize().d_width) - getBaseXValue(window);
+    return asAbsolute(x, element.getRootContainerSize().d_width) - element.getUnclippedOuterRect().get().d_min.x;
 }
 
 //----------------------------------------------------------------------------//
 
-float CoordConverter::screenToWindowY(const Window& window, const UDim& y)
+float CoordConverter::screenToWindowY(const Element& element, const UDim& y)
 {
-    return asAbsolute(y,
-        window.getRootContainerSize().d_height) - getBaseYValue(window);
+    return asAbsolute(y, element.getRootContainerSize().d_height) - element.getUnclippedOuterRect().get().d_min.y;
 }
 
 //----------------------------------------------------------------------------//
 
-Vector2f CoordConverter::screenToWindow(const Window& window, const UVector2& vec)
+glm::vec2 CoordConverter::screenToWindow(const Element& element, const UVector2& vec)
 {
-    return asAbsolute(vec, window.getRootContainerSize()) - getBaseValue(window);
+    return asAbsolute(vec, element.getRootContainerSize()) - element.getUnclippedOuterRect().get().d_min;
 }
 
 //----------------------------------------------------------------------------//
-Rectf CoordConverter::screenToWindow(const Window& window, const URect& rect)
+Rectf CoordConverter::screenToWindow(const Element& element, const URect& rect)
 {
-    Vector2f base(getBaseValue(window));
-    Rectf pixel(asAbsolute(rect, window.getRootContainerSize()));
-
-    // negate base position
-    base.d_x = -base.d_x;
-    base.d_y = -base.d_y;
-
-    pixel.offset(base);
+    Rectf pixel(asAbsolute(rect, element.getRootContainerSize()));
+    pixel.offset(-element.getUnclippedOuterRect().get().d_min);
     return pixel;
 }
 
 //----------------------------------------------------------------------------//
 
-float CoordConverter::screenToWindowX(const Window& window, const float x)
+float CoordConverter::screenToWindowX(const Element& element, const float x)
 {
-    return x - getBaseXValue(window);
+    return x - element.getUnclippedOuterRect().get().d_min.x;
 }
 
 //----------------------------------------------------------------------------//
 
-float CoordConverter::screenToWindowY(const Window& window, const float y)
+float CoordConverter::screenToWindowY(const Element& element, const float y)
 {
-    return y - getBaseYValue(window);
+    return y - element.getUnclippedOuterRect().get().d_min.y;
 }
 
 //----------------------------------------------------------------------------//
 
-Vector2f CoordConverter::screenToWindow(const Window& window, const Vector2f& vec)
+glm::vec2 CoordConverter::screenToWindow(const Element& element, const glm::vec2& vec)
 {
-    return vec - getBaseValue(window);
+    return vec - element.getUnclippedOuterRect().get().d_min;
 }
 
 //----------------------------------------------------------------------------//
 
-Rectf CoordConverter::screenToWindow(const Window& window, const Rectf& rect)
+Rectf CoordConverter::screenToWindow(const Element& element, const Rectf& rect)
 {
-    Vector2f base(getBaseValue(window));
-
-    // negate base position
-    base.d_x = -base.d_x;
-    base.d_y = -base.d_y;
-
     Rectf tmp(rect);
-    tmp.offset(base);
-
+    tmp.offset(-element.getUnclippedOuterRect().get().d_min);
     return tmp;
 }
 
 //----------------------------------------------------------------------------//
-
-CoordConverter::CoordConverter()
-{}
-
-//----------------------------------------------------------------------------//
-
-float CoordConverter::getBaseXValue(const Window& window)
-{
-    const Window* parent = window.getParent();
-
-    const Rectf parent_rect(parent ?
-        parent->getChildContentArea(window.isNonClient()).get() :
-        Rectf(Vector2f(0, 0), window.getRootContainerSize())
-    );
-
-    const float parent_width = parent_rect.getWidth();
-    float baseX = parent_rect.d_min.d_x;
-
-    baseX += asAbsolute(window.getArea().d_min.d_x, parent_width);
-
-    switch(window.getHorizontalAlignment())
-    {
-        case HA_CENTRE:
-            baseX += (parent_width - window.getPixelSize().d_width) * 0.5f;
-            break;
-        case HA_RIGHT:
-            baseX += parent_width - window.getPixelSize().d_width;
-            break;
-        default:
-            break;
-    }
-
-    return alignToPixels(baseX);
-}
-
-//----------------------------------------------------------------------------//
-
-float CoordConverter::getBaseYValue(const Window& window)
-{
-    const Window* parent = window.getParent();
-
-    const Rectf parent_rect(parent ?
-        parent->getChildContentArea(window.isNonClient()).get() :
-        Rectf(Vector2f(0, 0), window.getRootContainerSize())
-    );
-
-    const float parent_height = parent_rect.getHeight();
-    float baseY = parent_rect.d_min.d_y;
-
-    baseY += asAbsolute(window.getArea().d_min.d_y, parent_height);
-
-    switch(window.getVerticalAlignment())
-    {
-        case VA_CENTRE:
-            baseY += (parent_height - window.getPixelSize().d_height) * 0.5f;
-            break;
-        case VA_BOTTOM:
-            baseY += parent_height - window.getPixelSize().d_height;
-            break;
-        default:
-            break;
-    }
-
-    return alignToPixels(baseY);
-}
-
-//----------------------------------------------------------------------------//
-
-Vector2f CoordConverter::getBaseValue(const Window& window)
-{
-    return Vector2f(getBaseXValue(window), getBaseYValue(window));
-}
 
 } // End of  CEGUI namespace section

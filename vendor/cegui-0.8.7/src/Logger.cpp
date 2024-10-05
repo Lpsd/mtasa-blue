@@ -28,28 +28,27 @@
  ***************************************************************************/
 #include "CEGUI/Logger.h"
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
     /*************************************************************************
         Static Data Definitions
     *************************************************************************/
     // singleton instance pointer
-    template<> Logger* Singleton<Logger>::ms_Singleton  = 0;
+    template<> Logger* Singleton<Logger>::ms_Singleton  = nullptr;
 
 
     /*************************************************************************
         Constructor
     *************************************************************************/
-    Logger::Logger(void) :
-            d_level(Standard)
+    Logger::Logger() :
+            d_level(LoggingLevel::Standard)
     {
     }
 
     /*************************************************************************
         Destructor
     *************************************************************************/
-    Logger::~Logger(void)
+    Logger::~Logger()
     {
     }
 

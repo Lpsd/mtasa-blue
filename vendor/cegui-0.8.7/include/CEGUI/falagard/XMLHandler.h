@@ -29,7 +29,7 @@
 
 #include "../ChainedXMLHandler.h"
 #include "./Dimensions.h"
-#include "../Window.h"
+#include <unordered_map>
 #include <vector>
 
 #if defined(_MSC_VER)
@@ -37,7 +37,6 @@
 #   pragma warning(disable : 4251)
 #endif
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
     // forward refs
@@ -111,6 +110,8 @@ namespace CEGUI
         static const String ColoursElement;             //!< Tag name for Colours elements.
         static const String VertFormatElement;          //!< Tag name for VertFormat elements.
         static const String HorzFormatElement;          //!< Tag name for HorzFormat elements.
+        static const String WordWrapElement;            //!< Tag name for WordWrap elements.
+        static const String ParagraphDirElement;        //!< Tag name for ParagraphDir elements.
         static const String VertAlignmentElement;       //!< Tag name for VertAlignment elements.
         static const String HorzAlignmentElement;       //!< Tag name for HorzAlignment elements.
         static const String PropertyElement;            //!< Tag name for Property elements.
@@ -132,6 +133,7 @@ namespace CEGUI
         static const String OperatorDimElement;         //!< Tag name for dimension operator elements.
         static const String VertFormatPropertyElement;  //!< Tag name for element that specifies a vertical formatting property.
         static const String HorzFormatPropertyElement;  //!< Tag name for element that specifies a horizontal formatting property..
+        static const String ParagraphDirPropertyElement; //!< Tag name for element that specifies a default paragraph direction property..
         static const String AreaPropertyElement;        //!< Tag name for element that specifies a URect property..
         static const String ImagePropertyElement;       //!< Tag name for element that specifies an Image property..
         static const String TextPropertyElement;        //!< Tag name for element that specifies an Text property.
@@ -195,8 +197,8 @@ namespace CEGUI
             ChainedXMLHandler base class overrides
         *************************************************************************/
         void elementStartLocal(const String& element,
-                               const XMLAttributes& attributes);
-        void elementEndLocal(const String& element);
+                               const XMLAttributes& attributes) override;
+        void elementEndLocal(const String& element) override;
 
     private:
         /*************************************************************************
@@ -207,14 +209,9 @@ namespace CEGUI
         //! Type for handlers of a closing xml element.
         typedef void (Falagard_xmlHandler::*ElementEndHandler)();
         //! Map of handlers for opening xml elements.
-        typedef std::map<String, ElementStartHandler, StringFastLessCompare> ElementStartHandlerMap;
+        typedef std::unordered_map<String, ElementStartHandler> ElementStartHandlerMap;
         //! Map of handlers for closing xml elements.
-        typedef std::map<String, ElementEndHandler, StringFastLessCompare> ElementEndHandlerMap;
-
-        /*************************************************************************
-            helper methods
-        **************************************************************************/
-        static argb_t hexStringToARGB(const String& str);
+        typedef std::unordered_map<String, ElementEndHandler> ElementEndHandlerMap;
 
         /*************************************************************************
             implementation methods
@@ -317,6 +314,18 @@ namespace CEGUI
             Method that handles the opening HorzFormat XML element.
         */
         void elementHorzFormatStart(const XMLAttributes& attributes);
+
+        /*!
+        \brief
+            Method that handles the opening WordWrap XML element.
+        */
+        void elementWordWrapStart(const XMLAttributes& attributes);
+
+        /*!
+        \brief
+            Method that handles the opening ParagraphDir XML element.
+        */
+        void elementParagraphDirStart(const XMLAttributes& attributes);
 
         /*!
         \brief
@@ -431,6 +440,8 @@ namespace CEGUI
             Method that handles the opening HorzFormatProperty XML element.
         */
         void elementHorzFormatPropertyStart(const XMLAttributes& attributes);
+
+        void elementParagraphDirPropertyStart(const XMLAttributes& attributes);
 
         /*!
         \brief
@@ -604,8 +615,7 @@ namespace CEGUI
         NamedArea*      d_namedArea;
         FrameComponent*  d_framecomponent;
 
-        std::vector<BaseDim*
-            CEGUI_VECTOR_ALLOC(BaseDim*)> d_dimStack;
+        std::vector<BaseDim*> d_dimStack;
 
         PropertyDefinitionBase* d_propertyLink;
         EventLinkDefinition* d_eventLink;

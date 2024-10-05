@@ -1,6 +1,6 @@
 /***********************************************************************
-	created:	14/2/2005
-	author:		Paul D Turner
+    created:    14/2/2005
+    author:        Paul D Turner
 *************************************************************************/
 /***************************************************************************
  *   Copyright (C) 2004 - 2006 Paul D Turner & The CEGUI Development Team
@@ -28,567 +28,524 @@
 #include "CEGUI/CoordConverter.h"
 #include "CEGUI/RenderingContext.h"
 #include "CEGUI/ImageManager.h"
-#include <math.h>
+#include "CEGUI/GUIContext.h"
+#include <cmath>
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
-    //////////////////////////////////////////////////////////////////////////
-    // Window type string
-    const String DragContainer::WidgetTypeName("DragContainer");
-    // Event Strings
-    const String DragContainer::EventNamespace("DragContainer");
-    const String DragContainer::EventDragStarted("DragStarted");
-    const String DragContainer::EventDragEnded("DragEnded");
-    const String DragContainer::EventDragPositionChanged("DragPositionChanged");
-    const String DragContainer::EventDragEnabledChanged("DragEnabledChanged");
-    const String DragContainer::EventDragAlphaChanged("DragAlphaChanged");
-    const String DragContainer::EventDragMouseCursorChanged("DragMouseCursorChanged");
-    const String DragContainer::EventDragThresholdChanged("DragThresholdChanged");
-    const String DragContainer::EventDragDropTargetChanged("DragDropTargetChanged");
+//////////////////////////////////////////////////////////////////////////
+// Window type string
+const String DragContainer::WidgetTypeName("DragContainer");
+// Event Strings
+const String DragContainer::EventNamespace("DragContainer");
+const String DragContainer::EventDragStarted("DragStarted");
+const String DragContainer::EventDragEnded("DragEnded");
+const String DragContainer::EventDragPositionChanged("DragPositionChanged");
+const String DragContainer::EventDragEnabledChanged("DragEnabledChanged");
+const String DragContainer::EventDragAlphaChanged("DragAlphaChanged");
+const String DragContainer::EventDragCursorChanged("DragCursorChanged");
+const String DragContainer::EventDragThresholdChanged("DragThresholdChanged");
+const String DragContainer::EventDragDropTargetChanged("DragDropTargetChanged");
 
-    //////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 
-    DragContainer::DragContainer(const String& type, const String& name) :
-        Window(type, name),
-        d_draggingEnabled(true),
-        d_leftMouseDown(false),
-        d_dragging(false),
-        d_dragThreshold(8.0f),
-        d_dragAlpha(0.5f),
-        d_dropTarget(0),
-        d_dragCursorImage(0),
-        d_dropflag(false),
-        d_stickyMode(false),
-        d_pickedUp(false),
-        d_usingFixedDragOffset(false),
-        d_fixedDragOffset(UDim(0, 0), UDim(0, 0))
+DragContainer::DragContainer(const String& type, const String& name) :
+    Window(type, name),
+    d_dropTarget(nullptr),
+    d_dragIndicatorImage(nullptr),
+    d_dragThreshold(8.0f),
+    d_dragAlpha(0.5f),
+    d_draggingEnabled(true),
+    d_leftPointerHeld(false),
+    d_dragging(false),
+    d_stickyMode(false),
+    d_pickedUp(false),
+    d_usingFixedDragOffset(false)
+{
+    addDragContainerProperties();
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::setDraggingEnabled(bool setting)
+{
+    if (d_draggingEnabled != setting)
     {
-        addDragContainerProperties();
-    }
-
-    DragContainer::~DragContainer(void)
-    {
-    }
-
-    bool DragContainer::isDraggingEnabled(void) const
-    {
-        return d_draggingEnabled;
-    }
-
-    void DragContainer::setDraggingEnabled(bool setting)
-    {
-        if (d_draggingEnabled != setting)
-        {
-            d_draggingEnabled = setting;
-            WindowEventArgs args(this);
-            onDragEnabledChanged(args);
-        }
-    }
-
-    bool DragContainer::isBeingDragged(void) const
-    {
-        return d_dragging;
-    }
-
-    float DragContainer::getPixelDragThreshold(void) const
-    {
-        return d_dragThreshold;
-    }
-
-    void DragContainer::setPixelDragThreshold(float pixels)
-    {
-        if (d_dragThreshold != pixels)
-        {
-            d_dragThreshold = pixels;
-            WindowEventArgs args(this);
-            onDragThresholdChanged(args);
-        }
-    }
-
-    float DragContainer::getDragAlpha(void) const
-    {
-        return d_dragAlpha;
-    }
-
-    void DragContainer::setDragAlpha(float alpha)
-    {
-        if (d_dragAlpha != alpha)
-        {
-            d_dragAlpha = alpha;
-            WindowEventArgs args(this);
-            onDragAlphaChanged(args);
-        }
-    }
-
-    const Image* DragContainer::getDragCursorImage(void) const
-    {
-        return d_dragCursorImage ? d_dragCursorImage :
-            getGUIContext().getMouseCursor().getDefaultImage();
-    }
-
-    void DragContainer::setDragCursorImage(const Image* image)
-    {
-        if (d_dragCursorImage != image)
-        {
-            d_dragCursorImage = image;
-            WindowEventArgs args(this);
-            onDragMouseCursorChanged(args);
-        }
-    }
-
-    void DragContainer::setDragCursorImage(const String& name)
-    {
-        setDragCursorImage(&ImageManager::getSingleton().get(name));
-    }
-
-    Window* DragContainer::getCurrentDropTarget(void) const
-    {
-        return d_dropTarget;
-    }
-
-    void DragContainer::addDragContainerProperties(void)
-    {
-        const String& propertyOrigin = WidgetTypeName;
-
-        CEGUI_DEFINE_PROPERTY(DragContainer, bool,
-            "DraggingEnabled", "Property to get/set the state of the dragging enabled setting for the DragContainer.  Value is either \"true\" or \"false\".",
-            &DragContainer::setDraggingEnabled, &DragContainer::isDraggingEnabled, true
-        );
-        
-        CEGUI_DEFINE_PROPERTY(DragContainer, float,
-            "DragAlpha", "Property to get/set the dragging alpha value.  Value is a float.",
-            &DragContainer::setDragAlpha, &DragContainer::getDragAlpha, 0.5f
-        );
-        
-        CEGUI_DEFINE_PROPERTY(DragContainer, float,
-            "DragThreshold", "Property to get/set the dragging threshold value.  Value is a float.",
-            &DragContainer::setPixelDragThreshold, &DragContainer::getPixelDragThreshold, 8.0f /* TODO: Inconsistency */
-        );
-        
-        CEGUI_DEFINE_PROPERTY(DragContainer, Image*,
-            "DragCursorImage", "Property to get/set the mouse cursor image used when dragging.  Value should be \"set:<imageset name> image:<image name>\".",
-            &DragContainer::setDragCursorImage, &DragContainer::getDragCursorImage, 0
-        );
-        
-        CEGUI_DEFINE_PROPERTY(DragContainer, bool,
-            "StickyMode", "Property to get/set the state of the sticky mode setting for the "
-                "DragContainer.  Value is either \"true\" or \"false\".",
-            &DragContainer::setStickyModeEnabled, &DragContainer::isStickyModeEnabled, true /* TODO: Inconsistency */
-        );
-        
-        CEGUI_DEFINE_PROPERTY(DragContainer, UVector2,
-            "FixedDragOffset", "Property to get/set the state of the fixed dragging offset "
-                "setting for the DragContainer.  "
-                "Value is a UVector2 property value.",
-            &DragContainer::setFixedDragOffset, &DragContainer::getFixedDragOffset, UVector2::zero()
-        );
-        
-        CEGUI_DEFINE_PROPERTY(DragContainer, bool,
-            "UseFixedDragOffset", "Property to get/set the setting that control whether the fixed "
-                "dragging offset will be used.  "
-                "Value is either \"true\" or \"false\".",
-            &DragContainer::setUsingFixedDragOffset, &DragContainer::isUsingFixedDragOffset, false /* TODO: Inconsistency */
-        );
-    }
-
-    bool DragContainer::isDraggingThresholdExceeded(const Vector2f& local_mouse)
-    {
-        // calculate amount mouse has moved.
-        float	deltaX = fabsf(local_mouse.d_x - CoordConverter::asAbsolute(d_dragPoint.d_x, d_pixelSize.d_width));
-        float	deltaY = fabsf(local_mouse.d_y - CoordConverter::asAbsolute(d_dragPoint.d_y, d_pixelSize.d_height));
-
-        // see if mouse has moved far enough to start dragging operation
-        return (deltaX > d_dragThreshold || deltaY > d_dragThreshold) ? true : false;
-    }
-
-    void DragContainer::initialiseDragging(void)
-    {
-        // only proceed if dragging is actually enabled
-        if (d_draggingEnabled)
-        {
-            // initialise drag moving state
-            d_storedClipState = d_clippedByParent;
-            setClippedByParent(false);
-            d_storedAlpha = d_alpha;
-            setAlpha(d_dragAlpha);
-            d_startPosition = getPosition();
-
-            d_dragging = true;
-
-            notifyScreenAreaChanged();
-
-            // Now drag mode is set, change cursor as required
-            updateActiveMouseCursor();
-        }
-    }
-
-    void DragContainer::doDragging(const Vector2f& local_mouse)
-    {
-        // calculate amount to move
-        UVector2 offset(cegui_absdim(local_mouse.d_x), cegui_absdim(local_mouse.d_y));
-        offset -= (d_usingFixedDragOffset) ? d_fixedDragOffset : d_dragPoint;
-        // set new position
-        setPosition(getPosition() + offset);
-
-        // Perform event notification
+        d_draggingEnabled = setting;
         WindowEventArgs args(this);
-        onDragPositionChanged(args);
+        onDragEnabledChanged(args);
     }
+}
 
-    void DragContainer::updateActiveMouseCursor(void) const
+//----------------------------------------------------------------------------//
+void DragContainer::setPixelDragThreshold(float pixels)
+{
+    if (d_dragThreshold != pixels)
     {
-        getGUIContext().getMouseCursor().
-            setImage(d_dragging ? getDragCursorImage() : getMouseCursor());
+        d_dragThreshold = pixels;
+        WindowEventArgs args(this);
+        onDragThresholdChanged(args);
     }
+}
 
-    void DragContainer::onMouseButtonDown(MouseEventArgs& e)
+//----------------------------------------------------------------------------//
+void DragContainer::setDragAlpha(float alpha)
+{
+    if (d_dragAlpha != alpha)
     {
-        Window::onMouseButtonDown(e);
-
-        if (e.button == LeftButton)
-        {
-            // ensure all inputs come to us for now
-            if (captureInput())
-            {
-                // get position of mouse as co-ordinates local to this window.
-                Vector2f localPos = CoordConverter::screenToWindow(*this, e.position);
-
-                // store drag point for possible sizing or moving operation.
-                d_dragPoint.d_x = cegui_absdim(localPos.d_x);
-                d_dragPoint.d_y = cegui_absdim(localPos.d_y);
-                d_leftMouseDown = true;
-            }
-
-            ++e.handled;
-        }
-
+        d_dragAlpha = alpha;
+        WindowEventArgs args(this);
+        onDragAlphaChanged(args);
     }
+}
 
-    void DragContainer::onMouseButtonUp(MouseEventArgs& e)
+//----------------------------------------------------------------------------//
+const Image* DragContainer::getDragIndicatorImage() const
+{
+    return d_dragIndicatorImage ? d_dragIndicatorImage :
+        d_guiContext ? d_guiContext->getDefaultCursorImage() :
+        nullptr;
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::setDragIndicatorImage(const Image* image)
+{
+    if (d_dragIndicatorImage != image)
     {
-        Window::onMouseButtonUp(e);
-
-        if (e.button == LeftButton)
-        {
-            if (d_dragging)
-            {
-                // release picked up state
-                if (d_pickedUp)
-                    d_pickedUp = false;
-
-                // fire off event
-                WindowEventArgs args(this);
-                onDragEnded(args);
-            }
-            // check for sticky pick up
-            else if (d_stickyMode && !d_pickedUp)
-            {
-                initialiseDragging();
-                d_pickedUp = true;
-                // in this case, do not proceed to release inputs.
-                return;
-            }
-
-            // release our capture on the input data
-            releaseInput();
-            ++e.handled;
-        }
+        d_dragIndicatorImage = image;
+        WindowEventArgs args(this);
+        onDragCursorChanged(args);
     }
+}
 
-    void DragContainer::onMouseMove(MouseEventArgs& e)
+//----------------------------------------------------------------------------//
+void DragContainer::setDragIndicatorImage(const String& name)
+{
+    setDragIndicatorImage(&ImageManager::getSingleton().get(name));
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::addDragContainerProperties()
+{
+    const String& propertyOrigin = WidgetTypeName;
+
+    CEGUI_DEFINE_PROPERTY(DragContainer, bool,
+        "DraggingEnabled", "Property to get/set the state of the dragging enabled setting for the DragContainer.  Value is either \"true\" or \"false\".",
+        &DragContainer::setDraggingEnabled, &DragContainer::isDraggingEnabled, true
+    );
+
+    CEGUI_DEFINE_PROPERTY(DragContainer, float,
+        "DragAlpha", "Property to get/set the dragging alpha value.  Value is a float.",
+        &DragContainer::setDragAlpha, &DragContainer::getDragAlpha, 0.5f
+    );
+
+    CEGUI_DEFINE_PROPERTY(DragContainer, float,
+        "DragThreshold", "Property to get/set the dragging threshold value.  Value is a float.",
+        &DragContainer::setPixelDragThreshold, &DragContainer::getPixelDragThreshold, 8.0f /* TODO: Inconsistency */
+    );
+
+    CEGUI_DEFINE_PROPERTY(DragContainer, Image*,
+        "DragIndicatorImage", "Property to get/set the cursor image used when dragging.  Value should be \"set:<imageset name> image:<image name>\".",
+        &DragContainer::setDragIndicatorImage, &DragContainer::getDragIndicatorImage, nullptr
+    );
+
+    CEGUI_DEFINE_PROPERTY(DragContainer, bool,
+        "StickyMode", "Property to get/set the state of the sticky mode setting for the "
+            "DragContainer.  Value is either \"true\" or \"false\".",
+        &DragContainer::setStickyModeEnabled, &DragContainer::isStickyModeEnabled, true /* TODO: Inconsistency */
+    );
+
+    CEGUI_DEFINE_PROPERTY(DragContainer, UVector2,
+        "FixedDragOffset", "Property to get/set the state of the fixed dragging offset "
+            "setting for the DragContainer.  "
+            "Value is a UVector2 property value.",
+        &DragContainer::setFixedDragOffset, &DragContainer::getFixedDragOffset, UVector2::zero()
+    );
+
+    CEGUI_DEFINE_PROPERTY(DragContainer, bool,
+        "UseFixedDragOffset", "Property to get/set the setting that control whether the fixed "
+            "dragging offset will be used.  "
+            "Value is either \"true\" or \"false\".",
+        &DragContainer::setUsingFixedDragOffset, &DragContainer::isUsingFixedDragOffset, false /* TODO: Inconsistency */
+    );
+}
+
+//----------------------------------------------------------------------------//
+bool DragContainer::isDraggingThresholdExceeded(const glm::vec2& local_cursor)
+{
+    return d_dragThreshold < std::fabs(local_cursor.x - CoordConverter::asAbsolute(d_dragPoint.d_x, d_pixelSize.d_width)) ||
+        d_dragThreshold < std::fabs(local_cursor.y - CoordConverter::asAbsolute(d_dragPoint.d_y, d_pixelSize.d_height));
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::doDragging(const CursorInputEventArgs& e)
+{
+    const auto offset = e.d_localPos - CoordConverter::asAbsolute(d_usingFixedDragOffset ? d_fixedDragOffset : d_dragPoint, d_pixelSize);
+    if (offset.x == 0.f && offset.y == 0.f)
+        return;
+
+    auto pos = getPosition();
+    pos.d_x.d_offset += offset.x;
+    pos.d_y.d_offset += offset.y;
+    setPosition(pos);
+
+    updateDropTarget();
+
+    CursorMoveEventArgs args(e, offset);
+    onDragPositionChanged(args);
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::endDragging(bool restorePosition)
+{
+    d_leftPointerHeld = false;
+    d_pickedUp = false;
+    d_targetDestroyConnection.disconnect();
+
+    if (d_dragging)
     {
-        Window::onMouseMove(e);
+        // restore normal state of the window
+        d_dragging = false;
 
-        // get position of mouse as co-ordinates local to this window.
-        Vector2f localMousePos = CoordConverter::screenToWindow(*this, e.position);
-
-        // handle dragging
-        if (d_dragging)
-        {
-            doDragging(localMousePos);
-       }
-        // not dragging
-        else
-        {
-            // if mouse button is down (but we're not yet being dragged)
-            if (d_leftMouseDown)
-            {
-                if (isDraggingThresholdExceeded(localMousePos))
-                {
-                    // Trigger the event
-                    WindowEventArgs args(this);
-                    onDragStarted(args);
-                }
-            }
-        }
-    }
-
-    void DragContainer::onCaptureLost(WindowEventArgs& e)
-    {
-        Window::onCaptureLost(e);
-
-        // reset state
-        if (d_dragging)
-        {
-            // restore windows 'normal' state.
-            d_dragging = false;
+        if (restorePosition)
             setPosition(d_startPosition);
-            setClippedByParent(d_storedClipState);
-            setAlpha(d_storedAlpha);
 
-            notifyScreenAreaChanged();
+        setClippedByParent(d_storedClipState);
+        setAlpha(d_storedAlpha);
 
-            // restore normal mouse cursor
-            updateActiveMouseCursor();
+        WindowEventArgs args(this);
+        onDragEnded(args);
+
+        // restore normal cursor
+        updateActiveCursorImage();
+    }
+
+    d_dropTarget = nullptr;
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::cancelDragging()
+{
+    if (d_dragging)
+        releaseInput();
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::updateActiveCursorImage() const
+{
+    if (d_guiContext)
+        d_guiContext->setCursorImage(d_dragging ? getDragIndicatorImage() : getEffectiveCursor());
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::onMouseButtonDown(MouseButtonEventArgs& e)
+{
+    Window::onMouseButtonDown(e);
+
+    if (e.d_button == MouseButton::Left)
+    {
+        // ensure all inputs come to us for now
+        if (captureInput())
+        {
+            // store drag point for possible sizing or moving operation.
+            d_dragPoint.d_x = cegui_absdim(e.d_localPos.x);
+            d_dragPoint.d_y = cegui_absdim(e.d_localPos.y);
+            d_leftPointerHeld = true;
         }
-
-        d_leftMouseDown = false;
-        d_dropTarget = 0;
 
         ++e.handled;
     }
+}
 
-    void DragContainer::onAlphaChanged(WindowEventArgs& e)
+//----------------------------------------------------------------------------//
+void DragContainer::onMouseButtonUp(MouseButtonEventArgs& e)
+{
+    Window::onMouseButtonUp(e);
+
+    if (e.d_button == MouseButton::Left)
     {
-        // store new value and re-set dragging alpha as required.
+        // Handle dropping
         if (d_dragging)
         {
-            d_storedAlpha = d_alpha;
-            d_alpha = d_dragAlpha;
-        }
+            // Target could change even if we didn't move. Ensure we drop correctly.
+            updateDropTarget();
 
-        Window::onAlphaChanged(e);
-    }
-
-    void DragContainer::onClippingChanged(WindowEventArgs& e)
-    {
-        // store new value and re-set clipping for drag as required.
-        if (d_dragging)
-        {
-            d_storedClipState = d_clippedByParent;
-            d_clippedByParent = false;
-        }
-
-        Window::onClippingChanged(e);
-    }
-
-    void DragContainer::onMoved(ElementEventArgs& e)
-    {
-        Window::onMoved(e);
-        if (d_dropflag)
-        {
-            d_startPosition = getPosition();
-        }
-    }
-
-    void DragContainer::onDragStarted(WindowEventArgs& e)
-    {
-        initialiseDragging();
-
-        fireEvent(EventDragStarted, e, EventNamespace);
-    }
-
-    void DragContainer::onDragEnded(WindowEventArgs& e)
-    {
-        fireEvent(EventDragEnded, e, EventNamespace);
-
-        // did we drop over a window?
-        if (d_dropTarget)
-        {
-            // set flag - we need to detect if the position changed in a DragDropItemDropped
-            d_dropflag = true;
-            // Notify that item was dropped in the target window
-            d_dropTarget->notifyDragDropItemDropped(this);
-            // reset flag
-            d_dropflag = false;
-        }
-    }
-
-    void DragContainer::onDragPositionChanged(WindowEventArgs& e)
-    {
-        fireEvent(EventDragPositionChanged, e, EventNamespace);
-
-        Window* root;
-
-        if (0 != (root = getGUIContext().getRootWindow()))
-        {
-            // this hack with the 'enabled' state is so that getChildAtPosition
-            // returns something useful instead of a pointer back to 'this'.
-            // This hack is only acceptable because I am CrazyEddie!
-            bool wasEnabled = d_enabled;
-            d_enabled = false;
-            // find out which child of root window has the mouse in it
-            Window* eventWindow = root->getTargetChildAtPosition(
-                getGUIContext().getMouseCursor().getPosition());
-            d_enabled = wasEnabled;
-
-            // use root itself if no child was hit
-            if (!eventWindow)
+            if (d_dropTarget)
             {
-                eventWindow = root;
-            }
+                // Keep position changes made in a DragDropItemDropped
+                const UVector2 prevPos = getPosition();
 
-            // if the window with the mouse is different to current drop target
-            if (eventWindow != d_dropTarget)
-            {
-                DragDropEventArgs args(eventWindow);
-                args.dragDropItem = this;
-                onDragDropTargetChanged(args);
+                // Try dropping. Continue sticky dragging if it is not accepted by the target.
+                if (!d_dropTarget->notifyDragDropItemDropped(this) && d_pickedUp)
+                    return;
+
+                endDragging(prevPos == getPosition());
             }
         }
+
+        // Release input capture anyway
+        releaseInput();
+
+        ++e.handled;
     }
+}
 
-    void DragContainer::onDragEnabledChanged(WindowEventArgs& e)
+//----------------------------------------------------------------------------//
+void DragContainer::onClick(MouseButtonEventArgs& e)
+{
+    Window::onClick(e);
+
+    if (e.d_button == MouseButton::Left)
     {
-        fireEvent(EventDragEnabledChanged, e, EventNamespace);
+        ++e.handled;
 
-        // abort current drag operation if dragging gets disabled part way through
-        if (!d_draggingEnabled && d_dragging)
+        // Perform picking up in a sticky mode
+        if (!d_dragging && d_stickyMode && !d_pickedUp)
         {
-            releaseInput();
+            CursorInputEventArgs args(this, e.d_globalPos, e.d_buttons, e.d_modifiers);
+            onDragStarted(args);
+            if (d_dragging)
+                d_pickedUp = true;
         }
     }
+}
 
-    void DragContainer::onDragAlphaChanged(WindowEventArgs& e)
+//----------------------------------------------------------------------------//
+void DragContainer::onCursorMove(CursorMoveEventArgs& e)
+{
+    Window::onCursorMove(e);
+
+    if (d_dragging)
     {
-        fireEvent(EventDragAlphaChanged, e, EventNamespace);
+        doDragging(e);
+    }
+    else if (d_leftPointerHeld && isDraggingThresholdExceeded(e.d_localPos))
+    {
+        CursorInputEventArgs args(this, e.d_globalPos, e.d_buttons, e.d_modifiers);
+        onDragStarted(args);
+    }
+}
 
-        if (d_dragging)
+//----------------------------------------------------------------------------//
+void DragContainer::onCaptureLost(WindowEventArgs& e)
+{
+    Window::onCaptureLost(e);
+    d_dropTarget = nullptr;
+    endDragging(true);
+    ++e.handled;
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::onAlphaChanged(WindowEventArgs& e)
+{
+    // store new value and re-set dragging alpha as required.
+    if (d_dragging)
+    {
+        d_storedAlpha = d_alpha;
+        d_alpha = d_dragAlpha;
+    }
+
+    Window::onAlphaChanged(e);
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::onClippingChanged(WindowEventArgs& e)
+{
+    // store new value and re-set clipping for drag as required.
+    if (d_dragging)
+    {
+        d_storedClipState = d_clippedByParent;
+        d_clippedByParent = false;
+    }
+
+    Window::onClippingChanged(e);
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::onDragStarted(CursorInputEventArgs& e)
+{
+    if (!d_draggingEnabled || d_dragging)
+        return;
+
+    // initialise drag moving state
+    d_storedClipState = d_clippedByParent;
+    setClippedByParent(false);
+    d_storedAlpha = d_alpha;
+    setAlpha(d_dragAlpha);
+    d_startPosition = getPosition();
+
+    d_dragging = true;
+
+    fireEvent(EventDragStarted, e, EventNamespace);
+
+    // Handle possible endDragging() caused by event handlers
+    if (!d_dragging)
+        return;
+
+    // Now drag mode is set, change cursor as required
+    updateActiveCursorImage();
+
+    // Immediately update position relative to the cursor
+    doDragging(e);
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::onDragEnded(WindowEventArgs& e)
+{
+    fireEvent(EventDragEnded, e, EventNamespace);
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::onDragPositionChanged(CursorMoveEventArgs& e)
+{
+    fireEvent(EventDragPositionChanged, e, EventNamespace);
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::updateDropTarget()
+{
+    if (!d_guiContext || !d_guiContext->getRootWindow())
+        return;
+
+    // find out which child of root window has the cursor in it
+    Window* newTarget = d_guiContext->getRootWindow()->getTargetChildAtPosition(
+        d_guiContext->getCursorPosition(), false, this);
+
+    // use root itself if no child was hit
+    if (!newTarget)
+        newTarget = d_guiContext->getRootWindow();
+
+    while (newTarget && !newTarget->isDragDropTarget())
+        newTarget = newTarget->getParent();
+
+    if (newTarget == d_dropTarget)
+        return;
+
+    // Notify old target that drop item has left
+    if (d_dropTarget)
+        d_dropTarget->notifyDragDropItemLeaves(this);
+
+    // update to new target
+    d_dropTarget = newTarget;
+
+    // Notify new target window that someone has dragged a DragContainer over it
+    if (d_dropTarget)
+    {
+        d_targetDestroyConnection = d_dropTarget->subscribeEvent(EventDestructionStarted, [this]()
         {
-            d_alpha = d_storedAlpha;
-            onAlphaChanged(e);
-        }
-    }
+            d_targetDestroyConnection.disconnect();
+            d_dropTarget = nullptr;
+            updateDropTarget();
+        });
 
-    void DragContainer::onDragMouseCursorChanged(WindowEventArgs& e)
+        d_dropTarget->notifyDragDropItemEnters(this);
+    }
+    else
     {
-        fireEvent(EventDragMouseCursorChanged, e, EventNamespace);
-
-        updateActiveMouseCursor();
+        d_targetDestroyConnection.disconnect();
     }
 
-    void DragContainer::onDragThresholdChanged(WindowEventArgs& e)
+    DragDropEventArgs args(d_dropTarget, this);
+    onDragDropTargetChanged(args);
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::onDragEnabledChanged(WindowEventArgs& e)
+{
+    fireEvent(EventDragEnabledChanged, e, EventNamespace);
+
+    // abort current drag operation if dragging gets disabled part way through
+    if (!d_draggingEnabled)
+        cancelDragging();
+}
+
+//----------------------------------------------------------------------------//
+void DragContainer::onDragAlphaChanged(WindowEventArgs& e)
+{
+    fireEvent(EventDragAlphaChanged, e, EventNamespace);
+
+    if (d_dragging)
     {
-        fireEvent(EventDragThresholdChanged, e, EventNamespace);
+        d_alpha = d_storedAlpha;
+        onAlphaChanged(e);
     }
+}
 
-    void DragContainer::onDragDropTargetChanged(DragDropEventArgs& e)
-    {
-        fireEvent(EventDragDropTargetChanged, e, EventNamespace);
+//----------------------------------------------------------------------------//
+void DragContainer::onDragCursorChanged(WindowEventArgs& e)
+{
+    fireEvent(EventDragCursorChanged, e, EventNamespace);
 
-        // Notify old target that drop item has left
-        if (d_dropTarget)
-        {
-            d_dropTarget->notifyDragDropItemLeaves(this);
-        }
+    updateActiveCursorImage();
+}
 
-        // update to new target
-        d_dropTarget = e.window;
+//----------------------------------------------------------------------------//
+void DragContainer::onDragThresholdChanged(WindowEventArgs& e)
+{
+    fireEvent(EventDragThresholdChanged, e, EventNamespace);
+}
 
-        while ((d_dropTarget != 0) && !d_dropTarget->isDragDropTarget())
-            d_dropTarget = d_dropTarget->getParent();
-
-        // Notify new target window that someone has dragged a DragContainer over it
-        if (d_dropTarget)
-            d_dropTarget->notifyDragDropItemEnters(this);
-    }
+//----------------------------------------------------------------------------//
+void DragContainer::onDragDropTargetChanged(DragDropEventArgs& e)
+{
+    fireEvent(EventDragDropTargetChanged, e, EventNamespace);
+}
 
 //----------------------------------------------------------------------------//
 void DragContainer::getRenderingContext_impl(RenderingContext& ctx) const
 {
     // if not dragging, do the default thing.
     if (!d_dragging)
-        return (void)Window::getRenderingContext_impl(ctx);
+    {
+        Window::getRenderingContext_impl(ctx);
+        return;
+    }
 
     // otherwise, switch rendering onto root rendering surface
     const Window* root = getRootWindow();
-    ctx.surface = &root->getTargetRenderingSurface();
+    ctx.surface = root->getTargetRenderingSurface();
     // ensure root window is only used as owner if it really is.
-    ctx.owner = root->getRenderingSurface() == ctx.surface ? root : 0;
+    ctx.owner = root->getRenderingSurface() == ctx.surface ? root : nullptr;
     // ensure use of correct offset for the surface we're targetting
-    ctx.offset = ctx.owner ? ctx.owner->getOuterRectClipper().getPosition() :
-                             Vector2f(0, 0);
+    ctx.offset = ctx.owner ? ctx.owner->getOuterRectClipper().getPosition() : glm::vec2(0.f, 0.f);
     // draw to overlay queue
-    ctx.queue = RQ_OVERLAY;
+    ctx.queue = RenderQueueID::Overlay;
 }
 
 //----------------------------------------------------------------------------//
-bool DragContainer::isStickyModeEnabled() const
+bool DragContainer::pickUp(bool force_sticky /*= false*/)
 {
-    return d_stickyMode;
-}
-
-//----------------------------------------------------------------------------//
-void DragContainer::setStickyModeEnabled(bool setting)
-{
-    d_stickyMode = setting;
-}
-
-//----------------------------------------------------------------------------//
-bool DragContainer::pickUp(const bool force_sticky /*= false*/)
-{
-    // check if we're already picked up or if dragging is disabled.
-    if (d_pickedUp || !d_draggingEnabled)
+    if (d_pickedUp)
         return true;
 
+    if (!d_draggingEnabled || !d_guiContext)
+        return false;
+
     // see if we need to force sticky mode switch
-    if (!d_stickyMode && force_sticky)
-        setStickyModeEnabled(true);
-
     // can only pick up if sticky
-    if (d_stickyMode)
+    if (!d_stickyMode)
     {
-        // force immediate release of any current input capture (unless it's us)
-        if (getCaptureWindow() && getCaptureWindow() != this)
-            getCaptureWindow()->releaseInput();
-        // activate ourselves and try to capture input
-        activate();
-        if (captureInput())
-        {
-            // set the dragging point to the centre of the container.
-            d_dragPoint.d_x = cegui_absdim(d_pixelSize.d_width / 2);
-            d_dragPoint.d_y = cegui_absdim(d_pixelSize.d_height / 2);
+        if (force_sticky)
+            d_stickyMode = true;
+        else
+            return false;
+    }
 
-            // initialise the dragging state
-            initialiseDragging();
+    activate();
 
-            // get position of mouse as co-ordinates local to this window.
-            const Vector2f localMousePos(CoordConverter::screenToWindow(*this,
-                getGUIContext().getMouseCursor().getPosition()));
-            doDragging(localMousePos);
+    if (captureInput())
+    {
+        // set the dragging point to the centre of the container.
+        d_dragPoint.d_x = cegui_absdim(d_pixelSize.d_width / 2.f);
+        d_dragPoint.d_y = cegui_absdim(d_pixelSize.d_height / 2.f);
 
+        // initialise the dragging state
+        CursorInputEventArgs args(this, d_guiContext->getCursorPosition(), d_guiContext->getMouseButtons(), d_guiContext->getModifierKeys());
+        onDragStarted(args);
+        if (d_dragging)
             d_pickedUp = true;
-        }
     }
 
     return d_pickedUp;
 }
 
-//----------------------------------------------------------------------------//
-void DragContainer::setFixedDragOffset(const UVector2& offset)
-{
-    d_fixedDragOffset = offset;
 }
-
-//----------------------------------------------------------------------------//
-const UVector2& DragContainer::getFixedDragOffset() const
-{
-    return d_fixedDragOffset;
-}
-
-//----------------------------------------------------------------------------//
-void DragContainer::setUsingFixedDragOffset(const bool enable)
-{
-    d_usingFixedDragOffset = enable;
-}
-
-//----------------------------------------------------------------------------//
-bool DragContainer::isUsingFixedDragOffset() const
-{
-    return d_usingFixedDragOffset;
-}
-
-//----------------------------------------------------------------------------//
-
-} // End of  CEGUI namespace section

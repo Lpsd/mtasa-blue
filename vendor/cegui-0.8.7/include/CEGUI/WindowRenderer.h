@@ -29,26 +29,21 @@
 #ifndef _CEGUIWindowRenderer_h_
 #define _CEGUIWindowRenderer_h_
 
-#include "CEGUI/Window.h"
-#include "CEGUI/Property.h"
+#include "CEGUI/String.h"
+#include "CEGUI/Colour.h"
 #include <vector>
-#include <utility>
 
 #if defined(_MSC_VER)
 #   pragma warning(push)
 #   pragma warning(disable : 4251)
 #endif
 
-
-// Start of CEGUI namespace section
 namespace CEGUI
 {
-/*!
-\brief
-    Base-class for the assignable WindowRenderer object
-*/
-class CEGUIEXPORT WindowRenderer :
-    public AllocatedObject<WindowRenderer>
+class TextParser;
+
+//! \brief Base class for the assignable WindowRenderer object
+class CEGUIEXPORT WindowRenderer
 {
 public:
     /*************************************************************************
@@ -78,13 +73,13 @@ public:
     **************************************************************************/
     /*!
     \brief
-        Populate render cache.
+        Creates the render geometry.
 
         This method must be implemented by all window renderers and should
         perform the rendering operations needed for this widget.
         Normally using the Falagard API...
     */
-    virtual void render() = 0;
+    virtual void createRenderGeometry() = 0;
 
     /*!
     \brief
@@ -112,6 +107,20 @@ public:
 
     /*!
     \brief
+        Set the given ColourRect to the colour(s) fetched from the named
+        property if it exists, else the default colour of black.
+
+    \param propertyName
+        String object holding the name of the property to be accessed if it
+        exists.
+
+    \param colour_rect
+        Reference to a ColourRect that will be set.
+    */
+    ColourRect getOptionalColour(const String& propertyName, const Colour& defaultColour = 0x00000000) const;
+
+    /*!
+    \brief
         Get unclipped inner rectangle that our window should return from its
         member function with the same name.
     */
@@ -121,8 +130,11 @@ public:
     \brief
         Method called to perform extended laying out of the window's attached
         child windows.
+
+    \return
+        True if something changed after this call
     */
-    virtual void performChildWindowLayout() {}
+    virtual bool performChildWindowLayout() { return false; }
 
     /*!
     \brief
@@ -139,7 +151,7 @@ public:
         Perform any updates needed because the given font's render size has
         changed.
 
-    /note
+    \note
         This base implementation deals with updates needed for various
         definitions in the assigned widget look.  If you override, you should
         generally always call this base class implementation.
@@ -152,6 +164,85 @@ public:
         - false if no action was taken (i.e font is not used here).
     */
     virtual bool handleFontRenderSizeChange(const Font* const font);
+
+    //! Override this to provide an ability to assign custom rendered string parser to the window
+    virtual TextParser* getTextParser() const { return nullptr; }
+
+    //! Override this to provide an ability to control visual text parsing
+    virtual bool isTextParsingEnabled() const { return true; }
+
+    /*!
+    \brief
+        Get width and height of the content of the window.
+
+        See the documentaion for "Window::getContentSize" for more details.
+
+    \see Window::getContentSize
+    */
+    virtual Sizef getContentSize() const;
+
+    /*!
+    \brief
+        Get a lower bound for the width of the area of the window which is
+        reserved for content as an affine function of the window width.
+
+        See the documentaion for
+        "Window::getWidthOfAreaReservedForContentLowerBoundAsFuncOfWindowWidth"
+        for more details.
+    
+    \see Window::getWidthOfAreaReservedForContentLowerBoundAsFuncOfWindowWidth
+    */
+    virtual UDim getWidthOfAreaReservedForContentLowerBoundAsFuncOfWindowWidth() const;
+
+    /*!
+    \brief
+        Get a lower bound for the height of the area of the window which is
+        reserved for content as an affine function of the window height.
+
+        See the documentaion for
+        "Window::getHeightOfAreaReservedForContentLowerBoundAsFuncOfWindowHeight"
+        for more details.
+    
+    \see Window::getHeightOfAreaReservedForContentLowerBoundAsFuncOfWindowHeight
+    */
+    virtual UDim getHeightOfAreaReservedForContentLowerBoundAsFuncOfWindowHeight() const;
+
+    /*!
+    \brief
+        Set the size of the window to the minimal value in which the whole
+        window content is visible without the need for scrollbars (if possible),
+        and while the content remains "intact" (if possible).
+
+        See the documentaion for "Window::adjustSizeToContent" for more details.
+
+    \see Window::adjustSizeToContent
+    */
+    virtual void adjustSizeToContent();
+
+    /*!
+    \brief
+        Return whether setting the window size to "window_size" would make the
+        whole window content visible without the need for scrollbars (if
+        possible), and while the content remains "intact" (if possible).
+
+        See the documentaion for "Window::contentFitsForSpecifiedElementSize"
+        for more details.
+
+    \see Window::contentFitsForSpecifiedElementSize
+    */
+    virtual bool contentFitsForSpecifiedWindowSize(const Sizef& window_size) const;
+
+    /*!
+    \brief
+        Return whether the whole window content is visible without the need for
+        scrollbars (if possible), and while the content remains "intact" (if
+        possible).
+
+        See the documentaion for "Window::contentFits" for more details.
+
+    \see Window::contentFits
+    */
+    virtual bool contentFits() const;
 
 protected:
     /*************************************************************************
@@ -215,12 +306,7 @@ protected:
     const String d_name;    //!< Name of the factory type used to create this window renderer.
     const String d_class;   //!< Name of the widget class that is the "minimum" requirement.
 
-    //! type used for entries in the PropertyList.
-    typedef std::pair<Property*, bool> PropertyEntry;
-    //! type to use for the property list.
-    typedef std::vector<PropertyEntry
-        CEGUI_VECTOR_ALLOC(PropertyEntry)> PropertyList;
-    PropertyList d_properties;  //!< The list of properties that this windowrenderer will be handling.
+    std::vector<std::pair<Property*, bool>> d_properties; //!< The list of properties that this windowrenderer will be handling.
 
     // Window is friend so it can manipulate our 'd_window' member directly.
     // We don't want users fiddling with this so no public interface.

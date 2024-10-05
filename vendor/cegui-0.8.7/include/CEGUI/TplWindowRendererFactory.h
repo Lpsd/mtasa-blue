@@ -29,7 +29,6 @@
 
 #include "CEGUI/WindowRenderer.h"
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 /*!
@@ -52,37 +51,13 @@ template <typename T>
 class TplWindowRendererFactory : public WindowRendererFactory
 {
 public:
-    //! Default constructor.
-    TplWindowRendererFactory();
 
-    // Implement WindowRendererFactory interface
-    WindowRenderer* create();
-    void destroy(WindowRenderer* wr);
+    TplWindowRendererFactory() : WindowRendererFactory(T::TypeName) {}
+
+    WindowRenderer* create() override { return new T(T::TypeName); }
+    void destroy(WindowRenderer* wr) override { delete wr; }
 };
 
-//----------------------------------------------------------------------------//
-template <typename T>
-TplWindowRendererFactory<T>::TplWindowRendererFactory() :
-    WindowRendererFactory(T::TypeName)
-{
 }
 
-//----------------------------------------------------------------------------//
-template <typename T>
-WindowRenderer* TplWindowRendererFactory<T>::create()
-{
-    return CEGUI_NEW_AO T(T::TypeName);
-}
-
-//----------------------------------------------------------------------------//
-template <typename T>
-void TplWindowRendererFactory<T>::destroy(WindowRenderer* wr)
-{
-    CEGUI_DELETE_AO wr;
-}
-
-//----------------------------------------------------------------------------//
-
-} // End of  CEGUI namespace section
-
-#endif  // end of guard _CEGUITplWindowRendererFactory_h_
+#endif

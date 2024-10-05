@@ -25,7 +25,6 @@
  *   OTHER DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
 #include "CEGUI/falagard/SectionSpecification.h"
-#include "CEGUI/falagard/ImagerySection.h"
 #include "CEGUI/falagard/WidgetLookFeel.h"
 #include "CEGUI/falagard/WidgetLookManager.h"
 #include "CEGUI/falagard/XMLHandler.h"
@@ -37,9 +36,6 @@
 // Start of CEGUI namespace section
 namespace CEGUI
 {
-    // This is deprecated and declared as an extern in PropertyLinkDefinition.h
-    const String S_parentIdentifier("__parent__");
-
     SectionSpecification::SectionSpecification() :
         d_usingColourOverride(false)
     {}
@@ -74,14 +70,13 @@ namespace CEGUI
 
     void SectionSpecification::render(Window& srcWindow,
                                       const ColourRect* modcols,
-                                      const Rectf* clipper,
-                                      bool clipToDisplay) const
+                                      const Rectf* clipper) const
     {
         // see if we need to bother rendering
         if (!shouldBeDrawn(srcWindow))
             return;
 
-        CEGUI_TRY
+        try
         {
             // get the imagery section object with the name we're set up to use
             const ImagerySection* sect =
@@ -90,29 +85,27 @@ namespace CEGUI
             // decide what colours are to be used
             ColourRect finalColours;
             initColourRectForOverride(srcWindow, finalColours);
-            finalColours.modulateAlpha(srcWindow.getEffectiveAlpha());
 
             if (modcols)
                 finalColours *= *modcols;
 
             // render the imagery section
-            sect->render(srcWindow, &finalColours, clipper, clipToDisplay);
+            sect->render(srcWindow, &finalColours, clipper);
         }
         // do nothing here, errors are non-faltal and are logged for debugging purposes.
-        CEGUI_CATCH (Exception&)
+        catch (Exception&)
         {}
     }
 
     void SectionSpecification::render(Window& srcWindow, const Rectf& baseRect,
                                       const ColourRect* modcols,
-                                      const Rectf* clipper,
-                                      bool clipToDisplay) const
+                                      const Rectf* clipper) const
     {
         // see if we need to bother rendering
         if (!shouldBeDrawn(srcWindow))
             return;
 
-        CEGUI_TRY
+        try
         {
             // get the imagery section object with the name we're set up to use
             const ImagerySection* sect =
@@ -121,16 +114,15 @@ namespace CEGUI
             // decide what colours are to be used
             ColourRect finalColours;
             initColourRectForOverride(srcWindow, finalColours);
-            finalColours.modulateAlpha(srcWindow.getEffectiveAlpha());
 
             if (modcols)
                 finalColours *= *modcols;
 
             // render the imagery section
-            sect->render(srcWindow, baseRect, &finalColours, clipper, clipToDisplay);
+            sect->render(srcWindow, baseRect, &finalColours, clipper);
         }
         // do nothing here, errors are non-faltal and are logged for debugging purposes.
-        CEGUI_CATCH (Exception&)
+        catch (Exception&)
         {}
     }
 

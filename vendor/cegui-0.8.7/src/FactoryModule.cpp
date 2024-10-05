@@ -27,64 +27,57 @@
 #include "CEGUI/FactoryModule.h"
 #include "CEGUI/FactoryRegisterer.h"
 #include "CEGUI/Exceptions.h"
-#include <stdio.h>
-// Start of CEGUI namespace section
+
 namespace CEGUI
 {
 //----------------------------------------------------------------------------//
-FactoryModule::~FactoryModule()
-{}
+FactoryModule::~FactoryModule() = default;
 
 //----------------------------------------------------------------------------//
 void FactoryModule::registerFactory(const String& type_name)
 {
-    FactoryRegistry::iterator i = d_registry.begin();
-    for ( ; i != d_registry.end(); ++i)
+    for (auto registerer : d_registry)
     {
-        if ((*i)->d_type == type_name)
+        if (registerer->d_type == type_name)
         {
-            (*i)->registerFactory();
+            registerer->registerFactory();
             return;
         }
     }
 
-    CEGUI_THROW(UnknownObjectException("No factory for type '" +
-        type_name + "' in this module."));
+    throw UnknownObjectException("No factory for type '" +
+        type_name + "' in this module.");
 }
 
 //----------------------------------------------------------------------------//
-uint FactoryModule::registerAllFactories()
+unsigned int FactoryModule::registerAllFactories()
 {
-    FactoryRegistry::iterator i = d_registry.begin();
-    for ( ; i != d_registry.end(); ++i)
-        (*i)->registerFactory();
+    for (auto registerer : d_registry)
+        registerer->registerFactory();
 
-    return static_cast<uint>(d_registry.size());
+    return static_cast<unsigned int>(d_registry.size());
 }
 
 //----------------------------------------------------------------------------//
 void FactoryModule::unregisterFactory(const String& type_name)
 {
-    FactoryRegistry::iterator i = d_registry.begin();
-    for ( ; i != d_registry.end(); ++i)
+    for (auto registerer : d_registry)
     {
-        if ((*i)->d_type == type_name)
+        if (registerer->d_type == type_name)
         {
-            (*i)->unregisterFactory();
+            registerer->unregisterFactory();
             return;
         }
     }
-
 }
 
 //----------------------------------------------------------------------------//
-uint FactoryModule::unregisterAllFactories()
+unsigned int FactoryModule::unregisterAllFactories()
 {
-    FactoryRegistry::iterator i = d_registry.begin();
-    for ( ; i != d_registry.end(); ++i)
-        (*i)->unregisterFactory();
+    for (auto registerer : d_registry)
+        registerer->unregisterFactory();
 
-    return static_cast<uint>(d_registry.size());
+    return static_cast<unsigned int>(d_registry.size());
 }
 
 //----------------------------------------------------------------------------//
@@ -99,7 +92,4 @@ extern "C"
 }
 #endif
 
-//----------------------------------------------------------------------------//
-
-} // End of  CEGUI namespace section
-
+}

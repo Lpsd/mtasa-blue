@@ -27,11 +27,12 @@
  *   OTHER DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
 #include "CEGUI/MinizipResourceProvider.h"
+#include "CEGUI/DataContainer.h"
 #include "CEGUI/Logger.h"
 #include "CEGUI/Exceptions.h"
 
 // exclude code on apple unless feature macro is defined.
-#if !defined(__APPLE__) || defined(CEGUI_HAS_MINIZIP_RESOURCE_PROVIDER)
+#if !defined(__APPLE__) || defined(CEGUI_BUILD_RESOURCE_PROVIDER_MINIZIP)
 
 #include "minizip/unzip.h"
 
@@ -63,6 +64,7 @@ struct MinizipResourceProvider::Impl
 
     unzFile d_zfile;
     String  d_archive;
+    String  d_password;
     bool    d_loadLocal;
 };
 
@@ -70,7 +72,11 @@ struct MinizipResourceProvider::Impl
 // Helper function that matches names against the pattern.
 bool nameMatchesPattern(const String& name, const String& pattern)
 {
+#if (CEGUI_STRING_CLASS == CEGUI_STRING_CLASS_UTF_8) || (CEGUI_STRING_CLASS == CEGUI_STRING_CLASS_ASCII)
     return !FNMATCH(pattern.c_str(), name.c_str());
+#elif CEGUI_STRING_CLASS == CEGUI_STRING_CLASS_UTF_32
+    return !FNMATCH(String::convertUtf32ToUtf8(pattern.getString()).c_str(), String::convertUtf32ToUtf8(name.getString()).c_str());
+#endif
 }
 
 //----------------------------------------------------------------------------//
@@ -107,9 +113,20 @@ void MinizipResourceProvider::setArchive(const String& archive)
 }
 
 //----------------------------------------------------------------------------//
+void MinizipResourceProvider::setPassword(const String& password)
+{
+    d_pimpl->d_password = password;
+}
+
+//----------------------------------------------------------------------------//
 bool MinizipResourceProvider::doesFileExist(const String& filename)
 {
+#if (CEGUI_STRING_CLASS == CEGUI_STRING_CLASS_UTF_8) || (CEGUI_STRING_CLASS == CEGUI_STRING_CLASS_ASCII)
     std::ifstream dataFile(filename.c_str(), std::ios::binary | std::ios::ate);
+#elif CEGUI_STRING_CLASS == CEGUI_STRING_CLASS_UTF_32
+    std::ifstream dataFile(String::convertUtf32ToUtf8(filename.getString()).c_str(),
+                           std::ios::binary | std::ios::ate);
+#endif
 
     if (dataFile)
         return true;
@@ -120,12 +137,16 @@ bool MinizipResourceProvider::doesFileExist(const String& filename)
 //----------------------------------------------------------------------------//
 void MinizipResourceProvider::openArchive()
 {
+#if (CEGUI_STRING_CLASS == CEGUI_STRING_CLASS_UTF_8) || (CEGUI_STRING_CLASS == CEGUI_STRING_CLASS_ASCII)
     d_pimpl->d_zfile = unzOpen(d_pimpl->d_archive.c_str());
+#elif CEGUI_STRING_CLASS == CEGUI_STRING_CLASS_UTF_32
+    d_pimpl->d_zfile = unzOpen(String::convertUtf32ToUtf8(d_pimpl->d_archive.getString()).c_str());
+#endif
 
     if (d_pimpl->d_zfile == 0)
     {
-        CEGUI_THROW(InvalidRequestException(
-            "'" + d_pimpl->d_archive + "' does not exist"));
+        throw InvalidRequestException(
+            "'" + d_pimpl->d_archive + "' does not exist");
     }
 }
 
@@ -139,7 +160,7 @@ void MinizipResourceProvider::closeArchive()
         {
             CEGUI::Logger::getSingleton().logEvent(
                 "MinizipResourceProvider::closeArchive: '" +
-                d_pimpl->d_archive + "' error upon closing", Errors);
+                d_pimpl->d_archive + "' error upon closing", LoggingLevel::Error);
         }
     }
 
@@ -163,15 +184,19 @@ void MinizipResourceProvider::loadRawDataContainer(const String& filename,
 
     if (d_pimpl->d_zfile == 0)
     {
-        CEGUI_THROW(InvalidRequestException(
+        throw InvalidRequestException(
             "'" + final_filename + "' cannot be "
-            "loaded because the archive has not been set"));
+            "loaded because the archive has not been set");
     }
 
+#if (CEGUI_STRING_CLASS == CEGUI_STRING_CLASS_UTF_8) || (CEGUI_STRING_CLASS == CEGUI_STRING_CLASS_ASCII)
     if (unzLocateFile(d_pimpl->d_zfile, final_filename.c_str(), 0) != UNZ_OK)
+#elif CEGUI_STRING_CLASS == CEGUI_STRING_CLASS_UTF_32
+    if (unzLocateFile(d_pimpl->d_zfile, String::convertUtf32ToUtf8(final_filename.getString()).c_str(), 0) != UNZ_OK)
+#endif
     {
-        CEGUI_THROW(InvalidRequestException("'" + final_filename +
-            "' does not exist"));
+        throw InvalidRequestException("'" + final_filename +
+            "' does not exist");
     }
 
     unz_file_info file_info;
@@ -179,29 +204,29 @@ void MinizipResourceProvider::loadRawDataContainer(const String& filename,
     if (unzGetCurrentFileInfo(d_pimpl->d_zfile, &file_info,
                               0, 0, 0, 0, 0, 0) != UNZ_OK)
     {
-        CEGUI_THROW(FileIOException("'" + final_filename +
-            "' error reading file header"));
+        throw FileIOException("'" + final_filename +
+            "' error reading file header");
     }
 
-    if (unzOpenCurrentFile(d_pimpl->d_zfile) != Z_OK)
+    if (unzOpenCurrentFilePassword(d_pimpl->d_zfile, (const char*) d_pimpl->d_password.c_str()) != UNZ_OK)
     {
-        CEGUI_THROW(FileIOException("'" + final_filename +
-            "' error opening file"));
+        throw FileIOException("'" + final_filename +
+            "' error opening file");
     }
 
-    ulong size = file_info.uncompressed_size;
-    uint8* buffer = CEGUI_NEW_ARRAY_PT(uint8, size, RawDataContainer);
+    const auto size = file_info.uncompressed_size;
+    std::uint8_t* buffer = new std::uint8_t[size];
 
     if (unzReadCurrentFile(d_pimpl->d_zfile, buffer, size) < 0)
     {
-        CEGUI_THROW(FileIOException("'" + final_filename +
-            "' error reading file"));
+        throw FileIOException("'" + final_filename +
+            "' error reading file");
     }
 
     if (unzCloseCurrentFile(d_pimpl->d_zfile) != UNZ_OK)
     {
-        CEGUI_THROW(GenericException("'" + final_filename +
-            "' error validating file"));
+        throw GenericException("'" + final_filename +
+            "' error validating file");
     }
 
     output.setData(buffer);
@@ -235,12 +260,12 @@ size_t MinizipResourceProvider::getResourceGroupFileNames(
 
     char current_name[1024];
     unz_file_info file_info;
-    
+
     if (unzGoToFirstFile(d_pimpl->d_zfile) != UNZ_OK)
     {
         Logger::getSingleton().logEvent(
             "MinizipResourceProvider::getResourceGroupFileNames: "
-            "unzGoToFirstFile failed, skipping zip file scan.", Errors);
+            "unzGoToFirstFile failed, skipping zip file scan.", LoggingLevel::Error);
 
         return entries;
     }
@@ -252,7 +277,7 @@ size_t MinizipResourceProvider::getResourceGroupFileNames(
         {
             Logger::getSingleton().logEvent(
                 "MinizipResourceProvider::getResourceGroupFileNames: "
-                "unzGetCurrentFileInfo failed, terminating scan.", Errors);
+                "unzGetCurrentFileInfo failed, terminating scan.", LoggingLevel::Error);
 
             return entries;
         }

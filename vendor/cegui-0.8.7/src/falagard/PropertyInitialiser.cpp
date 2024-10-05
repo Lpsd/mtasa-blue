@@ -27,6 +27,7 @@
 #include "CEGUI/falagard/PropertyInitialiser.h"
 #include "CEGUI/falagard/XMLHandler.h"
 #include "CEGUI/Exceptions.h"
+#include "CEGUI/XMLSerializer.h"
 #include <iostream>
 
 // Start of CEGUI namespace section
@@ -39,12 +40,12 @@ namespace CEGUI
 
     void PropertyInitialiser::apply(CEGUI::PropertySet& target) const
     {
-        CEGUI_TRY
+        try
         {
             target.setProperty(d_propertyName, d_propertyValue);
         }
         // allow 'missing' properties
-        CEGUI_CATCH (UnknownObjectException&)
+        catch (UnknownObjectException&)
         {}
     }
 

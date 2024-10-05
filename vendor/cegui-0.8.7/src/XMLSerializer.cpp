@@ -26,7 +26,7 @@
  ***************************************************************************/
 #include "CEGUI/XMLSerializer.h"
 #include <iostream>
-// Start of CEGUI namespace section 
+
 namespace CEGUI 
 {
 XMLSerializer::XMLSerializer(OutStream& out, size_t indentSpace)
@@ -36,7 +36,6 @@ XMLSerializer::XMLSerializer(OutStream& out, size_t indentSpace)
     d_stream << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
     d_error = ! d_stream;
 }
-
 
 XMLSerializer::~XMLSerializer(void)
 {
@@ -62,7 +61,7 @@ XMLSerializer& XMLSerializer::openTag(const String& name)
             d_stream << std::endl;
             indentLine();
         }
-        d_stream << '<' << name.c_str() << ' ';
+        d_stream << '<' << name << ' ';
         d_tagStack.push_back(name);
         ++d_depth;
         d_needClose = true;
@@ -86,11 +85,11 @@ XMLSerializer& XMLSerializer::closeTag(void)
         {
             d_stream << std::endl;
             indentLine();
-            d_stream << "</" << back.c_str() << '>';
+            d_stream << "</" << back << '>';
         }
         else
         {
-            d_stream << "</" << back.c_str() << '>';
+            d_stream << "</" << back << '>';
         }
         d_lastIsText = false;
         d_needClose = false;
@@ -109,8 +108,8 @@ XMLSerializer& XMLSerializer::attribute(const String& name, const String& value)
     }
     if (!d_error)
     {
-        d_stream << name.c_str() << "=\""
-            << convertEntityInAttribute(value).c_str()
+        d_stream << name << "=\""
+            << convertEntityInAttribute(value)
             << "\" ";
         d_lastIsText = false;
         d_error = ! d_stream;
@@ -128,7 +127,7 @@ XMLSerializer& XMLSerializer::text(const String& text)
             d_stream << '>';
             d_needClose = false;
         }
-        d_stream << convertEntityInText(text).c_str();
+        d_stream << convertEntityInText(text);
         d_lastIsText = true;
         d_error = ! d_stream;
     }

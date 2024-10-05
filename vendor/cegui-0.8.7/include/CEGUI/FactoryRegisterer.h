@@ -29,7 +29,6 @@
 
 #include "CEGUI/String.h"
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 
@@ -38,12 +37,11 @@ namespace CEGUI
     Base class encapsulating a type name and common parts of factory
     registration.
 */
-class CEGUIEXPORT FactoryRegisterer :
-    public AllocatedObject<FactoryRegisterer>
+class CEGUIEXPORT FactoryRegisterer
 {
 public:
-    //! Destructor.
-    virtual ~FactoryRegisterer();
+
+    virtual ~FactoryRegisterer() = default;
 
     /*!
     \brief
@@ -63,8 +61,8 @@ public:
     const String d_type;
 
 protected:
-    //! Constructor.
-    FactoryRegisterer(const String& type);
+
+    FactoryRegisterer(const String& type) : d_type(type) {}
 
     //! Function to do the actual addition of a factory to the CEGUI system.
     virtual void doFactoryAdd() const = 0;
@@ -73,7 +71,6 @@ protected:
     virtual bool isAlreadyRegistered() const = 0;
 };
 
-} // End of  CEGUI namespace section
+}
 
-#endif  // end of guard _CEGUIFactoryRegisterer_h_
-
+#endif

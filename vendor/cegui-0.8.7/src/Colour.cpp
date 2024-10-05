@@ -27,9 +27,8 @@
  *   OTHER DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
 #include "CEGUI/Colour.h"
+#include <iostream>
 
-
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 /*************************************************************************
@@ -56,8 +55,9 @@ Colour::Colour(float red, float green, float blue, float alpha) :
 	d_alpha(alpha),
 	d_red(red),
 	d_green(green),
-	d_blue(blue),
-	d_argbValid(false)
+	d_blue(blue), 
+    d_argb(0x00000000),
+    d_argbValid(false)
 {
 }
 
@@ -74,8 +74,8 @@ float Colour::getHue(void) const
 	float pGreen = d_green;
 	float pBlue = d_blue;
 
-	float pMax = ceguimax(ceguimax(d_red, d_green), d_blue);
-	float pMin = ceguimin(ceguimin(d_red, d_green), d_blue);
+	float pMax = std::max(std::max(d_red, d_green), d_blue);
+	float pMin = std::min(std::min(d_red, d_green), d_blue);
 
 	float pHue;
 
@@ -109,8 +109,8 @@ float Colour::getHue(void) const
 
 float Colour::getSaturation(void) const
 {
-	float pMax = ceguimax(ceguimax(d_red, d_green), d_blue);
-	float pMin = ceguimin(ceguimin(d_red, d_green), d_blue);
+	float pMax = std::max(std::max(d_red, d_green), d_blue);
+	float pMin = std::min(std::min(d_red, d_green), d_blue);
 
 	float pLum = (pMax + pMin) / 2;
 	float pSat;
@@ -133,8 +133,8 @@ float Colour::getSaturation(void) const
 
 float Colour::getLumination(void) const
 {
-	float pMax = ceguimax(ceguimax(d_red, d_green), d_blue);
-	float pMin = ceguimin(ceguimin(d_red, d_green), d_blue);
+	float pMax = std::max(std::max(d_red, d_green), d_blue);
+	float pMin = std::min(std::min(d_red, d_green), d_blue);
 
 	float pLum = (pMax + pMin) / 2;
 	return pLum;
@@ -230,7 +230,6 @@ void Colour::setHSL(float hue, float saturation, float luminance, float alpha)
 	d_argbValid = false;
 }
 
-
 argb_t Colour::calculateARGB(void) const
 {
     return (
@@ -256,6 +255,36 @@ void Colour::invertColourWithAlpha(void)
 	d_red	= 1.0f - d_red;
 	d_green	= 1.0f - d_green;
 	d_blue	= 1.0f - d_blue;
+}
+
+/*!
+\brief Writes a Colour to a stream
+*/
+std::ostream& operator << (std::ostream& s, const Colour& val)
+{
+    s.fill('0');
+    s.width(8);
+    s << std::hex;
+    s << val.getARGB();
+
+    // Reset sticky manipulators
+    s << std::dec;
+    // Reset to default fill character
+    s.fill(s.widen(' '));
+
+    return s;
+}
+
+/*!
+\brief Extracts a Colour from a stream
+*/
+std::istream& operator >> (std::istream& inStream, Colour& val)
+{
+    argb_t value = 0xFF000000;
+    inStream >> std::hex >> value;
+    val.setARGB(value);
+    inStream >> std::dec;
+    return inStream;
 }
 
 } // End of  CEGUI namespace section

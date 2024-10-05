@@ -44,16 +44,13 @@ namespace CEGUI
     \brief
         Class that encapsulates a re-usable collection of imagery specifications.
     */
-    class CEGUIEXPORT ImagerySection :
-        public AllocatedObject<ImagerySection>
+    class CEGUIEXPORT ImagerySection
     {
     public:
         //! Vector of ImageryComponent Pointers
-        typedef std::vector<ImageryComponent* CEGUI_VECTOR_ALLOC(ImageryComponent*)> ImageryComponentPointerList;
-        //! Vector of TextComponent Pointers
-        typedef std::vector<TextComponent* CEGUI_VECTOR_ALLOC(TextComponent*)> TextComponentPointerList;
+        typedef std::vector<ImageryComponent*> ImageryComponentPointerList;
         //! Vector of FrameComponent Pointers
-        typedef std::vector<FrameComponent* CEGUI_VECTOR_ALLOC(FrameComponent*)> FrameComponentPointerList;
+        typedef std::vector<FrameComponent*> FrameComponentPointerList;
 
 
         /*!
@@ -72,6 +69,12 @@ namespace CEGUI
         */
         ImagerySection(const String& name);
 
+        ImagerySection(const ImagerySection& obj) = delete;
+        ImagerySection(ImagerySection&& obj) noexcept = default;
+        ImagerySection& operator =(const ImagerySection& other) = delete;
+        ImagerySection& operator =(ImagerySection&& other) noexcept = default;
+        ~ImagerySection() = default;
+
         /*!
         \brief
             Render the ImagerySection.
@@ -85,7 +88,7 @@ namespace CEGUI
         \return
             Nothing.
         */
-        void render(Window& srcWindow, const CEGUI::ColourRect* modColours = 0, const Rectf* clipper = 0, bool clipToDisplay = false) const;
+        void render(Window& srcWindow, const CEGUI::ColourRect* modColours = nullptr, const Rectf* clipper = nullptr) const;
 
         /*!
         \brief
@@ -103,7 +106,7 @@ namespace CEGUI
         \return
             Nothing.
         */
-        void render(Window& srcWindow, const Rectf& baseRect, const CEGUI::ColourRect* modColours = 0, const Rectf* clipper = 0, bool clipToDisplay = false) const;
+        void render(Window& srcWindow, const Rectf& baseRect, const CEGUI::ColourRect* modColours = nullptr, const Rectf* clipper = nullptr) const;
 
         /*!
         \brief
@@ -117,7 +120,7 @@ namespace CEGUI
         /*!
         \brief
             Removes an ImageryComponent from this ImagerySection. The supplied ImagerySection reference should be
-            retrieved via the getImageryComponentPointers function. The check to find out which ImagerySection to remove
+            retrieved via the getImageryComponents or getImageryComponentPointers function. The check to find out which ImagerySection to remove
             is done using memory address comparison (identity check).
 
         \param imageryComponent
@@ -141,12 +144,12 @@ namespace CEGUI
         \param textComponent
             TextComponent to be added to the section (a copy is made)
         */
-        void addTextComponent(const TextComponent& textComponent);
+        void addTextComponent(TextComponent&& textComponent);
 
         /*!
         \brief
             Removes an TextComponent from this ImagerySection. The supplied TextComponent reference should be
-            retrieved via the getTextComponentPointers function. The check to find out which TextComponent to remove
+            retrieved via the getTextComponents or getTextComponentPointers function. The check to find out which TextComponent to remove
             is done using memory address comparison (identity check).
 
         \param textComponent
@@ -184,7 +187,7 @@ namespace CEGUI
         /*!
         \brief
             Removes an FrameComponent from this ImagerySection. The supplied FrameComponent reference should be
-            retrieved via the getFrameComponentPointers function. The check to find out which FrameComponent to remove
+            retrieved via the getFrameComponents or getFrameComponentPointers function. The check to find out which FrameComponent to remove
             is done using memory address comparison (identity check).
 
         \param frameComponent
@@ -303,7 +306,7 @@ namespace CEGUI
          \return
             A vector of pointers to the TextComponents that are currently added to this ImagerySection
         */
-        TextComponentPointerList getTextComponentPointers();
+        std::vector<TextComponent*> getTextComponentPointers();
 
         /*!
         \brief
@@ -315,6 +318,36 @@ namespace CEGUI
             A vector of pointers to the FrameComponents that are currently added to this ImagerySection
         */
         FrameComponentPointerList getFrameComponentPointers();
+
+        typedef std::vector<ImageryComponent> ImageryComponentList;
+        typedef std::vector<FrameComponent> FrameComponentList;
+
+        /*!
+        \brief
+            Returns a const reference to the list of ImageryComponents that are currently added to this ImagerySection.
+
+         \return
+            A const reference to the vector of ImageryComponents that are currently added to this ImagerySection
+        */
+        const ImageryComponentList& getImageryComponents() const { return d_images; }
+
+        /*!
+        \brief
+            Returns a const reference to the list of ImageryComponents that are currently added to this ImagerySection.
+
+         \return
+            A const reference to the vector of ImageryComponents that are currently added to this ImagerySection
+        */
+        const std::vector<TextComponent>& getTextComponents() const { return d_texts; }
+
+        /*!
+        \brief
+            Returns a const reference to the list of ImageryComponents that are currently added to this ImagerySection.
+
+         \return
+            A const reference to the vector of ImageryComponents that are currently added to this ImagerySection
+        */
+        const FrameComponentList& getFrameComponents() const { return d_frames; }
 
     protected:
         /*!
@@ -329,62 +362,12 @@ namespace CEGUI
         void initMasterColourRect(const Window& wnd, ColourRect& cr) const;
 
     private:
-        typedef std::vector<ImageryComponent
-            CEGUI_VECTOR_ALLOC(ImageryComponent)> ImageryList;
-        typedef std::vector<TextComponent
-            CEGUI_VECTOR_ALLOC(TextComponent)> TextList;
-        typedef std::vector<FrameComponent
-            CEGUI_VECTOR_ALLOC(FrameComponent)> FrameList;
-
-        CEGUI::String       d_name;             //!< Holds the name of the ImagerySection.
-        CEGUI::ColourRect   d_masterColours;    //!< Naster colours for the the ImagerySection (combined with colours of each ImageryComponent).
-        FrameList           d_frames;           //!< Collection of FrameComponent objects to be drawn for this ImagerySection.
-        ImageryList         d_images;           //!< Collection of ImageryComponent objects to be drawn for this ImagerySection.
-        TextList            d_texts;            //!< Collection of TextComponent objects to be drawn for this ImagerySection.
-        String              d_colourPropertyName;   //!< name of property to fetch colours from.
-
-    public:
-        //!  \deprecated This iterator is deprecated because the function that uses the type is deprecated
-        typedef ConstVectorIterator<ImageryList> ImageryComponentIterator;
-        //!  \deprecated This iterator is deprecated because the function that uses the type is deprecated
-        typedef ConstVectorIterator<TextList> TextComponentIterator;
-        //!  \deprecated This iterator is deprecated because the function that uses the type is deprecated
-        typedef ConstVectorIterator<FrameList> FrameComponentIterator;
-
-        /*!
-        \brief
-            Return a ImagerySection::ImageryComponentIterator object to iterate
-            over the ImageryComponent elements currently added to the
-            ImagerySection.
-
-        \deprecated
-            This iterator is deprecated because it will be replaced by the function getImageryComponents
-            in the next version.
-        */
-        ImageryComponentIterator getImageryComponentIterator() const;
-        /*!
-        \brief
-            Return a ImagerySection::TextComponentIterator object to iterate
-            over the TextComponent elements currently added to the
-            ImagerySection.
-
-        \deprecated
-            This iterator is deprecated because it will be replaced by the function getTextComponents
-            in the next version.
-        */
-        TextComponentIterator getTextComponentIterator() const;
-        /*!
-        \brief
-            Return a ImagerySection::FrameComponentIterator object to iterate
-            over the FrameComponent elements currently added to the
-            ImagerySection.
-
-        \deprecated
-            This iterator is deprecated because it will be replaced by the function getFrameComponents
-            in the next version.
-        */
-        FrameComponentIterator getFrameComponentIterator() const;
-
+        CEGUI::String               d_name;             //!< Holds the name of the ImagerySection.
+        CEGUI::ColourRect           d_masterColours;    //!< Naster colours for the the ImagerySection (combined with colours of each ImageryComponent).
+        FrameComponentList          d_frames;           //!< Collection of FrameComponent objects to be drawn for this ImagerySection.
+        ImageryComponentList        d_images;           //!< Collection of ImageryComponent objects to be drawn for this ImagerySection.
+        std::vector<TextComponent>  d_texts;            //!< Collection of TextComponent objects to be drawn for this ImagerySection.
+        String                      d_colourPropertyName;   //!< name of property to fetch colours from.
     };
 
 } // End of  CEGUI namespace section

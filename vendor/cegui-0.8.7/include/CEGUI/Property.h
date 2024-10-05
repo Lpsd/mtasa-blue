@@ -30,13 +30,11 @@
 #ifndef _CEGUIProperty_h_
 #define _CEGUIProperty_h_
 
-#include "CEGUI/Base.h"
 #include "CEGUI/String.h"
-#include "CEGUI/XMLSerializer.h" 
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
+class XMLSerializer;
 
 /*!
 \brief
@@ -45,8 +43,7 @@ namespace CEGUI
 class CEGUIEXPORT PropertyReceiver
 {
 public:
-	PropertyReceiver() {}
-	virtual ~PropertyReceiver() {}
+    virtual ~PropertyReceiver() = default;
 };
 
 
@@ -57,8 +54,7 @@ public:
 	Property objects allow (via a PropertySet) access to certain properties of objects
 	by using simple get/set functions and the name of the property to be accessed.
 */
-class CEGUIEXPORT Property :
-    public AllocatedObject<Property>
+class CEGUIEXPORT Property
 {
 public:
     static const String XMLElementName;

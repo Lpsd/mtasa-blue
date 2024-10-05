@@ -27,9 +27,8 @@
  *   OTHER DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
 #include "CEGUI/Property.h"
-#include <iostream>
+#include "CEGUI/XMLSerializer.h" 
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 //----------------------------------------------------------------------------//
@@ -59,7 +58,7 @@ void Property::writeXMLToStream(const PropertyReceiver* receiver, XMLSerializer&
 		// Detect wether it is a long property or not
 		// Long property are needed if
 		const String& value = get(receiver);
-		if (value.find((String::value_type)'\n') != String::npos)
+		if (value.find(static_cast<String::value_type>('\n')) != String::npos)
 		{
 			xml_stream.text(value);
 		}

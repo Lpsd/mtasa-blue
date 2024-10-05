@@ -30,7 +30,6 @@
 #include "CEGUI/FactoryRegisterer.h"
 #include "CEGUI/WindowRendererManager.h"
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 /*!
@@ -42,47 +41,27 @@ template <typename T>
 class TplWRFactoryRegisterer : public FactoryRegisterer
 {
 public:
-    //! Constructor.
-    TplWRFactoryRegisterer();
 
-    void unregisterFactory() const;
+    TplWRFactoryRegisterer() : FactoryRegisterer(T::TypeName) {}
+
+    void unregisterFactory() const override
+    {
+        WindowRendererManager::getSingleton().removeFactory(d_type);
+    }
 
 protected:
-    void doFactoryAdd() const;
-    bool isAlreadyRegistered() const;
+
+    void doFactoryAdd() const override
+    {
+        WindowRendererManager::addWindowRendererType<T>();
+    }
+
+    bool isAlreadyRegistered() const override
+    {
+        return WindowRendererManager::getSingleton().isFactoryPresent(d_type);
+    }
 };
 
-
-//----------------------------------------------------------------------------//
-template <typename T>
-TplWRFactoryRegisterer<T>::TplWRFactoryRegisterer() :
-    FactoryRegisterer(T::TypeName)
-{}
-
-//----------------------------------------------------------------------------//
-template <typename T>
-void TplWRFactoryRegisterer<T>::unregisterFactory() const
-{
-    WindowRendererManager::getSingleton().removeFactory(d_type);
 }
 
-//----------------------------------------------------------------------------//
-template <typename T>
-void TplWRFactoryRegisterer<T>::doFactoryAdd() const
-{
-    WindowRendererManager::addWindowRendererType<T>();
-}
-
-//----------------------------------------------------------------------------//
-template <typename T>
-bool TplWRFactoryRegisterer<T>::isAlreadyRegistered() const
-{
-    return WindowRendererManager::getSingleton().isFactoryPresent(d_type);
-}
-
-//----------------------------------------------------------------------------//
-
-} // End of  CEGUI namespace section
-
-#endif  // end of guard _CEGUITplWRFactoryRegisterer_h_
-
+#endif

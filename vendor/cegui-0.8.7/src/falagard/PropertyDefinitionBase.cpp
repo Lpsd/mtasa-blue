@@ -25,6 +25,7 @@
  *   OTHER DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
 #include "CEGUI/falagard/PropertyDefinitionBase.h"
+#include "CEGUI/PropertyHelper.h"
 #include "CEGUI/XMLSerializer.h"
 #include "CEGUI/falagard/XMLHandler.h"
 
@@ -159,10 +160,10 @@ void PropertyDefinitionBase::writeDefinitionXMLAttributes(
         xml_stream.attribute(Falagard_xmlHandler::InitialValueAttribute, d_initialValue);
 
     if (d_writeCausesRedraw)
-        xml_stream.attribute(Falagard_xmlHandler::RedrawOnWriteAttribute, PropertyHelper<bool>::True);
+        xml_stream.attribute(Falagard_xmlHandler::RedrawOnWriteAttribute, PropertyHelper<bool>::ValueTrue);
 
     if (d_writeCausesLayout)
-        xml_stream.attribute(Falagard_xmlHandler::LayoutOnWriteAttribute, PropertyHelper<bool>::True);
+        xml_stream.attribute(Falagard_xmlHandler::LayoutOnWriteAttribute, PropertyHelper<bool>::ValueTrue);
 
     if (!d_eventFiredOnWrite.empty())
         xml_stream.attribute(Falagard_xmlHandler::FireEventAttribute, d_eventFiredOnWrite);

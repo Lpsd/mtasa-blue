@@ -1,7 +1,7 @@
 /***********************************************************************
 	created:	8/8/2004
 	author:		Steve Streeting
-	
+
 	purpose:	Interface to base class for TabButton widget
 *************************************************************************/
 /***************************************************************************
@@ -29,12 +29,13 @@
 #ifndef _CEGUITabButton_h_
 #define _CEGUITabButton_h_
 
-#include "../Base.h"
 #include "./ButtonBase.h"
+#include "../WindowRenderer.h"
 
 // Start of CEGUI namespace section
 namespace CEGUI
 {
+
 /*!
 \brief
     Base class for TabButtons.  A TabButton based class is used internally as
@@ -56,14 +57,14 @@ public:
      * WindowEventArgs::window set to the TabButton that was clicked.
      */
 	static const String EventClicked;
-    /** Event fired when use user attempts to drag the button with middle mouse
-     * button.
-     * Handlers are passed a const MouseEventArgs reference with all fields
+    /** Event fired when use user attempts to drag the button with middle cursor
+     * source.
+     * Handlers are passed a const CursorInputEventArgs reference with all fields
      * valid.
      */
 	static const String EventDragged;
-    /** Event fired when the scroll wheel is used on top of the button.
-     * Handlers are passed a const MouseEventArgs reference with all fields
+    /** Event fired when a scroll action is executed on top of the button.
+     * Handlers are passed a const CursorInputEventArgs reference with all fields
      * valid.
      */
 	static const String EventScrolled;
@@ -82,7 +83,7 @@ public:
 	\brief
 		Destructor for TabButton class
 	*/
-	virtual ~TabButton(void);
+	virtual ~TabButton();
 
     /*!
     \brief
@@ -111,6 +112,7 @@ public:
     Window* getTargetWindow(void) { return d_targetWindow; }
 
 protected:
+
     /*************************************************************************
     Implementation Data
     *************************************************************************/
@@ -130,10 +132,10 @@ protected:
 	/*************************************************************************
 		Overridden Event Handlers
 	*************************************************************************/
-    virtual void onMouseButtonUp(MouseEventArgs& e);
-    virtual void onMouseButtonDown(MouseEventArgs& e);
-    virtual void onMouseWheel(MouseEventArgs& e);
-    virtual void onMouseMove(MouseEventArgs& e);
+    void onMouseButtonDown(MouseButtonEventArgs& e) override;
+    void onMouseButtonUp(MouseButtonEventArgs& e) override;
+    void onClick(MouseButtonEventArgs& e) override;
+    void onCursorMove(CursorMoveEventArgs& e) override;
 };
 
 

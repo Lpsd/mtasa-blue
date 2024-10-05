@@ -29,24 +29,16 @@
 #ifndef _CEGUIPropertySet_h_
 #define _CEGUIPropertySet_h_
 
-#include "CEGUI/Base.h"
-#include "CEGUI/String.h"
-#include "CEGUI/IteratorBase.h"
 #include "CEGUI/Property.h"
-#include "CEGUI/PropertyHelper.h"
-#include "CEGUI/TypedProperty.h"
-// not needed in this header but you are likely to use it if you include this,
-// we also define the CEGUI_DEFINE_PROPERTY macro that relies on this here
-#include "CEGUI/TplWindowProperty.h"
-#include "CEGUI/Exceptions.h"
-#include <map>
+#include "CEGUI/IteratorBase.h"
+#include "CEGUI/TplWindowProperty.h" // for CEGUI_DEFINE_PROPERTY, see below //???move both out of here?
+#include <unordered_map>
 
 #if defined(_MSC_VER)
 #	pragma warning(push)
 #	pragma warning(disable : 4251)
 #endif
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
 /*!
@@ -223,7 +215,7 @@ public:
 
         if (pos == d_properties.end())
         {
-            CEGUI_THROW(UnknownObjectException("There is no Property named '" + name + "' available in the set."));
+            throw UnknownObjectException("There is no Property named '" + name + "' available in the set.");
         }
 
         Property* baseProperty = pos->second;
@@ -269,7 +261,7 @@ public:
 
         if (pos == d_properties.end())
         {
-            CEGUI_THROW(UnknownObjectException("There is no Property named '" + name + "' available in the set."));
+            throw UnknownObjectException("There is no Property named '" + name + "' available in the set.");
         }
 
         Property* baseProperty = pos->second;
@@ -314,8 +306,7 @@ public:
     String getPropertyDefault(const String& name) const;
 
 private:
-    typedef std::map<String, Property*, StringFastLessCompare
-        CEGUI_MAP_ALLOC(String, Property*)> PropertyRegistry;
+    typedef std::unordered_map<String, Property*> PropertyRegistry;
     PropertyRegistry	d_properties;
 
 
