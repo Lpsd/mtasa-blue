@@ -12,6 +12,8 @@ project "GUI New"
             "../../Shared/sdk",
 			"../sdk",
 			"../../vendor/cegui-0.8.7/include",
+            "../../vendor/cegui-0.8.7/dependencies/glm-0.9.4.5",
+            "../../vendor/cegui-0.8.7/dependencies/pcre-8.12",
 			"../../vendor/sparsehash/src/",
 			"../../vendor/freetype/include",
 		}
@@ -28,7 +30,9 @@ project "GUI New"
 		"CEGUICoreWindowRendererSet",
 		"CEGUISILLYImageCodec",
 		"CEGUIDirect3D9Renderer",
-		"CEGUITinyXMLParser",
+		"CEGUITinyXML2Parser",
+        "glm-0.9.4.5",
+        "pcre-8.12",
 		"d3dx9.lib",
 		"d3d9.lib",
 		"dxerr.lib"

@@ -168,6 +168,7 @@ workspace "MTASA"
 		include "vendor/cegui-0.8.7/dependencies/SILLY"
 		include "vendor/cegui-0.8.7/dependencies/tinyxml2-9.0.0"
 		include "vendor/cegui-0.8.7/dependencies/glm-0.9.4.5"
+		include "vendor/cegui-0.8.7/dependencies/pcre-8.12"
 
 		group "Vendor"
 		include "vendor/portaudio"

@@ -7,14 +7,14 @@ project "CEGUI-0.8.7"
 	includedirs {
 		"include",
         "dependencies/glm-0.9.4.5",
+        "dependencies/pcre-8.12",
 		"../freetype/include",
-		"../pcre"
 	}
 
 	links { 
         "glm-0.9.4.5",
 		"freetype",
-		"pcre",
+		"pcre-8.12",
 		"dbghelp",
 		"winmm"
 	}

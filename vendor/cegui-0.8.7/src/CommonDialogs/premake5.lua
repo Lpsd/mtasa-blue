@@ -7,7 +7,7 @@ project "CEGUICommonDialogs"
 	includedirs {
 		"../../include",
 		"../../../freetype/include",
-		"../../../pcre",
+        "../../dependencies/pcre-8.12",
         "../../dependencies/glm-0.9.4.5"
 	}
 
@@ -15,7 +15,7 @@ project "CEGUICommonDialogs"
         "glm-0.9.4.5",
         "CEGUI-0.8.7",
 		"freetype",
-		"pcre",
+		"pcre-8.12",
 		"dbghelp",
 		"winmm"
     }

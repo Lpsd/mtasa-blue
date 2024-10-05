@@ -7,7 +7,7 @@ project "CEGUITinyXML2Parser"
 	includedirs {
 		"../../include",
 		"../../../freetype/include",
-        "../../../pcre",
+        "../../dependencies/pcre-8.12",
         "../../dependencies/tinyxml2-9.0.0",
         "../../dependencies/glm-0.9.4.5"
 	}
@@ -17,7 +17,7 @@ project "CEGUITinyXML2Parser"
         "CEGUI-0.8.7",
         "tinyxml2-9.0.0",
 		"freetype", 
-		"pcre",
+		"pcre-8.12",
 		"dbghelp",
         "winmm",
         "d3d9",

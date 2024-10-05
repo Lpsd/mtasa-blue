@@ -44,4 +44,4 @@ extern "C" CEGUITINYXML2PARSER_API CEGUI::XMLParser* createParser(void);
 */
 extern "C" CEGUITINYXML2PARSER_API void destroyParser(CEGUI::XMLParser* parser);
 
-#endif // end of guard _CEGUITinyXMLParserModule_h_
+#endif // end of guard _CEGUITinyXML2ParserModule_h_
