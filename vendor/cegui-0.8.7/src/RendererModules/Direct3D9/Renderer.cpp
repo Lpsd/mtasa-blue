@@ -38,6 +38,7 @@
 #include "CEGUI/Logger.h"
 
 #include <algorithm>
+#include <stdlib.h>
 
 // Start of CEGUI namespace section
 namespace CEGUI
@@ -58,13 +59,15 @@ static const D3DMATRIX s_identityMatrix =
 
 //----------------------------------------------------------------------------//
 Direct3D9Renderer& Direct3D9Renderer::bootstrapSystem(LPDIRECT3DDEVICE9 device,
-                                                      const int abi, String moduleDir)
+                                                      const int abi, std::string moduleDir)
 {
     System::performVersionTest(CEGUI_VERSION_ABI, abi, CEGUI_FUNCTION_NAME);
 
     if (System::getSingletonPtr())
         throw InvalidRequestException(
             "CEGUI::System object is already initialised.");
+
+    SetEnvironmentVariable("CEGUI_MODULE_DIR", moduleDir.c_str());
 
     Direct3D9Renderer& renderer(create(device));
     DefaultResourceProvider* rp = new CEGUI::DefaultResourceProvider();
