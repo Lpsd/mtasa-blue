@@ -10,6 +10,7 @@
  *****************************************************************************/
 
 #include "StdInc.h"
+#include "CEGUI/RendererModules/Direct3D9/Renderer.h"
 
 #define CGUISTATICIMAGE_NAME "StaticImage"
 
@@ -31,7 +32,7 @@ CGUIStaticImage_Impl::CGUIStaticImage_Impl(CGUI_Impl* pGUI, CGUIElement* pParent
     // Create the control and set default properties
     m_pWindow = pGUI->GetWindowManager()->createWindow(pGUI->GetElementPrefix() + "/" + CGUISTATICIMAGE_NAME, szUnique);
     m_pWindow->setDestroyedByParent(false);
-    m_pWindow->setArea(CEGUI::Rect(CEGUI::UDim(0.0f, 0), CEGUI::UDim(0.0f, 0), CEGUI::UDim(1.0f, 0), CEGUI::UDim(1.0f, 0)));
+    m_pWindow->setArea(CEGUI::URect(CEGUI::UDim(0.0f, 0), CEGUI::UDim(0.0f, 0), CEGUI::UDim(1.0f, 0), CEGUI::UDim(1.0f, 0)));
     m_pWindow->setProperty("BackgroundEnabled", "False");
 
     // Make sure frame is disabled
@@ -69,13 +70,13 @@ bool CGUIStaticImage_Impl::LoadFromFile(const char* szFilename, const char* szRe
 
     // Check if the image already exists and load it
     if (m_pImagesetManager->isDefined(szFilename))
-        m_pImage = dynamic_cast<CEGUI::BasicImage*>(&m_pImagesetManager->get(szFilename));
+        m_pImage = dynamic_cast<CEGUI::BitmapImage*>(&m_pImagesetManager->get(szFilename));
     else
     {
         // Define a new image in the ImageManager
         try
         {
-            m_pImagesetManager->addFromImageFile(szFilename, szFilename, szResourceGroup);
+            m_pImagesetManager->addBitmapImageFromFile(szFilename, szFilename, szResourceGroup);
         }
         catch (CEGUI::Exception e)
         {
@@ -87,7 +88,7 @@ bool CGUIStaticImage_Impl::LoadFromFile(const char* szFilename, const char* szRe
             return false;
 
         // Get the image from the image manager and cast to BasicImage
-        m_pImage = dynamic_cast<CEGUI::BasicImage*>(&m_pImagesetManager->get(szFilename));
+        m_pImage = dynamic_cast<CEGUI::BitmapImage*>(&m_pImagesetManager->get(szFilename));
     }
 
     // Set image to window
@@ -117,7 +118,7 @@ bool CGUIStaticImage_Impl::LoadFromTexture(CGUITexture* pTexture)
     m_pGUI->GetUniqueName(szUnique);
 
     // Define a new image in the ImageManager
-    m_pImage = dynamic_cast<CEGUI::BasicImage*>(&m_pImagesetManager->create("BasicImage", szUnique));
+    m_pImage = dynamic_cast<CEGUI::BitmapImage*>(&m_pImagesetManager->create("BitmapImage", szUnique));
 
     // Set the texture of the created image
     m_pImage->setTexture(pCEGUITexture);
@@ -168,5 +169,5 @@ CEGUI::Image* CGUIStaticImage_Impl::GetDirectImage()
 /* Unused? */
 void CGUIStaticImage_Impl::Render()
 {
-    return m_pWindow->render();
+    return m_pWindow->draw();
 }

@@ -43,8 +43,8 @@ CGUIGridList_Impl::CGUIGridList_Impl(CGUI_Impl* pGUI, CGUIElement* pParent, bool
 
     reinterpret_cast<CEGUI::MultiColumnList*>(m_pWindow)->setUserColumnDraggingEnabled(false);
     reinterpret_cast<CEGUI::MultiColumnList*>(m_pWindow)->setShowHorzScrollbar(false);
-    reinterpret_cast<CEGUI::MultiColumnList*>(m_pWindow)->setSelectionMode(CEGUI::MultiColumnList::RowSingle);
-    reinterpret_cast<CEGUI::MultiColumnList*>(m_pWindow)->setSortDirection(CEGUI::ListHeaderSegment::None);
+    reinterpret_cast<CEGUI::MultiColumnList*>(m_pWindow)->setSelectionMode(CEGUI::MultiColumnList::SelectionMode::RowSingle);
+    reinterpret_cast<CEGUI::MultiColumnList*>(m_pWindow)->setSortDirection(CEGUI::ListHeaderSegment::SortDirection::NoSorting);
 
     // Store the pointer to this CGUI element in the CEGUI element
     m_pWindow->setUserData(reinterpret_cast<void*>(this));
@@ -310,7 +310,7 @@ const char* CGUIGridList_Impl::GetItemText(int iRow, int hColumn)
             reinterpret_cast<CEGUI::MultiColumnList*>(m_pWindow)->getItemAtGridReference(CEGUI::MCLGridRef(iRow, GetColumnIndex(hColumn)));
         if (pItem)
         {
-            const char* szRet = pItem->getText().c_str();
+            const char* szRet = (const char*)pItem->getText().c_str();
 
             if (!m_bIgnoreTextSpacer)
             {
@@ -381,7 +381,7 @@ int CGUIGridList_Impl::SetItemText(int iRow, int hColumn, const char* szText, bo
             }
             else
             {
-                pItem->SetFont(win->getFont()->getName().c_str()); // Reset font to the font of the item's parent (the gridlist)
+                pItem->SetFont((const char*)win->getFont()->getName().c_str()); // Reset font to the font of the item's parent (the gridlist)
                 pItem->SetDisabled(false);
 
                 if (GetColumnIndex(hColumn) == 0)
@@ -449,7 +449,7 @@ int CGUIGridList_Impl::SetItemText(int iRow, int hColumn, const char* szText, bo
 
         // If the list is sorted and we just changed an item in the sorting column,
         // re-sort the list.
-        if (win->getSortDirection() != SortDirections::None && win->getSortColumn() == GetColumnIndex(hColumn))
+        if (win->getSortDirection() != CEGUI::ListHeaderSegment::SortDirection::NoSorting && win->getSortColumn() == GetColumnIndex(hColumn))
         {
             win->setSortColumn(win->getSortColumn());
             return GetItemRowIndex(pItem);
@@ -749,13 +749,13 @@ void CGUIGridList_Impl::Sort(unsigned int uiColumn, SortDirection direction)
     switch (direction)
     {
         case SortDirections::Ascending:
-            reinterpret_cast<CEGUI::MultiColumnList*>(m_pWindow)->setSortDirection(CEGUI::ListHeaderSegment::Ascending);
+            reinterpret_cast<CEGUI::MultiColumnList*>(m_pWindow)->setSortDirection(CEGUI::ListHeaderSegment::SortDirection::Ascending);
             break;
         case SortDirections::Descending:
-            reinterpret_cast<CEGUI::MultiColumnList*>(m_pWindow)->setSortDirection(CEGUI::ListHeaderSegment::Descending);
+            reinterpret_cast<CEGUI::MultiColumnList*>(m_pWindow)->setSortDirection(CEGUI::ListHeaderSegment::SortDirection::Descending);
             break;
         default:
-            reinterpret_cast<CEGUI::MultiColumnList*>(m_pWindow)->setSortDirection(CEGUI::ListHeaderSegment::None);
+            reinterpret_cast<CEGUI::MultiColumnList*>(m_pWindow)->setSortDirection(CEGUI::ListHeaderSegment::SortDirection::NoSorting);
             break;
     }
 }
@@ -766,16 +766,16 @@ void CGUIGridList_Impl::GetSort(unsigned int& uiColumn, SortDirection& direction
 
     switch (reinterpret_cast<CEGUI::MultiColumnList*>(m_pWindow)->getSortDirection())
     {
-        case CEGUI::ListHeaderSegment::Ascending:
+        case CEGUI::ListHeaderSegment::SortDirection::Ascending:
             direction = SortDirections::Ascending;
             break;
 
-        case CEGUI::ListHeaderSegment::Descending:
+        case CEGUI::ListHeaderSegment::SortDirection::Descending:
             direction = SortDirections::Descending;
             break;
 
         default:
-            direction = SortDirections::None;
+            direction = SortDirections::SortDirection::None;
             break;
     }
 }

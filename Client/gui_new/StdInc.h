@@ -8,6 +8,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <glm/glm.hpp>
 
 #include <d3dx9.h>
 #include <CEGUI/RendererModules/Direct3D9/Renderer.h>

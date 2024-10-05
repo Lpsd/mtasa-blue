@@ -77,7 +77,7 @@ void CGUILabel_Impl::SetVerticalAlign(CGUIVerticalAlign eAlign)
 
 CGUIVerticalAlign CGUILabel_Impl::GetVerticalAlign()
 {
-    SString verticalAlign = m_pWindow->getProperty("VertFormatting").c_str();
+    SString verticalAlign = (const char*)m_pWindow->getProperty("VertFormatting").c_str();
 
     if (verticalAlign == CGUIVerticalAlignValues[1])
         return CGUIVerticalAlign::CGUI_ALIGN_TOP;
@@ -99,7 +99,7 @@ void CGUILabel_Impl::SetHorizontalAlign(CGUIHorizontalAlign eAlign)
 
 CGUIHorizontalAlign CGUILabel_Impl::GetHorizontalAlign()
 {
-    SString horizontalAlign = m_pWindow->getProperty("HorzFormatting").c_str();
+    SString horizontalAlign = (const char*)m_pWindow->getProperty("HorzFormatting").c_str();
 
     if (horizontalAlign == CGUIHorizontalAlignValues[1])
         return CGUIHorizontalAlign::CGUI_ALIGN_LEFT;
@@ -188,13 +188,13 @@ float CGUILabel_Impl::GetFontHeight()
 
 float CGUILabel_Impl::GetTextExtent()
 {
-    const CEGUI::Font* pFont = m_pWindow->getFont();
+    CEGUI::Font* pFont = m_pWindow->getFont();
     if (pFont)
     {
         try
         {
             // Retrieve the longest line's extent
-            std::stringstream ssText(m_pWindow->getText().c_str());
+            std::stringstream ssText((const char*)m_pWindow->getText().c_str());
             std::string       sLineText;
             float             fMax = 0.0f, fLineExtent = 0.0f;
 

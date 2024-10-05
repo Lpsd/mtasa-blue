@@ -14,6 +14,8 @@
 #include "CGUI.h"
 #include "CGUITypes.h"
 
+#include <bitset>
+
 struct CGUIEventArgs
 {
     CGUIElement* pWindow;
@@ -25,6 +27,7 @@ struct CGUIKeyEventArgs
 
     unsigned int   codepoint;
     CGUIKeys::Scan scancode;
+    std::bitset<7> modifiers;
     unsigned int   sysKeys;
 };
 
@@ -35,8 +38,9 @@ struct CGUIMouseEventArgs
     CGUIPosition           position;
     CVector2D              moveDelta;
     CGUIMouse::MouseButton button;
-    unsigned int           sysKeys;
+    std::bitset<7>         modifiers;
     float                  wheelChange;
+    unsigned int           sysKeys;
     unsigned int           clickCount;
     CGUIElement*           pSwitchedWindow;
 };

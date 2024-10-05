@@ -21,7 +21,8 @@ class GUINew::CGUITexture_Impl;
 class GUINew::CGUI_Impl;
 class CWebViewInterface;
 
-namespace GUINew{
+namespace GUINew
+{
     class CGUIWebBrowser_Impl;
 }
 
@@ -56,22 +57,22 @@ protected:
     bool Event_Deactivated(const CEGUI::EventArgs& e);
 
 private:
-    CGUI_Impl*                 m_pGUI;
-    CEGUI::BasicImage*  m_pImage;
-    CEGUI::Texture*     m_pTexture;
-    CEGUI::Direct3D9Renderer*  m_pRenderer;
+    CGUI_Impl*                m_pGUI;
+    CEGUI::BitmapImage*       m_pImage;
+    CEGUI::Texture*           m_pTexture;
+    CEGUI::Direct3D9Renderer* m_pRenderer;
 
     ::CWebViewInterface* m_pWebView;
 
-    #define EXCLUDE_SET_SIZE // WTF? TODO: Refactor this
-    #include "CGUIElement_Inc.h"
-    #undef EXCLUDE_SET_SIZE
+#define EXCLUDE_SET_SIZE            // WTF? TODO: Refactor this
+#include "CGUIElement_Inc.h"
+#undef EXCLUDE_SET_SIZE
 };
 
 // The purpose of this class is to provide an externally managed DirectX texture
-//class CGUIWebBrowserTexture : public CEGUI::Direct3D9Texture
+// class CGUIWebBrowserTexture : public CEGUI::Direct3D9Texture
 //{
-//public:
+// public:
 //    CGUIWebBrowserTexture(CEGUI::Renderer* pOwner, CWebViewInterface* pWebView);
 //
 //    virtual ushort getWidth() const;
@@ -85,6 +86,6 @@ private:
 //    virtual void               preD3DReset(){};
 //    virtual void               postD3DReset(){};
 //
-//private:
+// private:
 //    CWebViewInterface* m_pWebView;
 //};

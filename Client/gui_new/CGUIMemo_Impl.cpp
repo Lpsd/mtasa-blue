@@ -147,12 +147,12 @@ void CGUIMemo_Impl::SetSelection(unsigned int uiStart, unsigned int uiEnd)
 
 unsigned int CGUIMemo_Impl::GetSelectionStart()
 {
-    return static_cast<unsigned int>(reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->getSelectionStartIndex());
+    return static_cast<unsigned int>(reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->getSelectionStart());
 }
 
 unsigned int CGUIMemo_Impl::GetSelectionEnd()
 {
-    return static_cast<unsigned int>(reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->getSelectionEndIndex());
+    return static_cast<unsigned int>(reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->getSelectionEnd());
 }
 
 unsigned int CGUIMemo_Impl::GetSelectionLength()
@@ -187,7 +187,7 @@ bool CGUIMemo_Impl::Event_TextChanged(const CEGUI::EventArgs& e)
 bool CGUIMemo_Impl::Event_OnKeyDown(const CEGUI::EventArgs& e)
 {
     const CEGUI::KeyEventArgs& KeyboardArgs = reinterpret_cast<const CEGUI::KeyEventArgs&>(e);
-    if (KeyboardArgs.scancode == CGUIKeys::Tab)
+    if ((CGUIKeys::Scan)KeyboardArgs.d_key == CGUIKeys::Scan::Tab)
     {
         // tab pressed, if we are in a window with tab enabled, just switch to the next element
         if (GetParent() == NULL)

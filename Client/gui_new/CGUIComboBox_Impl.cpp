@@ -31,7 +31,7 @@ CGUIComboBox_Impl::CGUIComboBox_Impl(CGUI_Impl* pGUI, CGUIElement* pParent, cons
     storedCaption = CGUI_Impl::GetUTFString(szCaption);
 
     m_pWindow->setText(storedCaption);
-    
+
     m_pWindow->setSize(pGUI->CreateAbsoluteSize(128.0f, 24.0f));
     m_pWindow->setVisible(true);
 
@@ -66,7 +66,7 @@ CGUIListItem* CGUIComboBox_Impl::AddItem(const char* szText)
 {
     CGUIListItem_Impl*  pNewItem = new CGUIListItem_Impl(m_pManager, szText, CGUIListItem_Impl::TextItem, NULL);
     CEGUI::ListboxItem* pListboxItem = pNewItem->GetListItem();
-    reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->addItem(pListboxItem);
+    reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->addItem((CEGUI::StandardItem*)pListboxItem);
     m_Items[pNewItem->GetListItem()] = pNewItem;
     return pNewItem;
 }
@@ -75,7 +75,7 @@ CGUIListItem* CGUIComboBox_Impl::AddItem(CGUIStaticImage* pImage)
 {
     CGUIListItem_Impl*  pNewItem = new CGUIListItem_Impl(m_pManager, "", CGUIListItem_Impl::ImageItem, (CGUIStaticImage_Impl*)pImage);
     CEGUI::ListboxItem* pListboxItem = pNewItem->GetListItem();
-    reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->addItem(pListboxItem);
+    reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->addItem((CEGUI::StandardItem*)pListboxItem);
     m_Items[pNewItem->GetListItem()] = pNewItem;
     return pNewItem;
 }
@@ -84,12 +84,12 @@ bool CGUIComboBox_Impl::RemoveItem(int index)
 {
     try
     {
-        CEGUI::ListboxItem* pItem = reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getListboxItemFromIndex(index);
+        CEGUI::ListboxItem* pItem = (CEGUI::ListboxItem*)reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getItemFromIndex(index);
         if (pItem->isSelected())            // if this is currently selected, let's update the editbox.
         {
             m_pWindow->setText(storedCaption);
         }
-        reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->removeItem(pItem);
+        reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->removeItem((CEGUI::StandardItem*)pItem);
         return true;
     }
     catch (...)
@@ -101,12 +101,13 @@ bool CGUIComboBox_Impl::RemoveItem(int index)
 
 CGUIListItem* CGUIComboBox_Impl::GetSelectedItem()
 {
-    return GetListItem(reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getSelectedItem());
+    return GetListItem((CEGUI::ListboxItem*)reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getSelectedItem());
 }
 
 int CGUIComboBox_Impl::GetSelectedItemIndex()
 {
-    CEGUI::ListboxItem*                                             pItem = reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getSelectedItem();
+    CEGUI::ListboxItem* pItem = (CEGUI::ListboxItem*)reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getSelectedItem();
+
     CFastHashMap<CEGUI::ListboxItem*, CGUIListItem_Impl*>::iterator it;
     it = m_Items.find(pItem);
     if (it == m_Items.end())
@@ -114,7 +115,7 @@ int CGUIComboBox_Impl::GetSelectedItemIndex()
 
     try
     {
-        return reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getItemIndex(it->first);
+        return reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getItemIndex((CEGUI::StandardItem*)it->first);
     }
     catch (...)
     {
@@ -139,7 +140,7 @@ int CGUIComboBox_Impl::GetItemIndex(CGUIListItem* pItem)
     {
         try
         {
-            return reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getItemIndex(it->first);
+            return reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getItemIndex((CEGUI::StandardItem*)it->first);
         }
         catch (...)
         {
@@ -156,14 +157,14 @@ const char* CGUIComboBox_Impl::GetItemText(int index)
     {
         if (index == -1)
         {
-            return m_pWindow->getText().c_str();
+            return (const char*)m_pWindow->getText().c_str();
         }
         else
         {
-            CEGUI::ListboxItem* pItem = reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getListboxItemFromIndex(index);
+            CEGUI::ListboxItem* pItem = (CEGUI::ListboxItem*)reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getItemFromIndex(index);
             if (pItem != NULL)
             {
-                return pItem->getText().c_str();
+                return (const char*)pItem->getText().c_str();
             }
         }
     }
@@ -178,7 +179,7 @@ bool CGUIComboBox_Impl::SetItemText(int index, const char* szText)
 {
     try
     {
-        CEGUI::ListboxItem* pItem = reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getListboxItemFromIndex(index);
+        CEGUI::ListboxItem* pItem = (CEGUI::ListboxItem*)reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getItemFromIndex(index);
         pItem->setText(CGUI_Impl::GetUTFString(szText));
         if (pItem->isSelected())            // if this is currently selected, let's update the editbox.
         {
@@ -195,7 +196,7 @@ bool CGUIComboBox_Impl::SetItemText(int index, const char* szText)
 
 CGUIListItem* CGUIComboBox_Impl::GetItemByIndex(int index)
 {
-    CEGUI::ListboxItem* pCEGUIItem = reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getListboxItemFromIndex(index);
+    CEGUI::ListboxItem* pCEGUIItem = (CEGUI::ListboxItem*)reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getItemFromIndex(index);
     CGUIListItem*       pItem = GetListItem(pCEGUIItem);
     return pItem;
 }
@@ -213,7 +214,7 @@ bool CGUIComboBox_Impl::SetSelectedItemByIndex(int index)
         }
         else
         {
-            CEGUI::ListboxItem* pItem = reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getListboxItemFromIndex(index);
+            CEGUI::ListboxItem* pItem = (CEGUI::ListboxItem*)reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getItemFromIndex(index);
             if (pItem != NULL)
             {
                 pItem->setSelected(true);
@@ -231,7 +232,7 @@ bool CGUIComboBox_Impl::SetSelectedItemByIndex(int index)
 
 void CGUIComboBox_Impl::Clear()
 {
-    reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getDropList()->resetList();
+    reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->getDropList()->clearList();
 
     CFastHashMap<CEGUI::ListboxItem*, CGUIListItem_Impl*>::iterator it;
     for (it = m_Items.begin(); it != m_Items.end(); it++)
@@ -295,7 +296,7 @@ bool CGUIComboBox_Impl::Event_OnDropListRemoved(const CEGUI::EventArgs& e)
 void CGUIComboBox_Impl::ShowDropList()
 {
     reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->showDropList();
-    reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->setSingleClickEnabled(true);
+    reinterpret_cast<CEGUI::Combobox*>(m_pWindow)->setSingleCursorActivationEnabled(true);
 }
 
 void CGUIComboBox_Impl::HideDropList()

@@ -30,7 +30,7 @@ CGUIWebBrowser_Impl::CGUIWebBrowser_Impl(CGUI_Impl* pGUI, CGUIElement* pParent)
     // Create the control and set default properties
     m_pWindow = pGUI->GetWindowManager()->createWindow(pGUI->GetElementPrefix() + "/" + CGUIWEBBROWSER_NAME, szUnique);
     m_pWindow->setDestroyedByParent(false);
-    m_pWindow->setArea(CEGUI::Rect(CEGUI::UDim(0.0f, 0), CEGUI::UDim(0.0f, 0), CEGUI::UDim(1.0f, 0), CEGUI::UDim(1.0f, 0)));
+    m_pWindow->setArea(CEGUI::URect(CEGUI::UDim(0.0f, 0), CEGUI::UDim(0.0f, 0), CEGUI::UDim(1.0f, 0), CEGUI::UDim(1.0f, 0)));
     m_pWindow->setProperty("BackgroundEnabled", "false");
 
     // Store the pointer to this CGUI element in the CEGUI element
@@ -40,10 +40,10 @@ CGUIWebBrowser_Impl::CGUIWebBrowser_Impl(CGUI_Impl* pGUI, CGUIElement* pParent)
 
     // Apply browser events
     m_pWindow->subscribeEvent(CEGUI::Window::EventMouseButtonDown, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseButtonDown, this));
-    m_pWindow->subscribeEvent(CEGUI::Window::EventMouseDoubleClick, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseDoubleClick, this));
+    m_pWindow->subscribeEvent(CEGUI::Window::EventDoubleClick, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseDoubleClick, this));
     m_pWindow->subscribeEvent(CEGUI::Window::EventMouseButtonUp, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseButtonUp, this));
-    m_pWindow->subscribeEvent(CEGUI::Window::EventMouseMove, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseMove, this));
-    m_pWindow->subscribeEvent(CEGUI::Window::EventMouseWheel, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseWheel, this));
+    m_pWindow->subscribeEvent(CEGUI::Window::EventCursorMove, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseMove, this));
+    m_pWindow->subscribeEvent(CEGUI::Window::EventScroll, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseWheel, this));
     m_pWindow->subscribeEvent(CEGUI::Window::EventActivated, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_Activated, this));
     m_pWindow->subscribeEvent(CEGUI::Window::EventDeactivated, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_Deactivated, this));
 
@@ -134,7 +134,7 @@ CEGUI::Image* CGUIWebBrowser_Impl::GetDirectImage()
 
 void CGUIWebBrowser_Impl::Render()
 {
-    return m_pWindow->render();
+    return m_pWindow->draw();
 }
 
 bool CGUIWebBrowser_Impl::HasInputFocus()
@@ -148,11 +148,11 @@ void CGUIWebBrowser_Impl::SetSize(const CVector2D& vecSize, bool bRelative)
     CGUIElement_Impl::SetSize(vecSize, bRelative);
     auto absSize = CGUIElement_Impl::GetSize(false);
 
-    CEGUI::Rectf imageSize = CEGUI::Rectf(CEGUI::Vector2f(0.0f, 0.0f), CEGUI::Sizef(absSize.fX, absSize.fY));
+    CEGUI::Rectf imageSize = CEGUI::Rectf(glm::vec2(0.0f, 0.0f), CEGUI::Sizef(absSize.fX, absSize.fY));
 
     // Update image area
     if (m_pImage)
-        m_pImage->setArea(imageSize);
+        m_pImage->setImageArea(imageSize);
 
     // Resize underlying web view as well
     if (m_pWebView)
@@ -161,13 +161,13 @@ void CGUIWebBrowser_Impl::SetSize(const CVector2D& vecSize, bool bRelative)
 
 bool CGUIWebBrowser_Impl::Event_MouseButtonDown(const CEGUI::EventArgs& e)
 {
-    const CEGUI::MouseEventArgs& args = reinterpret_cast<const CEGUI::MouseEventArgs&>(e);
+    const CEGUI::MouseButtonEventArgs& args = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(e);
 
-    if (args.button == CEGUI::MouseButton::LeftButton)
+    if (args.d_button == CEGUI::MouseButton::Left)
         m_pWebView->InjectMouseDown(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_LEFT, 1);
-    else if (args.button == CEGUI::MouseButton::MiddleButton)
+    else if (args.d_button == CEGUI::MouseButton::Middle)
         m_pWebView->InjectMouseDown(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_MIDDLE, 1);
-    else if (args.button == CEGUI::MouseButton::RightButton)
+    else if (args.d_button == CEGUI::MouseButton::Right)
         m_pWebView->InjectMouseDown(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_RIGHT, 1);
 
     return true;
@@ -175,13 +175,13 @@ bool CGUIWebBrowser_Impl::Event_MouseButtonDown(const CEGUI::EventArgs& e)
 
 bool CGUIWebBrowser_Impl::Event_MouseDoubleClick(const CEGUI::EventArgs& e)
 {
-    const CEGUI::MouseEventArgs& args = reinterpret_cast<const CEGUI::MouseEventArgs&>(e);
+    const CEGUI::MouseButtonEventArgs& args = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(e);
 
-    if (args.button == CEGUI::MouseButton::LeftButton)
+    if (args.d_button == CEGUI::MouseButton::Left)
         m_pWebView->InjectMouseDown(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_LEFT, 2);
-    else if (args.button == CEGUI::MouseButton::MiddleButton)
+    else if (args.d_button == CEGUI::MouseButton::Middle)
         m_pWebView->InjectMouseDown(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_MIDDLE, 2);
-    else if (args.button == CEGUI::MouseButton::RightButton)
+    else if (args.d_button == CEGUI::MouseButton::Right)
         m_pWebView->InjectMouseDown(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_RIGHT, 2);
 
     return true;
@@ -189,13 +189,13 @@ bool CGUIWebBrowser_Impl::Event_MouseDoubleClick(const CEGUI::EventArgs& e)
 
 bool CGUIWebBrowser_Impl::Event_MouseButtonUp(const CEGUI::EventArgs& e)
 {
-    const CEGUI::MouseEventArgs& args = reinterpret_cast<const CEGUI::MouseEventArgs&>(e);
+    const CEGUI::MouseButtonEventArgs& args = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(e);
 
-    if (args.button == CEGUI::MouseButton::LeftButton)
+    if (args.d_button == CEGUI::MouseButton::Left)
         m_pWebView->InjectMouseUp(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_LEFT);
-    else if (args.button == CEGUI::MouseButton::MiddleButton)
+    else if (args.d_button == CEGUI::MouseButton::Middle)
         m_pWebView->InjectMouseUp(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_MIDDLE);
-    else if (args.button == CEGUI::MouseButton::RightButton)
+    else if (args.d_button == CEGUI::MouseButton::Right)
         m_pWebView->InjectMouseUp(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_RIGHT);
 
     return true;
@@ -203,18 +203,18 @@ bool CGUIWebBrowser_Impl::Event_MouseButtonUp(const CEGUI::EventArgs& e)
 
 bool CGUIWebBrowser_Impl::Event_MouseMove(const CEGUI::EventArgs& e)
 {
-    const CEGUI::MouseEventArgs& args = reinterpret_cast<const CEGUI::MouseEventArgs&>(e);
+    const CEGUI::MouseButtonEventArgs& args = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(e);
     CEGUI::UVector2 position = m_pWindow->getPosition();
 
-    m_pWebView->InjectMouseMove((int)(args.position.d_x - position.d_x.d_offset), (int)(args.position.d_y - position.d_y.d_offset));
+    m_pWebView->InjectMouseMove((int)(args.d_globalPos.x - position.d_x.d_offset), (int)(args.d_globalPos.y - position.d_y.d_offset));
     return true;
 }
 
 bool CGUIWebBrowser_Impl::Event_MouseWheel(const CEGUI::EventArgs& e)
 {
-    const CEGUI::MouseEventArgs& args = reinterpret_cast<const CEGUI::MouseEventArgs&>(e);
+    const CEGUI::ScrollEventArgs& args = reinterpret_cast<const CEGUI::ScrollEventArgs&>(e);
 
-    m_pWebView->InjectMouseWheel((int)(args.wheelChange * 40), 0);
+    m_pWebView->InjectMouseWheel((int)(args.d_delta * 40), 0);
     return true;
 }
 

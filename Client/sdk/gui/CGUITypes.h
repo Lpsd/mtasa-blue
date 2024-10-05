@@ -15,6 +15,7 @@
 #include <CRect2D.h>
 
 #include <list>
+#include <bitset>
 
 #ifndef NULL
 #define NULL 0

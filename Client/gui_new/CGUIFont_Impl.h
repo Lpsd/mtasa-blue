@@ -13,7 +13,6 @@
 
 #include <gui/CGUIFont.h>
 #include <CEGUI/CEGUI.h>
-#include <CEGUI/FreeTypeFont.h>
 
 namespace GUINew{
     class CGUIFont_Impl;
@@ -46,4 +45,5 @@ private:
     CEGUI::Font*           m_pFont;
     CEGUI::FontManager*    m_pFontManager;
     CEGUI::GeometryBuffer* m_pGeometryBuffer;
+    CEGUI::RenderedText*   m_pRenderedText;
 };

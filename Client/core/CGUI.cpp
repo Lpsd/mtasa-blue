@@ -369,7 +369,7 @@ void CLocalGUI::DrawMouseCursor()
 {
     CGUI* pGUI = CCore::GetSingleton().GetGUI();
 
-    pGUI->DrawMouseCursor();
+    //pGUI->DrawMouseCursor();
 }
 
 CConsole* CLocalGUI::GetConsole()

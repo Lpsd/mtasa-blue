@@ -45,7 +45,7 @@ public:
 private:
     CGUI_Impl*                   m_pGUI;
     CGUITexture_Impl*            m_pTexture;
-    CEGUI::BasicImage*           m_pImage;
+    CEGUI::BitmapImage*          m_pImage;
     CEGUI::ImageManager*         m_pImagesetManager;
 
     #include "CGUIElement_Inc.h"

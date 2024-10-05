@@ -49,7 +49,7 @@ bool CGUITexture_Impl::LoadFromFile(const char* szFilename, const char* szResour
 
 void CGUITexture_Impl::LoadFromMemory(const void* pBuffer, unsigned int uiWidth, unsigned int uiHeight)
 {
-    m_pTexture->loadFromMemory(pBuffer, CEGUI::Sizef(uiWidth, uiHeight), CEGUI::Texture::PixelFormat::PF_RGBA);
+    m_pTexture->loadFromMemory(pBuffer, CEGUI::Sizef(uiWidth, uiHeight), CEGUI::Texture::PixelFormat::Rgba);
 }
 
 void CGUITexture_Impl::Clear()

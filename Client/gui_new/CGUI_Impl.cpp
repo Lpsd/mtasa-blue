@@ -14,29 +14,32 @@
 
 using std::list;
 
-#define CGUI_MTA_DEFAULT_FONT       "tahoma.ttf"        // %WINDIR%/font/<...>
-#define CGUI_MTA_DEFAULT_FONT_BOLD  "tahomabd.ttf"      // %WINDIR%/font/<...>
-#define CGUI_MTA_CLEAR_FONT         "verdana.ttf"       // %WINDIR%/font/<...>
+#define CGUI_MTA_DEFAULT_FONT      "tahoma.ttf"              // %WINDIR%/font/<...>
+#define CGUI_MTA_DEFAULT_FONT_BOLD "tahomabd.ttf"            // %WINDIR%/font/<...>
+#define CGUI_MTA_CLEAR_FONT        "verdana.ttf"             // %WINDIR%/font/<...>
 
-#define CGUI_MTA_DEFAULT_REG        "Tahoma (TrueType)"
-#define CGUI_MTA_DEFAULT_REG_BOLD   "Tahoma Bold (TrueType)"
-#define CGUI_MTA_CLEAR_REG          "Verdana (TrueType)"
+#define CGUI_MTA_DEFAULT_REG      "Tahoma (TrueType)"
+#define CGUI_MTA_DEFAULT_REG_BOLD "Tahoma Bold (TrueType)"
+#define CGUI_MTA_CLEAR_REG        "Verdana (TrueType)"
 
-#define CGUI_MTA_SUBSTITUTE_FONT    "unifont-5.1.20080907.ttf"  // GTA/MTA/<...>
-#define CGUI_MTA_SANS_FONT          "sans.ttf"     // GTA/MTA/<...>
-#define CGUI_SA_HEADER_FONT         "saheader.ttf" // GTA/MTA/<...>
-#define CGUI_SA_GOTHIC_FONT         "sagothic.ttf" // GTA/MTA/<...>
-#define CGUI_SA_HEADER_SIZE         26
-#define CGUI_SA_GOTHIC_SIZE         47
-#define CGUI_MTA_SANS_FONT_SIZE     9
+#define CGUI_MTA_SUBSTITUTE_FONT "unifont-5.1.20080907.ttf"            // GTA/MTA/<...>
+#define CGUI_MTA_SANS_FONT       "sans.ttf"                            // GTA/MTA/<...>
+#define CGUI_SA_HEADER_FONT      "saheader.ttf"                        // GTA/MTA/<...>
+#define CGUI_SA_GOTHIC_FONT      "sagothic.ttf"                        // GTA/MTA/<...>
+#define CGUI_SA_HEADER_SIZE      26
+#define CGUI_SA_GOTHIC_SIZE      47
+#define CGUI_MTA_SANS_FONT_SIZE  9
 
 const char* CEGUI_DEFAULT_SKIN_NAME = "GWEN";
-const char* CEGUI_ELEMENT_PREFIX = "GWEN"; // e.g CGUI/Button
-const char* CEGUI_IMAGESET_PREFIX = "GWEN"; // e.g CGUI-Images/MouseArrow
+const char* CEGUI_ELEMENT_PREFIX = "GWEN";             // e.g CGUI/Button
+const char* CEGUI_IMAGESET_PREFIX = "GWEN";            // e.g CGUI-Images/MouseArrow
 
 using namespace GUINew;
 
-CGUI_Impl::CGUI_Impl(IDirect3DDevice9* pDevice) : m_HasSchemeLoaded(false), m_fCurrentServerCursorAlpha(1.0f), m_pRenderer(&CEGUI::Direct3D9Renderer::bootstrapSystem(pDevice, 208, CalcMTASAPath("MTA").data()))
+CGUI_Impl::CGUI_Impl(IDirect3DDevice9* pDevice)
+    : m_HasSchemeLoaded(false),
+      m_fCurrentServerCursorAlpha(1.0f),
+      m_pRenderer(&CEGUI::Direct3D9Renderer::bootstrapSystem(pDevice, 299990, CalcMTASAPath("MTA").data()))
 {
     m_RenderOkTimer.SetMaxIncrement(100);
 
@@ -55,13 +58,8 @@ CGUI_Impl::CGUI_Impl(IDirect3DDevice9* pDevice) : m_HasSchemeLoaded(false), m_fC
     m_pWindowManager = CEGUI::WindowManager::getSingletonPtr();
     m_pWindowFactoryManager = CEGUI::WindowFactoryManager::getSingletonPtr();
 
-    // Setup system keys
-    m_pSystemKeys = &CEGUI::SystemKeys();
-
-    m_pGeometryBuffer = &m_pRenderer->createGeometryBuffer();
-
-    // Create any other CEGUI instances which require their own object
-    m_pMouseCursor = new CEGUI::MouseCursor();
+    auto renderMaterial = &m_pRenderer->createRenderMaterial(CEGUI::DefaultShaderType::Solid);
+    m_pGeometryBuffer = &m_pRenderer->createGeometryBufferColoured(*renderMaterial);
 
     m_pResourceProvider = m_pSystem->getResourceProvider();
     m_pDefaultResourceProvider = static_cast<CEGUI::DefaultResourceProvider*>(m_pSystem->getResourceProvider());
@@ -80,7 +78,6 @@ CGUI_Impl::CGUI_Impl(IDirect3DDevice9* pDevice) : m_HasSchemeLoaded(false), m_fC
     m_pDefaultResourceProvider->setResourceGroupDirectory("mta_looknfeels", CalcMTASAPath("MTA/cgui-0.8.7/datafiles/looknfeel").data());
     m_pDefaultResourceProvider->setResourceGroupDirectory("mta_xml_schemas", CalcMTASAPath("MTA/cgui-0.8.7/datafiles/xml_schemas").data());
 
-
     // Set the group directories
     CEGUI::Scheme::setDefaultResourceGroup("mta_schemes");
     CEGUI::ImageManager::setImagesetDefaultResourceGroup("mta_imagesets");
@@ -91,16 +88,21 @@ CGUI_Impl::CGUI_Impl(IDirect3DDevice9* pDevice) : m_HasSchemeLoaded(false), m_fC
     // Set XML parser defaults
     m_pXMLParser = m_pSystem->getXMLParser();
 
+    auto resolution = GetResolution();
+    CEGUI::TextureTarget* renderTextureTarget = m_pSystem->getRenderer()->createTextureTarget(false);
+    renderTextureTarget->declareRenderSize(CEGUI::Sizef(resolution.fX, resolution.fY));
+    m_pDefaultGUIContext = &m_pSystem->createGUIContext(static_cast<CEGUI::RenderTarget&>(*renderTextureTarget));
+
     if (m_pXMLParser->isPropertyPresent("SchemaDefaultResourceGroup"))
         m_pXMLParser->setProperty("SchemaDefaultResourceGroup", "mta_xml_schemas");
 
-    // Declare our custom CEGUI element types in the WindowFactoryManager (like ImageListboxItem)
-    //m_pWindowFactoryManager->addFactory(&CEGUI::getImageListboxItemFactory());
-    //m_pWindowFactoryManager->addFalagardWindowMapping("CGUI/ImageListboxItem", "CEGUI/ItemEntry", "CGUI/ImageListboxItem", "Falagard/ItemEntry");
+        // Declare our custom CEGUI element types in the WindowFactoryManager (like ImageListboxItem)
+        // m_pWindowFactoryManager->addFactory(&CEGUI::getImageListboxItemFactory());
+        // m_pWindowFactoryManager->addFalagardWindowMapping("CGUI/ImageListboxItem", "CEGUI/ItemEntry", "CGUI/ImageListboxItem", "Falagard/ItemEntry");
 
-    // Set logging to Informative for debug and Standard for release
+        // Set logging to Informative for debug and Standard for release
 #if defined(_DEBUG) || defined(DEBUG)
-    CEGUI::Logger::getSingleton().setLoggingLevel(CEGUI::Informative);
+    CEGUI::Logger::getSingleton().setLoggingLevel(CEGUI::LoggingLevel::Informative);
 #else
     CEGUI::Logger::getSingleton().setLoggingLevel(CEGUI::Standard);
 #endif
@@ -114,7 +116,7 @@ CGUI_Impl::CGUI_Impl(IDirect3DDevice9* pDevice) : m_HasSchemeLoaded(false), m_fC
     }
     catch (CEGUI::InvalidRequestException e)
     {
-        SString strMessage = e.getMessage().c_str();
+        SString strMessage = (const char*)e.getMessage().c_str();
         BrowseToSolution("create-fonts", EXIT_GAME_FIRST | ASK_GO_ONLINE, SString("Error loading fonts!\n\n%s", *strMessage));
     }
 
@@ -132,7 +134,7 @@ CGUI_Impl::CGUI_Impl(IDirect3DDevice9* pDevice) : m_HasSchemeLoaded(false), m_fC
     }
     catch (CEGUI::InvalidRequestException e)
     {
-        SString strMessage = e.getMessage().c_str();
+        SString strMessage = (const char*)e.getMessage().c_str();
         BrowseToSolution("create-fonts", EXIT_GAME_FIRST | ASK_GO_ONLINE, SString("Error loading fonts!\n\n%s", *strMessage));
     }
 }
@@ -169,27 +171,27 @@ void CGUI_Impl::SetSkin(const char* szName)
     schemeFileName += ".scheme";
 
     m_CurrentScheme = &m_pSchemeManager->createFromFile(schemeFileName.c_str(), "mta_schemes");
-    
+
     m_HasSchemeLoaded = true;
 
-    m_pSystem->getDefaultGUIContext().getMouseCursor().setDefaultImage(GetImagesetPrefix() + "/Scroller.ButtonV.Normal.Top");
-    //m_pSystem->getSingleton().getDefaultGUIContext().setDefaultTooltipType(GetElementPrefix() + "/Tooltip");
+    m_pDefaultGUIContext->setDefaultCursorImage(GetImagesetPrefix() + "/Scroller.ButtonV.Normal.Top");
+    // m_pSystem->getSingleton().getDefaultGUIContext().setDefaultTooltipType(GetElementPrefix() + "/Tooltip");
 
     // Destroy any windows we already have
     m_pWindowManager->destroyAllWindows();
 
     // Create dummy GUI root
     m_pTop = m_pWindowManager->createWindow("DefaultWindow", "guiroot");
-    m_pSystem->getDefaultGUIContext().setRootWindow(m_pTop);
+    m_pDefaultGUIContext->setRootWindow(m_pTop);
 
     // Disable single click timeouts
-    m_pSystem->getDefaultGUIContext().setMouseButtonClickTimeout(100000000.0f);
+    m_pDefaultGUIContext->setMouseButtonMultiClickTimeout(100000000.0f);
 
     // Set our default font
-    m_pSystem->getDefaultGUIContext().setDefaultFont(m_pDefaultFont->GetFont());
+    m_pDefaultGUIContext->setDefaultFont(m_pDefaultFont->GetFont());
 
     // Grab our default cursor
-    m_pCursor = m_pSystem->getDefaultGUIContext().getMouseCursor().getDefaultImage();
+    m_pCursor = m_pDefaultGUIContext->getDefaultCursorImage();
 
     // Used to create unique names for widget instances
     m_ulPreviousUnique = 0;
@@ -205,7 +207,7 @@ void CGUI_Impl::SetSkin(const char* szName)
 
 void CGUI_Impl::SetBidiEnabled(bool bEnabled)
 {
-    //m_pSystem->SetBidiEnabled(bEnabled);
+    // m_pSystem->SetBidiEnabled(bEnabled);
 }
 
 void CGUI_Impl::SubscribeToMouseEvents()
@@ -215,17 +217,17 @@ void CGUI_Impl::SubscribeToMouseEvents()
 
     pEvents->subscribeEvent("Window/" + CEGUI::Window::EventCharacterKey, CEGUI::Event::Subscriber(&CGUI_Impl::Event_CharacterKey, this));
     pEvents->subscribeEvent("Window/" + CEGUI::Window::EventKeyDown, CEGUI::Event::Subscriber(&CGUI_Impl::Event_KeyDown, this));
-    pEvents->subscribeEvent("Window/" + CEGUI::Window::EventMouseClick, CEGUI::Event::Subscriber(&CGUI_Impl::Event_MouseClick, this));
-    pEvents->subscribeEvent("Window/" + CEGUI::Window::EventMouseDoubleClick, CEGUI::Event::Subscriber(&CGUI_Impl::Event_MouseDoubleClick, this));
+    pEvents->subscribeEvent("Window/" + CEGUI::Window::EventClick, CEGUI::Event::Subscriber(&CGUI_Impl::Event_MouseClick, this));
+    pEvents->subscribeEvent("Window/" + CEGUI::Window::EventDoubleClick, CEGUI::Event::Subscriber(&CGUI_Impl::Event_MouseDoubleClick, this));
     pEvents->subscribeEvent("Window/" + CEGUI::Window::EventMouseButtonDown, CEGUI::Event::Subscriber(&CGUI_Impl::Event_MouseButtonDown, this));
     pEvents->subscribeEvent("Window/" + CEGUI::Window::EventMouseButtonUp, CEGUI::Event::Subscriber(&CGUI_Impl::Event_MouseButtonUp, this));
-    pEvents->subscribeEvent("Window/" + CEGUI::Window::EventMouseWheel, CEGUI::Event::Subscriber(&CGUI_Impl::Event_MouseWheel, this));
-    pEvents->subscribeEvent("Window/" + CEGUI::Window::EventMouseMove, CEGUI::Event::Subscriber(&CGUI_Impl::Event_MouseMove, this));
-    pEvents->subscribeEvent("Window/" + CEGUI::Window::EventMouseEntersArea, CEGUI::Event::Subscriber(&CGUI_Impl::Event_MouseEnter, this));
-    pEvents->subscribeEvent("Window/" + CEGUI::Window::EventMouseLeavesArea, CEGUI::Event::Subscriber(&CGUI_Impl::Event_MouseLeave, this));
+    pEvents->subscribeEvent("Window/" + CEGUI::Window::EventScroll, CEGUI::Event::Subscriber(&CGUI_Impl::Event_MouseWheel, this));
+    pEvents->subscribeEvent("Window/" + CEGUI::Window::EventCursorMove, CEGUI::Event::Subscriber(&CGUI_Impl::Event_MouseMove, this));
+    pEvents->subscribeEvent("Window/" + CEGUI::Window::EventCursorEntersArea, CEGUI::Event::Subscriber(&CGUI_Impl::Event_MouseEnter, this));
+    pEvents->subscribeEvent("Window/" + CEGUI::Window::EventCursorLeavesArea, CEGUI::Event::Subscriber(&CGUI_Impl::Event_MouseLeave, this));
     pEvents->subscribeEvent("Window/" + CEGUI::Window::EventMoved, CEGUI::Event::Subscriber(&CGUI_Impl::Event_Moved, this));
     pEvents->subscribeEvent("Window/" + CEGUI::Window::EventSized, CEGUI::Event::Subscriber(&CGUI_Impl::Event_Sized, this));
-    //pEvents->subscribeEvent("Window/" + CEGUI::Window::EventRedrawRequested, CEGUI::Event::Subscriber(&CGUI_Impl::Event_RedrawRequested, this));
+    // pEvents->subscribeEvent("Window/" + CEGUI::Window::EventRedrawRequested, CEGUI::Event::Subscriber(&CGUI_Impl::Event_RedrawRequested, this));
     pEvents->subscribeEvent("Window/" + CEGUI::Window::EventActivated, CEGUI::Event::Subscriber(&CGUI_Impl::Event_FocusGained, this));
     pEvents->subscribeEvent("Window/" + CEGUI::Window::EventDeactivated, CEGUI::Event::Subscriber(&CGUI_Impl::Event_FocusLost, this));
 }
@@ -238,7 +240,7 @@ CVector2D CGUI_Impl::GetResolution()
 
 void CGUI_Impl::SetResolution(float fWidth, float fHeight)
 {
-    m_pRenderer->setDisplaySize(CEGUI::Size(fWidth, fHeight));
+    m_pRenderer->setDisplaySize(CEGUI::Sizef(fWidth, fHeight));
 }
 
 void CGUI_Impl::Draw()
@@ -257,7 +259,7 @@ void CGUI_Impl::Draw()
     m_pSystem->renderAllGUIContexts();
 
     // I don't think this is required anymore? There's most likely a better way to catch rendering issues now
-    //if (!m_pSystem->renderAllGUIContexts())
+    // if (!m_pSystem->renderAllGUIContexts())
     //{
     //    if (m_RenderOkTimer.Get() > 4000)
     //    {
@@ -265,7 +267,7 @@ void CGUI_Impl::Draw()
     //        BrowseToSolution("gui-render", EXIT_GAME_FIRST, "Some sort of DirectX problem has occurred");
     //    }
     //}
-    //else
+    // else
     //    m_RenderOkTimer.Reset();
 }
 
@@ -282,14 +284,9 @@ void CGUI_Impl::Restore()
     }
     catch (CEGUI::RendererException& exception)
     {
-        MessageBox(0, exception.getMessage().c_str(), "CEGUI Exception", MB_OK | MB_ICONERROR | MB_TOPMOST);
+        MessageBox(0, (const char*)exception.getMessage().c_str(), "CEGUI Exception", MB_OK | MB_ICONERROR | MB_TOPMOST);
         TerminateProcess(GetCurrentProcess(), 1);
     }
-}
-
-void CGUI_Impl::DrawMouseCursor()
-{
-    m_pMouseCursor->draw();
 }
 
 void CGUI_Impl::ProcessMouseInput(CGUIMouseInput eMouseInput, unsigned long ulX, unsigned long ulY, CGUIMouseButton eMouseButton)
@@ -297,26 +294,23 @@ void CGUI_Impl::ProcessMouseInput(CGUIMouseInput eMouseInput, unsigned long ulX,
     switch (eMouseInput)
     {
         case CGUI_MI_MOUSEMOVE:
-            m_pSystem->getDefaultGUIContext().injectMouseMove(static_cast<float>(ulX), static_cast<float>(ulY));
+            m_pDefaultGUIContext->injectMouseMove(static_cast<float>(ulX), static_cast<float>(ulY));
             break;
 
         case CGUI_MI_MOUSEPOS:
-            m_pSystem->getDefaultGUIContext().injectMousePosition(static_cast<float>(ulX), static_cast<float>(ulY));
+            m_pDefaultGUIContext->injectMousePosition(static_cast<float>(ulX), static_cast<float>(ulY));
             break;
 
         case CGUI_MI_MOUSEDOWN:
-            m_pSystem->getDefaultGUIContext().injectMouseButtonDown(static_cast<CEGUI::MouseButton>(eMouseButton));
+            m_pDefaultGUIContext->injectMouseButtonDown(static_cast<CEGUI::MouseButton>(eMouseButton));
             break;
 
         case CGUI_MI_MOUSEUP:
-            m_pSystem->getDefaultGUIContext().injectMouseButtonUp(static_cast<CEGUI::MouseButton>(eMouseButton));
+            m_pDefaultGUIContext->injectMouseButtonUp(static_cast<CEGUI::MouseButton>(eMouseButton));
             break;
 
         case CGUI_MI_MOUSEWHEEL:
-            if ((signed long)ulX > 0)
-                m_pSystem->getDefaultGUIContext().injectMouseWheelChange(+1);
-            else
-                m_pSystem->getDefaultGUIContext().injectMouseWheelChange(-1);
+            m_pDefaultGUIContext->injectMouseWheelChange((signed long)ulX > 0 ? +1 : -1);
             break;
     }
 }
@@ -325,11 +319,11 @@ void CGUI_Impl::ProcessKeyboardInput(unsigned long ulKey, bool bIsDown)
 {
     if (bIsDown)
     {
-        m_pSystem->getDefaultGUIContext().injectKeyDown(CEGUI::Key::Scan(ulKey));
+        m_pDefaultGUIContext->injectKeyDown(CEGUI::Key::Scan(ulKey));
     }
     else
     {
-        m_pSystem->getDefaultGUIContext().injectKeyUp(CEGUI::Key::Scan(ulKey));
+        m_pDefaultGUIContext->injectKeyUp(CEGUI::Key::Scan(ulKey));
     }
 }
 
@@ -345,7 +339,8 @@ bool CGUI_Impl::GetGUIInputEnabled()
             break;
         case INPUTMODE_NO_BINDS_ON_EDIT:
         {
-            CEGUI::Window* pActiveWindow = m_pTop->getActiveChild();
+            CEGUI::Window* pActiveWindow = m_pDefaultGUIContext->getActiveWindow();
+
             if (!pActiveWindow || pActiveWindow == m_pTop || !pActiveWindow->isVisible())
             {
                 return false;
@@ -389,19 +384,19 @@ eInputMode CGUI_Impl::GetGUIInputMode()
 
 CEGUI::String CGUI_Impl::GetUTFString(const char* szInput)
 {
-    CEGUI::String strUTF = (CEGUI::utf8*)szInput;            // Convert into a CEGUI String
+    CEGUI::String strUTF = szInput;            // Convert into a CEGUI String
     return strUTF;
 }
 
 CEGUI::String CGUI_Impl::GetUTFString(const std::string& strInput)
 {
-    CEGUI::String strUTF = (CEGUI::utf8*)strInput.c_str();            // Convert into a CEGUI String
+    CEGUI::String strUTF = strInput.c_str();            // Convert into a CEGUI String
     return strUTF;
 }
 
 void CGUI_Impl::ProcessCharacter(unsigned long ulCharacter)
 {
-    m_pSystem->getDefaultGUIContext().injectChar(ulCharacter);
+    m_pSystem->getGUIContexts()[0]->injectChar(ulCharacter);
 }
 
 CGUIMessageBox* CGUI_Impl::CreateMessageBox(const char* szTitle, const char* szMessage, unsigned int uiFlags)
@@ -536,24 +531,17 @@ CGUIWindow* CGUI_Impl::CreateWnd(CGUIElement* pParent, const char* szCaption)
 
 void CGUI_Impl::SetCursorEnabled(bool bEnabled)
 {
-    if (bEnabled)
-    {
-        m_pMouseCursor->show();
-    }
-    else
-    {
-        m_pMouseCursor->hide();
-    }
+    m_pDefaultGUIContext->setCursorVisible(bEnabled);
 }
 
 bool CGUI_Impl::IsCursorEnabled()
 {
-    return m_pMouseCursor->isVisible();
+    return m_pDefaultGUIContext->isCursorVisible();
 }
 
 void CGUI_Impl::SetCursorAlpha(float fAlpha, bool bOnlyCurrentServer)
 {
-    //m_pMouseCursor->setAlpha(fAlpha)
+    // m_pMouseCursor->setAlpha(fAlpha)
 
     if (bOnlyCurrentServer)
         SetCurrentServerCursorAlpha(fAlpha);
@@ -571,7 +559,7 @@ float CGUI_Impl::GetCurrentServerCursorAlpha()
 
 eCursorType CGUI_Impl::GetCursorType()
 {
-    auto image = m_pMouseCursor->getImage();
+    auto image = m_pDefaultGUIContext->getCursorImage();
 
     if (image == nullptr)
         return CURSORTYPE_NONE;
@@ -671,9 +659,8 @@ bool CGUI_Impl::Event_CharacterKey(const CEGUI::EventArgs& Args)
         CGUIKeyEventArgs           NewArgs;
 
         // copy the variables
-        NewArgs.codepoint = e.codepoint;
-        NewArgs.scancode = (CGUIKeys::Scan)e.scancode;
-        NewArgs.sysKeys = e.sysKeys;
+        NewArgs.scancode = (CGUIKeys::Scan)e.d_key;
+        NewArgs.modifiers = e.d_modifiers.getMask();
 
         // get the CGUIElement
         CGUIElement* pElement = reinterpret_cast<CGUIElement*>((e.window)->getUserData());
@@ -750,9 +737,8 @@ bool CGUI_Impl::Event_KeyDown(const CEGUI::EventArgs& Args)
         CGUIKeyEventArgs           NewArgs;
 
         // copy the variables
-        NewArgs.codepoint = e.codepoint;
-        NewArgs.scancode = (CGUIKeys::Scan)e.scancode;
-        NewArgs.sysKeys = e.sysKeys;
+        NewArgs.scancode = (CGUIKeys::Scan)e.d_key;
+        NewArgs.modifiers = e.d_modifiers.getMask();
 
         // get the CGUIElement
         CGUIElement* pElement = reinterpret_cast<CGUIElement*>((e.window)->getUserData());
@@ -761,13 +747,13 @@ bool CGUI_Impl::Event_KeyDown(const CEGUI::EventArgs& Args)
         m_KeyDownHandlers[m_Channel](NewArgs);
     }
 
-    switch (KeyboardArgs.scancode)
+    switch (KeyboardArgs.d_key)
     {
         // Cut/Copy keys
-        case CEGUI::Key::X:
-        case CEGUI::Key::C:
+        case CEGUI::Key::Scan::X:
+        case CEGUI::Key::Scan::C:
         {
-            if (KeyboardArgs.sysKeys & CEGUI::Control)
+            if (KeyboardArgs.d_modifiers.hasAll(CEGUI::ModifierKeys::Ctrl()))
             {
                 // Data to copy
                 CEGUI::String strTemp;
@@ -780,15 +766,15 @@ bool CGUI_Impl::Event_KeyDown(const CEGUI::EventArgs& Args)
                     CEGUI::Editbox* WndEdit = reinterpret_cast<CEGUI::Editbox*>(Wnd);
 
                     // Don't allow cutting/copying if the editbox is masked
-                    if (!WndEdit->isTextMasked())
+                    if (!WndEdit->isTextMaskingEnabled())
                     {
                         // Get the text from the editbox
-                        size_t sizeSelectionStart = WndEdit->getSelectionStartIndex();
+                        size_t sizeSelectionStart = WndEdit->getSelectionStart();
                         size_t sizeSelectionLength = WndEdit->getSelectionLength();
                         strTemp = WndEdit->getText().substr(sizeSelectionStart, sizeSelectionLength);
 
                         // If the user cut, remove the text too
-                        if (KeyboardArgs.scancode == CEGUI::Key::X)
+                        if (KeyboardArgs.d_key == CEGUI::Key::Scan::X)
                         {
                             // Read only?
                             if (!WndEdit->isReadOnly())
@@ -809,12 +795,12 @@ bool CGUI_Impl::Event_KeyDown(const CEGUI::EventArgs& Args)
                     CEGUI::MultiLineEditbox* WndEdit = reinterpret_cast<CEGUI::MultiLineEditbox*>(Wnd);
 
                     // Get the text from the editbox
-                    size_t sizeSelectionStart = WndEdit->getSelectionStartIndex();
+                    size_t sizeSelectionStart = WndEdit->getSelectionStart();
                     size_t sizeSelectionLength = WndEdit->getSelectionLength();
                     strTemp = WndEdit->getText().substr(sizeSelectionStart, sizeSelectionLength);
 
                     // If the user cut, remove the text too
-                    if (KeyboardArgs.scancode == CEGUI::Key::X)
+                    if (KeyboardArgs.d_key == CEGUI::Key::Scan::X)
                     {
                         // Read only?
                         if (!WndEdit->isReadOnly())
@@ -831,7 +817,7 @@ bool CGUI_Impl::Event_KeyDown(const CEGUI::EventArgs& Args)
                 if (strTemp.length() > 0)
                 {
                     // Convert it to Unicode
-                    std::wstring strUTF = MbUTF8ToUTF16(strTemp.c_str());
+                    std::wstring strUTF = MbUTF8ToUTF16((const char*)strTemp.c_str());
 
                     // Open and empty the clipboard
                     OpenClipboard(NULL);
@@ -855,12 +841,12 @@ bool CGUI_Impl::Event_KeyDown(const CEGUI::EventArgs& Args)
         }
 
         // Paste keys
-        case CEGUI::Key::V:
+        case CEGUI::Key::Scan::V:
         {
-            if (KeyboardArgs.sysKeys & CEGUI::Control)
+            if (KeyboardArgs.d_modifiers.hasAll(CEGUI::ModifierKeys::Ctrl()))
             {
                 CEGUI::Window* Wnd = reinterpret_cast<CEGUI::Window*>(KeyboardArgs.window);
-                if (Wnd->getType() == GetElementPrefix() +  "/Editbox" || Wnd->getType() == GetElementPrefix() + "/MultiLineEditbox")
+                if (Wnd->getType() == GetElementPrefix() + "/Editbox" || Wnd->getType() == GetElementPrefix() + "/MultiLineEditbox")
                 {
                     // Open the clipboard
                     OpenClipboard(NULL);
@@ -887,7 +873,7 @@ bool CGUI_Impl::Event_KeyDown(const CEGUI::EventArgs& Args)
                                 return true;
                             }
                             strEditText = WndEdit->getText();
-                            iSelectionStart = WndEdit->getSelectionStartIndex();
+                            iSelectionStart = WndEdit->getSelectionStart();
                             iSelectionLength = WndEdit->getSelectionLength();
                             iMaxLength = WndEdit->getMaxTextLength();
                             iCaratIndex = WndEdit->getCaretIndex();
@@ -903,7 +889,7 @@ bool CGUI_Impl::Event_KeyDown(const CEGUI::EventArgs& Args)
                             }
 
                             strEditText = WndEdit->getText();
-                            iSelectionStart = WndEdit->getSelectionStartIndex();
+                            iSelectionStart = WndEdit->getSelectionStart();
                             iSelectionLength = WndEdit->getSelectionLength();
                             iMaxLength = WndEdit->getMaxTextLength();
                             iCaratIndex = WndEdit->getCaretIndex();
@@ -942,7 +928,7 @@ bool CGUI_Impl::Event_KeyDown(const CEGUI::EventArgs& Args)
                         }
 
                         // Put the editbox's data into a string and insert the data if it has not reached it's maximum text length
-                        std::wstring tmp = MbUTF8ToUTF16(strEditText.c_str());
+                        std::wstring tmp = MbUTF8ToUTF16((const char*)strEditText.c_str());
                         if ((strClipboardText.length() + tmp.length() - iSelectionLength) <= iMaxLength)
                         {
                             // Are there characters selected?
@@ -1011,27 +997,27 @@ bool CGUI_Impl::Event_KeyDown(const CEGUI::EventArgs& Args)
         }
 
         // Select all key
-        case CEGUI::Key::A:
+        case CEGUI::Key::Scan::A:
         {
-            if (KeyboardArgs.sysKeys & CEGUI::Control)
+        if (KeyboardArgs.d_modifiers.hasAll(CEGUI::ModifierKeys::Ctrl()))
+        {
+            // Edit boxes
+            CEGUI::Window* Wnd = reinterpret_cast<CEGUI::Window*>(KeyboardArgs.window);
+            if (Wnd->getType() == GetElementPrefix() + "/Editbox")
             {
-                // Edit boxes
-                CEGUI::Window* Wnd = reinterpret_cast<CEGUI::Window*>(KeyboardArgs.window);
-                if (Wnd->getType() == GetElementPrefix() + "/Editbox")
-                {
-                    // Turn our event window into an editbox
-                    CEGUI::Editbox* WndEdit = reinterpret_cast<CEGUI::Editbox*>(Wnd);
-                    WndEdit->setSelection(0, WndEdit->getText().size());
-                }
-                else if (Wnd->getType() == GetElementPrefix() + "/MultiLineEditbox")
-                {
-                    // Turn our event window into a multiline editbox
-                    CEGUI::MultiLineEditbox* WndEdit = reinterpret_cast<CEGUI::MultiLineEditbox*>(Wnd);
-                    WndEdit->setSelection(0, WndEdit->getText().size());
-                }
+                // Turn our event window into an editbox
+                CEGUI::Editbox* WndEdit = reinterpret_cast<CEGUI::Editbox*>(Wnd);
+                WndEdit->setSelection(0, WndEdit->getText().size());
             }
+            else if (Wnd->getType() == GetElementPrefix() + "/MultiLineEditbox")
+            {
+                // Turn our event window into a multiline editbox
+                CEGUI::MultiLineEditbox* WndEdit = reinterpret_cast<CEGUI::MultiLineEditbox*>(Wnd);
+                WndEdit->setSelection(0, WndEdit->getText().size());
+            }
+        }
 
-            break;
+        break;
         }
     }
 
@@ -1040,41 +1026,41 @@ bool CGUI_Impl::Event_KeyDown(const CEGUI::EventArgs& Args)
 
 void CGUI_Impl::SetDefaultGuiWorkingDirectory(const SString& strDir)
 {
-    //assert(m_GuiWorkingDirectoryStack.empty());
-    //m_GuiWorkingDirectoryStack.push_back(PathConform(strDir + "\\"));
-    //ApplyGuiWorkingDirectory();
+    // assert(m_GuiWorkingDirectoryStack.empty());
+    // m_GuiWorkingDirectoryStack.push_back(PathConform(strDir + "\\"));
+    // ApplyGuiWorkingDirectory();
 }
 
 void CGUI_Impl::PushGuiWorkingDirectory(const SString& strDir)
 {
-    //m_GuiWorkingDirectoryStack.push_back(PathConform(strDir + "\\"));
-    //ApplyGuiWorkingDirectory();
+    // m_GuiWorkingDirectoryStack.push_back(PathConform(strDir + "\\"));
+    // ApplyGuiWorkingDirectory();
 }
 
 void CGUI_Impl::PopGuiWorkingDirectory(const SString& strDirCheck)
 {
-    //if (m_GuiWorkingDirectoryStack.size() < 2)
+    // if (m_GuiWorkingDirectoryStack.size() < 2)
     //{
-    //    OutputDebugLine(SString("CGUI_Impl::PopWorkingDirectory - Stack empty. Expected '%s'", *strDirCheck));
-    //}
-    //else
+    //     OutputDebugLine(SString("CGUI_Impl::PopWorkingDirectory - Stack empty. Expected '%s'", *strDirCheck));
+    // }
+    // else
     //{
-    //    if (!strDirCheck.empty())
-    //    {
-    //        const SString& strWas = m_GuiWorkingDirectoryStack.back();
-    //        if (strDirCheck != strWas)
-    //        {
-    //            OutputDebugLine(SString("CGUI_Impl::PopWorkingDirectory - Mismatch. Got '%s', expected '%s'", *strWas, *strDirCheck));
-    //        }
-    //    }
-    //    m_GuiWorkingDirectoryStack.pop_back();
-    //}
-    //ApplyGuiWorkingDirectory();
+    //     if (!strDirCheck.empty())
+    //     {
+    //         const SString& strWas = m_GuiWorkingDirectoryStack.back();
+    //         if (strDirCheck != strWas)
+    //         {
+    //             OutputDebugLine(SString("CGUI_Impl::PopWorkingDirectory - Mismatch. Got '%s', expected '%s'", *strWas, *strDirCheck));
+    //         }
+    //     }
+    //     m_GuiWorkingDirectoryStack.pop_back();
+    // }
+    // ApplyGuiWorkingDirectory();
 }
 
 void CGUI_Impl::ApplyGuiWorkingDirectory()
 {
-    //CEGUI::System::getSingleton().SetGuiWorkingDirectory(m_GuiWorkingDirectoryStack.back());
+    // CEGUI::System::getSingleton().SetGuiWorkingDirectory(m_GuiWorkingDirectoryStack.back());
 }
 
 const SString& CGUI_Impl::GetGuiWorkingDirectory() const
@@ -1085,7 +1071,7 @@ const SString& CGUI_Impl::GetGuiWorkingDirectory() const
 
 bool CGUI_Impl::Event_MouseClick(const CEGUI::EventArgs& Args)
 {
-    const CEGUI::MouseEventArgs& e = reinterpret_cast<const CEGUI::MouseEventArgs&>(Args);
+    const CEGUI::MouseButtonEventArgs& e = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(Args);
 
     // get the approriate cegui window
     CEGUI::Window* wnd = e.window;
@@ -1105,11 +1091,9 @@ bool CGUI_Impl::Event_MouseClick(const CEGUI::EventArgs& Args)
         CGUIMouseEventArgs NewArgs;
 
         // copy the variables
-        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.button);
-        NewArgs.moveDelta = CVector2D(e.moveDelta.d_x, e.moveDelta.d_y);
-        NewArgs.position = CGUIPosition(e.position.d_x, e.position.d_y);
-        NewArgs.sysKeys = e.sysKeys;
-        NewArgs.wheelChange = e.wheelChange;
+        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.d_button);
+        NewArgs.position = CGUIPosition(e.d_globalPos.x, e.d_globalPos.y);
+        NewArgs.modifiers = e.d_modifiers.getMask();
         NewArgs.pWindow = pElement;
 
         m_MouseClickHandlers[m_Channel](NewArgs);
@@ -1119,7 +1103,7 @@ bool CGUI_Impl::Event_MouseClick(const CEGUI::EventArgs& Args)
 
 bool CGUI_Impl::Event_MouseDoubleClick(const CEGUI::EventArgs& Args)
 {
-    const CEGUI::MouseEventArgs& e = reinterpret_cast<const CEGUI::MouseEventArgs&>(Args);
+    const CEGUI::MouseButtonEventArgs& e = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(Args);
 
     // get the approriate cegui window
     CEGUI::Window* wnd = e.window;
@@ -1139,11 +1123,9 @@ bool CGUI_Impl::Event_MouseDoubleClick(const CEGUI::EventArgs& Args)
         CGUIMouseEventArgs NewArgs;
 
         // copy the variables
-        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.button);
-        NewArgs.moveDelta = CVector2D(e.moveDelta.d_x, e.moveDelta.d_y);
-        NewArgs.position = CGUIPosition(e.position.d_x, e.position.d_y);
-        NewArgs.sysKeys = e.sysKeys;
-        NewArgs.wheelChange = e.wheelChange;
+        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.d_button);
+        NewArgs.position = CGUIPosition(e.d_globalPos.x, e.d_globalPos.y);
+        NewArgs.modifiers = e.d_modifiers.getMask();
         NewArgs.pWindow = pElement;
 
         m_MouseDoubleClickHandlers[m_Channel](NewArgs);
@@ -1153,7 +1135,7 @@ bool CGUI_Impl::Event_MouseDoubleClick(const CEGUI::EventArgs& Args)
 
 bool CGUI_Impl::Event_MouseButtonDown(const CEGUI::EventArgs& Args)
 {
-    const CEGUI::MouseEventArgs& e = reinterpret_cast<const CEGUI::MouseEventArgs&>(Args);
+    const CEGUI::MouseButtonEventArgs& e = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(Args);
 
     // get the approriate cegui window
     CEGUI::Window* wnd = e.window;
@@ -1170,11 +1152,11 @@ bool CGUI_Impl::Event_MouseButtonDown(const CEGUI::EventArgs& Args)
     else
     {
         // If there's no element, we're probably dealing with the root element
-        CEGUI::Window* pActiveWindow = m_pTop->getActiveChild();
+        CEGUI::Window* pActiveWindow = m_pDefaultGUIContext->getActiveWindow();
         if (m_pTop == wnd && pActiveWindow)
         {
-            // Deactivate active window to trigger onClientGUIBlur
-            pActiveWindow->deactivate();
+        // Deactivate active window to trigger onClientGUIBlur
+        pActiveWindow->deactivate();
         }
     }
 
@@ -1183,11 +1165,9 @@ bool CGUI_Impl::Event_MouseButtonDown(const CEGUI::EventArgs& Args)
         CGUIMouseEventArgs NewArgs;
 
         // copy the variables
-        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.button);
-        NewArgs.moveDelta = CVector2D(e.moveDelta.d_x, e.moveDelta.d_y);
-        NewArgs.position = CGUIPosition(e.position.d_x, e.position.d_y);
-        NewArgs.sysKeys = e.sysKeys;
-        NewArgs.wheelChange = e.wheelChange;
+        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.d_button);
+        NewArgs.position = CGUIPosition(e.d_globalPos.x, e.d_globalPos.y);
+        NewArgs.modifiers = e.d_modifiers.getMask();
         NewArgs.pWindow = pElement;
 
         m_MouseButtonDownHandlers[m_Channel](NewArgs);
@@ -1200,8 +1180,8 @@ bool CGUI_Impl::Event_MouseButtonUp(const CEGUI::EventArgs& Args)
 {
     if (m_MouseButtonUpHandlers[m_Channel])
     {
-        const CEGUI::MouseEventArgs& e = reinterpret_cast<const CEGUI::MouseEventArgs&>(Args);
-        CGUIMouseEventArgs           NewArgs;
+        const CEGUI::MouseButtonEventArgs& e = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(Args);
+        CGUIMouseEventArgs                 NewArgs;
 
         // get the approriate cegui window
         CEGUI::Window* wnd = e.window;
@@ -1210,11 +1190,9 @@ bool CGUI_Impl::Event_MouseButtonUp(const CEGUI::EventArgs& Args)
         wnd = GetMasterWindow(wnd);
 
         // copy the variables
-        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.button);
-        NewArgs.moveDelta = CVector2D(e.moveDelta.d_x, e.moveDelta.d_y);
-        NewArgs.position = CGUIPosition(e.position.d_x, e.position.d_y);
-        NewArgs.sysKeys = e.sysKeys;
-        NewArgs.wheelChange = e.wheelChange;
+        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.d_button);
+        NewArgs.position = CGUIPosition(e.d_globalPos.x, e.d_globalPos.y);
+        NewArgs.modifiers = e.d_modifiers.getMask();
 
         // get the CGUIElement
         CGUIElement* pElement = reinterpret_cast<CGUIElement*>(wnd->getUserData());
@@ -1229,8 +1207,8 @@ bool CGUI_Impl::Event_MouseWheel(const CEGUI::EventArgs& Args)
 {
     if (m_MouseWheelHandlers[m_Channel])
     {
-        const CEGUI::MouseEventArgs& e = reinterpret_cast<const CEGUI::MouseEventArgs&>(Args);
-        CGUIMouseEventArgs           NewArgs;
+        const CEGUI::MouseButtonEventArgs& e = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(Args);
+        CGUIMouseEventArgs                 NewArgs;
 
         // get the approriate cegui window
         CEGUI::Window* wnd = e.window;
@@ -1239,11 +1217,9 @@ bool CGUI_Impl::Event_MouseWheel(const CEGUI::EventArgs& Args)
         wnd = GetMasterWindow(wnd);
 
         // copy the variables
-        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.button);
-        NewArgs.moveDelta = CVector2D(e.moveDelta.d_x, e.moveDelta.d_y);
-        NewArgs.position = CGUIPosition(e.position.d_x, e.position.d_y);
-        NewArgs.sysKeys = e.sysKeys;
-        NewArgs.wheelChange = e.wheelChange;
+        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.d_button);
+        NewArgs.position = CGUIPosition(e.d_globalPos.x, e.d_globalPos.y);
+        NewArgs.modifiers = e.d_modifiers.getMask();
 
         // get the CGUIElement
         CGUIElement* pElement = reinterpret_cast<CGUIElement*>(wnd->getUserData());
@@ -1258,8 +1234,8 @@ bool CGUI_Impl::Event_MouseMove(const CEGUI::EventArgs& Args)
 {
     if (m_MouseMoveHandlers[m_Channel])
     {
-        const CEGUI::MouseEventArgs& e = reinterpret_cast<const CEGUI::MouseEventArgs&>(Args);
-        CGUIMouseEventArgs           NewArgs;
+        const CEGUI::MouseButtonEventArgs& e = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(Args);
+        CGUIMouseEventArgs                 NewArgs;
 
         // get the approriate cegui window
         CEGUI::Window* wnd = e.window;
@@ -1268,11 +1244,9 @@ bool CGUI_Impl::Event_MouseMove(const CEGUI::EventArgs& Args)
         wnd = GetMasterWindow(wnd);
 
         // copy the variables
-        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.button);
-        NewArgs.moveDelta = CVector2D(e.moveDelta.d_x, e.moveDelta.d_y);
-        NewArgs.position = CGUIPosition(e.position.d_x, e.position.d_y);
-        NewArgs.sysKeys = e.sysKeys;
-        NewArgs.wheelChange = e.wheelChange;
+        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.d_button);
+        NewArgs.position = CGUIPosition(e.d_globalPos.x, e.d_globalPos.y);
+        NewArgs.modifiers = e.d_modifiers.getMask();
 
         // get the CGUIElement
         CGUIElement* pElement = reinterpret_cast<CGUIElement*>(wnd->getUserData());
@@ -1285,7 +1259,8 @@ bool CGUI_Impl::Event_MouseMove(const CEGUI::EventArgs& Args)
 
 bool CGUI_Impl::Event_MouseEnter(const CEGUI::EventArgs& Args)
 {
-    const CEGUI::MouseEventArgs& e = reinterpret_cast<const CEGUI::MouseEventArgs&>(Args);
+    const CEGUI::MouseButtonEventArgs& e = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(Args);
+    CGUIMouseEventArgs                 NewArgs;
 
     // get the approriate cegui window
     CEGUI::Window* wnd = e.window;
@@ -1306,25 +1281,22 @@ bool CGUI_Impl::Event_MouseEnter(const CEGUI::EventArgs& Args)
 
         // copy the variables
         NewArgs.pWindow = pElement;
-        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.button);
-        NewArgs.moveDelta = CVector2D(e.moveDelta.d_x, e.moveDelta.d_y);
-        NewArgs.position = CGUIPosition(e.position.d_x, e.position.d_y);
-        NewArgs.sysKeys = e.sysKeys;
-        NewArgs.wheelChange = e.wheelChange;
-        NewArgs.clickCount = e.clickCount;
+        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.d_button);
+        NewArgs.position = CGUIPosition(e.d_globalPos.x, e.d_globalPos.y);
+        NewArgs.modifiers = e.d_modifiers.getMask();
 
-        CEGUI::Window* switchedWindow = m_pSystem->getDefaultGUIContext().getWindowContainingMouse();
+        CEGUI::Window* switchedWindow = m_pDefaultGUIContext->getWindowContainingCursor();
 
         if (switchedWindow)
         {
-            CEGUI::Window* Master = GetMasterWindow(switchedWindow);
-            // If the source and target windows are the same, don't bother triggering this
-            if (Master == wnd)
-                return true;
-            NewArgs.pSwitchedWindow = reinterpret_cast<CGUIElement*>(Master->getUserData());
+        CEGUI::Window* Master = GetMasterWindow(switchedWindow);
+        // If the source and target windows are the same, don't bother triggering this
+        if (Master == wnd)
+            return true;
+        NewArgs.pSwitchedWindow = reinterpret_cast<CGUIElement*>(Master->getUserData());
         }
         else
-            NewArgs.pSwitchedWindow = NULL;
+        NewArgs.pSwitchedWindow = NULL;
 
         m_MouseEnterHandlers[m_Channel](NewArgs);
     }
@@ -1334,7 +1306,8 @@ bool CGUI_Impl::Event_MouseEnter(const CEGUI::EventArgs& Args)
 
 bool CGUI_Impl::Event_MouseLeave(const CEGUI::EventArgs& Args)
 {
-    const CEGUI::MouseEventArgs& e = reinterpret_cast<const CEGUI::MouseEventArgs&>(Args);
+    const CEGUI::MouseButtonEventArgs& e = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(Args);
+    CGUIMouseEventArgs                 NewArgs;
 
     // get the approriate cegui window
     CEGUI::Window* wnd = e.window;
@@ -1350,7 +1323,7 @@ bool CGUI_Impl::Event_MouseLeave(const CEGUI::EventArgs& Args)
     {
         pElement = reinterpret_cast<CGUIElement*>(wnd->getUserData());
         if (pElement)
-            pElement->Event_OnMouseLeave();
+        pElement->Event_OnMouseLeave();
     }
 
     if (m_MouseLeaveHandlers[m_Channel])
@@ -1359,25 +1332,22 @@ bool CGUI_Impl::Event_MouseLeave(const CEGUI::EventArgs& Args)
 
         // copy the variables
         NewArgs.pWindow = pElement;
-        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.button);
-        NewArgs.moveDelta = CVector2D(e.moveDelta.d_x, e.moveDelta.d_y);
-        NewArgs.position = CGUIPosition(e.position.d_x, e.position.d_y);
-        NewArgs.sysKeys = e.sysKeys;
-        NewArgs.wheelChange = e.wheelChange;
-        NewArgs.clickCount = e.clickCount;
+        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.d_button);
+        NewArgs.position = CGUIPosition(e.d_globalPos.x, e.d_globalPos.y);
+        NewArgs.modifiers = e.d_modifiers.getMask();
 
-        CEGUI::Window* switchedWindow = m_pSystem->getDefaultGUIContext().getWindowContainingMouse();
+        CEGUI::Window* switchedWindow = m_pDefaultGUIContext->getWindowContainingCursor();
 
         if (switchedWindow)
         {
-            CEGUI::Window* Master = GetMasterWindow(switchedWindow);
-            // If the source and target windows are the same, don't bother triggering this
-            if (Master == wnd)
-                return true;
-            NewArgs.pSwitchedWindow = reinterpret_cast<CGUIElement*>(Master->getUserData());
+        CEGUI::Window* Master = GetMasterWindow(switchedWindow);
+        // If the source and target windows are the same, don't bother triggering this
+        if (Master == wnd)
+            return true;
+        NewArgs.pSwitchedWindow = reinterpret_cast<CGUIElement*>(Master->getUserData());
         }
         else
-            NewArgs.pSwitchedWindow = NULL;
+        NewArgs.pSwitchedWindow = NULL;
 
         m_MouseLeaveHandlers[m_Channel](NewArgs);
     }
@@ -1441,7 +1411,7 @@ bool CGUI_Impl::Event_FocusGained(const CEGUI::EventArgs& Args)
         NewArgs.pDeactivatedWindow = NULL;
         if (e.otherWindow)
         {
-            NewArgs.pDeactivatedWindow = reinterpret_cast<CGUIElement*>((e.otherWindow)->getUserData());
+        NewArgs.pDeactivatedWindow = reinterpret_cast<CGUIElement*>((e.otherWindow)->getUserData());
         }
 
         m_FocusGainedHandlers[m_Channel](NewArgs);
@@ -1464,7 +1434,7 @@ bool CGUI_Impl::Event_FocusLost(const CEGUI::EventArgs& Args)
         NewArgs.pActivatedWindow = NULL;
         if (e.otherWindow)
         {
-            NewArgs.pActivatedWindow = reinterpret_cast<CGUIElement*>((e.otherWindow)->getUserData());
+        NewArgs.pActivatedWindow = reinterpret_cast<CGUIElement*>((e.otherWindow)->getUserData());
         }
 
         m_FocusLostHandlers[m_Channel](NewArgs);
@@ -1482,18 +1452,18 @@ void CGUI_Impl::AddToRedrawQueue(CGUIElement* pWindow)
     {
         if (pWindow->GetParent() == *iter)
         {
-            return;
+        return;
         }
         else if ((*iter)->GetParent() == pWindow)
         {
-            m_RedrawQueue.remove(*iter);
-            if (m_RedrawQueue.empty())
-                return;
-            iter = m_RedrawQueue.begin();
+        m_RedrawQueue.remove(*iter);
+        if (m_RedrawQueue.empty())
+            return;
+        iter = m_RedrawQueue.begin();
         }
         else if (*iter == pWindow)
         {
-            return;
+        return;
         }
     }
     m_RedrawQueue.push_back(pWindow);
@@ -1723,26 +1693,13 @@ void CGUI_Impl::ClearInputHandlers(eInputChannel channel)
     m_FocusLostHandlers[channel] = GUI_CALLBACK_FOCUS();
 }
 
-void CGUI_Impl::ClearSystemKeys()
-{
-    // Unpress any held system keys
-    unsigned int uiSysKeys = m_pSystemKeys->get();
-
-    if (uiSysKeys & CEGUI::Control)
-        ProcessKeyboardInput(CGUIKeys::LeftControl, false);
-    if (uiSysKeys & CEGUI::Shift)
-        ProcessKeyboardInput(CGUIKeys::LeftShift, false);
-    if (uiSysKeys & CEGUI::Alt)
-        ProcessKeyboardInput(CGUIKeys::LeftAlt, false);
-}
-
 CEGUI::Window* CGUI_Impl::GetMasterWindow(CEGUI::Window* wnd)
 {
     // A titlebar should always return the parent (i.e. the frame window)
     if (wnd->getType() == GetElementPrefix() + "/" + CEGUI::Titlebar::EventNamespace)
     {
         if (wnd->getParent())
-            return wnd->getParent();
+        return wnd->getParent();
         return wnd;
     }
 
@@ -1754,9 +1711,9 @@ CEGUI::Window* CGUI_Impl::GetMasterWindow(CEGUI::Window* wnd)
         // So keep propogating upwards until we find an MTA element
         while (parent)
         {
-            if (parent->getUserData())
-                return parent;
-            parent = parent->getParent();
+        if (parent->getUserData())
+            return parent;
+        parent = parent->getParent();
         }
     }
     return wnd;
@@ -1775,4 +1732,8 @@ CEGUI::USize CGUI_Impl::CreateRelativeSize(float width, float height)
 CEGUI::GeometryBuffer* CGUI_Impl::GetGeometryBuffer()
 {
     return m_pGeometryBuffer;
+}
+
+void CGUI_Impl::ClearSystemKeys()
+{
 }

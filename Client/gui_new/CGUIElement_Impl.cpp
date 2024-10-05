@@ -88,9 +88,9 @@ void CGUIElement_Impl::SetPosition(const CVector2D& Position, bool bRelative)
     CEGUI::UVector2 position;
 
     if (bRelative)
-        position = CEGUI::Vector2(CEGUI::UDim(Position.fX, 0), CEGUI::UDim(Position.fY, 0));
+        position = CEGUI::UVector2(CEGUI::UDim(Position.fX, 0), CEGUI::UDim(Position.fY, 0));
     else
-        position = CEGUI::Vector2(CEGUI::UDim(0, Position.fX), CEGUI::UDim(0, Position.fY));
+        position = CEGUI::UVector2(CEGUI::UDim(0, Position.fX), CEGUI::UDim(0, Position.fY));
 
     m_pWindow->setPosition(position);
 }
@@ -161,7 +161,10 @@ void CGUIElement_Impl::GetSize(CVector2D& vecSize, bool bRelative)
 
 void CGUIElement_Impl::AutoSize(const char* Text, float fPaddingX, float fPaddingY)
 {
-    const CEGUI::Font* pFont = m_pWindow->getFont();
+    CEGUI::Font* pFont = m_pWindow->getFont();
+
+    if (!pFont)
+        return;
 
     // Add hack factor to height to allow for long characters such as 'g' or 'j'
     m_pWindow->setSize(CEGUI::USize(CEGUI::UDim(0, pFont->getTextExtent(Text ? Text : GetText()) + fPaddingX), CEGUI::UDim(0, pFont->getFontHeight() + fPaddingY)));
@@ -208,7 +211,7 @@ void CGUIElement_Impl::SetText(const char* szText)
 
 std::string CGUIElement_Impl::GetText()
 {
-    return CGUI_Impl::GetUTFString(m_pWindow->getText().c_str()).c_str();
+    return (const char*)CGUI_Impl::GetUTFString((const char*)m_pWindow->getText().c_str()).c_str();
 }
 
 void CGUIElement_Impl::SetAlpha(float fAlpha)
@@ -310,9 +313,9 @@ CVector2D CGUIElement_Impl::RelativeToAbsolute(const CVector2D& Vector)
     CEGUI::USize relativeSize = CEGUI::USize(CEGUI::UDim(Vector.fX, 0), CEGUI::UDim(Vector.fY, 0));
     CEGUI::USize baseSize = m_pWindow->getSize();
     
-    CEGUI::Size size = CEGUI::Size(baseSize.d_width.d_offset, baseSize.d_height.d_offset);
+    CEGUI::Sizef size = CEGUI::Sizef(baseSize.d_width.d_offset, baseSize.d_height.d_offset);
 
-    CEGUI::Size absoluteSize = CEGUI::CoordConverter::asAbsolute(relativeSize, size, true);
+    CEGUI::Sizef absoluteSize = CEGUI::CoordConverter::asAbsolute(relativeSize, size, true);
 
     return CVector2D(absoluteSize.d_width, absoluteSize.d_height);
 }
@@ -351,8 +354,8 @@ void CGUIElement_Impl::CorrectEdges()
     CEGUI::UVector2 currentPosition = m_pWindow->getPosition();
     CEGUI::USize    currentSize = m_pWindow->getSize();
 
-    std::string strType = m_pWindow->getType().c_str();
-    std::string strParentType = m_pWindow->getParent()->getType().c_str();
+    std::string strType = (const char*)m_pWindow->getType().c_str();
+    std::string strParentType = (const char*)m_pWindow->getParent()->getType().c_str();
 
     // Label turns out to be buggy
     if (strType == m_pManager->GetElementPrefix() + "/StaticText")
@@ -396,7 +399,7 @@ std::string CGUIElement_Impl::GetFont()
         {
             // Return the contname. std::string will copy it.
             CEGUI::String strFontName = pFont->getName();
-            return strFontName.c_str();
+            return (const char*)strFontName.c_str();
         }
     }
     catch (CEGUI::Exception e)
@@ -423,13 +426,13 @@ std::string CGUIElement_Impl::GetProperty(const char* szProperty)
     try
     {
         // Return the string. std::string will copy it
-        strValue = CGUI_Impl::GetUTFString(m_pWindow->getProperty(CGUI_Impl::GetUTFString(szProperty)).c_str());
+        strValue = CGUI_Impl::GetUTFString((const char*)m_pWindow->getProperty(CGUI_Impl::GetUTFString(szProperty)).c_str());
     }
     catch (CEGUI::Exception e)
     {
     }
 
-    return strValue.c_str();
+    return (const char*)strValue.c_str();
 }
 
 void CGUIElement_Impl::FillProperties()
@@ -441,8 +444,8 @@ void CGUIElement_Impl::FillProperties()
         CEGUI::String strValue = m_pWindow->getProperty(strKey);
 
         CGUIProperty* pProperty = new CGUIProperty;
-        pProperty->strKey = strKey.c_str();
-        pProperty->strValue = strValue.c_str();
+        pProperty->strKey = (const char*)strKey.c_str();
+        pProperty->strValue = (const char*)strValue.c_str();
 
         m_Properties.push_back(pProperty);
         itPropertySet++;
@@ -591,7 +594,7 @@ bool CGUIElement_Impl::Event_OnSized(const CEGUI::EventArgs& e)
 
 bool CGUIElement_Impl::Event_OnClick(const CEGUI::EventArgs& eBase)
 {
-    const CEGUI::MouseEventArgs& e = reinterpret_cast<const CEGUI::MouseEventArgs&>(eBase);
+    const CEGUI::MouseButtonEventArgs& e = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(eBase);
     CGUIElement*               pElement = reinterpret_cast<CGUIElement*>(this);
 
     if (m_OnClick)
@@ -602,11 +605,9 @@ bool CGUIElement_Impl::Event_OnClick(const CEGUI::EventArgs& eBase)
         CGUIMouseEventArgs NewArgs;
 
         // copy the variables
-        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.button);
-        NewArgs.moveDelta = CVector2D(e.moveDelta.d_x, e.moveDelta.d_y);
-        NewArgs.position = CGUIPosition(e.position.d_x, e.position.d_y);
-        NewArgs.sysKeys = e.sysKeys;
-        NewArgs.wheelChange = e.wheelChange;
+        NewArgs.button = static_cast<CGUIMouse::MouseButton>(e.d_button);
+        NewArgs.position = CGUIPosition(e.d_globalPos.x, e.d_globalPos.y);
+        NewArgs.modifiers = e.d_modifiers.getMask();
         NewArgs.pWindow = pElement;
 
         m_OnClickWithArgs(NewArgs);
@@ -672,9 +673,7 @@ bool CGUIElement_Impl::Event_OnKeyDown(const CEGUI::EventArgs& e)
         CGUIKeyEventArgs NewArgs;
 
         // copy the variables
-        NewArgs.codepoint = Args.codepoint;
-        NewArgs.scancode = (CGUIKeys::Scan)Args.scancode;
-        NewArgs.sysKeys = Args.sysKeys;
+        NewArgs.scancode = (CGUIKeys::Scan)Args.d_key;
 
         // get the CGUIElement
         CGUIElement* pElement = reinterpret_cast<CGUIElement*>((Args.window)->getUserData());
@@ -685,11 +684,11 @@ bool CGUIElement_Impl::Event_OnKeyDown(const CEGUI::EventArgs& e)
 
     if (m_OnEnter)
     {
-        switch (Args.scancode)
+        switch (Args.d_key)
         {
             // Return key
-            case CEGUI::Key::NumpadEnter:
-            case CEGUI::Key::Return:
+            case CEGUI::Key::Scan::NumpadEnter:
+            case CEGUI::Key::Scan::Return:
             {
                 // Fire the event
                 m_OnEnter(pCGUIElement);

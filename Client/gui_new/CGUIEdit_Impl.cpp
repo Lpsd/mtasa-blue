@@ -80,12 +80,12 @@ bool CGUIEdit_Impl::IsReadOnly()
 
 void CGUIEdit_Impl::SetMasked(bool bMasked)
 {
-    reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->setTextMasked(bMasked);
+    reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->setTextMaskingEnabled(bMasked);
 }
 
 bool CGUIEdit_Impl::IsMasked()
 {
-    return reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->isTextMasked();
+    return reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->isTextMaskingEnabled();
 }
 
 void CGUIEdit_Impl::SetMaxLength(unsigned int uiMaxLength)
@@ -105,12 +105,12 @@ void CGUIEdit_Impl::SetSelection(unsigned int uiStart, unsigned int uiEnd)
 
 unsigned int CGUIEdit_Impl::GetSelectionStart()
 {
-    return static_cast<unsigned int>(reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->getSelectionStartIndex());
+    return static_cast<unsigned int>(reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->getSelectionStart());
 }
 
 unsigned int CGUIEdit_Impl::GetSelectionEnd()
 {
-    return static_cast<unsigned int>(reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->getSelectionEndIndex());
+    return static_cast<unsigned int>(reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->getSelectionEnd());
 }
 
 unsigned int CGUIEdit_Impl::GetSelectionLength()
@@ -194,7 +194,8 @@ bool CGUIEdit_Impl::Event_OnRenderingStarted(const CEGUI::EventArgs& e)
 bool CGUIEdit_Impl::Event_OnKeyDown(const CEGUI::EventArgs& e)
 {
     const CEGUI::KeyEventArgs& KeyboardArgs = reinterpret_cast<const CEGUI::KeyEventArgs&>(e);
-    if (KeyboardArgs.scancode == CGUIKeys::Tab)
+    auto                       scancode = (CGUIKeys::Scan)KeyboardArgs.d_key;
+    if (scancode == CGUIKeys::Scan::Tab)
     {
         // tab pressed, if we are in a window with tab enabled, just switch to the next element
         if (GetParent() == NULL)
@@ -206,7 +207,7 @@ bool CGUIEdit_Impl::Event_OnKeyDown(const CEGUI::EventArgs& e)
             pTabList->SelectNext(this);
         }
     }
-    else if (KeyboardArgs.scancode == CGUIKeys::Return || KeyboardArgs.scancode == CGUIKeys::NumpadEnter)
+    else if (scancode == CGUIKeys::Return || scancode == CGUIKeys::NumpadEnter)
     {
         // Enter/Return event is split from Tab now, since we use that for Console, Quick Connect, etc. as enter-only
         if (m_OnTextAccepted)

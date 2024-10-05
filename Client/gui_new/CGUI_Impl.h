@@ -17,11 +17,12 @@
 
 #define CGUI_CHAR_SIZE 6
 
-namespace GUINew {
+namespace GUINew
+{
     class CGUI_Impl;
     class CGUIElement_Impl;
     class CGUIFont_Impl;
-}
+}            // namespace GUINew
 
 struct IDirect3DDevice9;
 
@@ -36,9 +37,8 @@ namespace CEGUI
     class Texture;
     class EventArgs;
     class GUISheet;
-    //typedef GUISheet DefaultWindow;
+    // typedef GUISheet DefaultWindow;
 }            // namespace CEGUI
-
 
 class GUINew::CGUI_Impl : public CGUI, public CGUITabList
 {
@@ -52,8 +52,6 @@ public:
     void Draw();
     void Invalidate();
     void Restore();
-
-    void DrawMouseCursor();
 
     void ProcessMouseInput(CGUIMouseInput eMouseInput, unsigned long ulX = 0, unsigned long ulY = 0, CGUIMouseButton eMouseButton = NoButton);
     void ProcessKeyboardInput(unsigned long ulKey, bool bIsDown);
@@ -126,7 +124,8 @@ public:
 
     CGUITexture* CreateTexture();
 
-    CGUIFont*    CreateFnt(const char* szFontName, const char* szFontFile, unsigned int uSize = 8, unsigned int uFlags = 0, bool bAutoScale = false, bool isWinFont = false);
+    CGUIFont* CreateFnt(const char* szFontName, const char* szFontFile, unsigned int uSize = 8, unsigned int uFlags = 0, bool bAutoScale = false,
+                        bool isWinFont = false);
 
     void        SetCursorEnabled(bool bEnabled);
     bool        IsCursorEnabled();
@@ -135,17 +134,17 @@ public:
     float       GetCurrentServerCursorAlpha();
     eCursorType GetCursorType();
 
-    void                        AddChild(CGUIElement_Impl* pChild);
-    CEGUI::FontManager*         GetFontManager();
-    CEGUI::ImageManager*        GetImageManager();
-    CEGUI::Direct3D9Renderer&   GetRenderer();
-    CEGUI::System*              GetGUISystem();
-    CEGUI::SchemeManager*       GetSchemeManager();
-    CEGUI::WindowManager*       GetWindowManager();
-    void                        GetUniqueName(char* pBuf);
-    CEGUI::Window*              GetMasterWindow(CEGUI::Window* Window);
+    void                      AddChild(CGUIElement_Impl* pChild);
+    CEGUI::FontManager*       GetFontManager();
+    CEGUI::ImageManager*      GetImageManager();
+    CEGUI::Direct3D9Renderer& GetRenderer();
+    CEGUI::System*            GetGUISystem();
+    CEGUI::SchemeManager*     GetSchemeManager();
+    CEGUI::WindowManager*     GetWindowManager();
+    void                      GetUniqueName(char* pBuf);
+    CEGUI::Window*            GetMasterWindow(CEGUI::Window* Window);
 
-    CEGUI::GeometryBuffer*      GetGeometryBuffer();
+    CEGUI::GeometryBuffer* GetGeometryBuffer();
 
     CEGUI::USize CreateAbsoluteSize(float width, float height);
     CEGUI::USize CreateRelativeSize(float width, float height);
@@ -300,25 +299,23 @@ private:
 
     CEGUI::Direct3D9Renderer*    m_pRenderer;
     CEGUI::System*               m_pSystem;
-    CEGUI::SystemKeys*           m_pSystemKeys;
     CEGUI::FontManager*          m_pFontManager;
     CEGUI::ImageManager*         m_pImageSetManager;
     CEGUI::SchemeManager*        m_pSchemeManager;
     CEGUI::WindowManager*        m_pWindowManager;
     CEGUI::WindowFactoryManager* m_pWindowFactoryManager;
 
-    CEGUI::XMLParser*          m_pXMLParser;
+    CEGUI::XMLParser* m_pXMLParser;
 
     CEGUI::ResourceProvider*        m_pResourceProvider;
     CEGUI::DefaultResourceProvider* m_pDefaultResourceProvider;
 
-    CEGUI::GeometryBuffer*     m_pGeometryBuffer;
+    CEGUI::GeometryBuffer* m_pGeometryBuffer;
+    CEGUI::GUIContext*     m_pDefaultGUIContext;
 
-    CEGUI::MouseCursor*  m_pMouseCursor;
-
-    CEGUI::Window* m_pTop;
-    const CEGUI::Image*   m_pCursor;
-    float                 m_fCurrentServerCursorAlpha;
+    CEGUI::Window*      m_pTop;
+    const CEGUI::Image* m_pCursor;
+    float               m_fCurrentServerCursorAlpha;
 
     CGUIFont_Impl* m_pDefaultFont;
     CGUIFont_Impl* m_pSmallFont;
@@ -356,7 +353,7 @@ private:
 
     bool m_bTransferBoxVisible;
 
-    bool            m_HasSchemeLoaded;
-    CEGUI::Scheme*  m_CurrentScheme;
-    CElapsedTime    m_RenderOkTimer;
+    bool           m_HasSchemeLoaded;
+    CEGUI::Scheme* m_CurrentScheme;
+    CElapsedTime   m_RenderOkTimer;
 };

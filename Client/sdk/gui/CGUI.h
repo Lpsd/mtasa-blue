@@ -63,8 +63,6 @@ public:
     virtual void Invalidate() = 0;
     virtual void Restore() = 0;
 
-    virtual void DrawMouseCursor() = 0;
-
     virtual void ProcessMouseInput(CGUIMouseInput eMouseInput, unsigned long ulX = 0, unsigned long ulY = 0, CGUIMouseButton eMouseButton = NoButton) = 0;
     virtual void ProcessKeyboardInput(unsigned long ulKey, bool bIsDown) = 0;
     virtual void ProcessCharacter(unsigned long ulCharacter) = 0;
