@@ -28,11 +28,13 @@
 #include "CEGUI/RendererModules/Direct3D9/Texture.h"
 #include "CEGUI/RendererModules/Direct3D9/GeometryBuffer.h"
 #include "CEGUI/RendererModules/Direct3D9/RenderTarget.h"
-#include "CEGUI/Exceptions.h"
 #include "CEGUI/RendererModules/Direct3D9/ViewportTarget.h"
 #include "CEGUI/RendererModules/Direct3D9/TextureTarget.h"
+#include "CEGUI/RendererModules/Direct3D9/ShaderWrapper.h"
 #include "CEGUI/System.h"
+#include "CEGUI/Exceptions.h"
 #include "CEGUI/DefaultResourceProvider.h"
+#include "CEGUI/RenderMaterial.h"
 #include "CEGUI/Logger.h"
 
 #include <algorithm>
@@ -61,12 +63,11 @@ Direct3D9Renderer& Direct3D9Renderer::bootstrapSystem(LPDIRECT3DDEVICE9 device,
     System::performVersionTest(CEGUI_VERSION_ABI, abi, CEGUI_FUNCTION_NAME);
 
     if (System::getSingletonPtr())
-        CEGUI_THROW(InvalidRequestException(
-            "CEGUI::System object is already initialised."));
+        throw InvalidRequestException(
+            "CEGUI::System object is already initialised.");
 
     Direct3D9Renderer& renderer(create(device));
     DefaultResourceProvider* rp = new CEGUI::DefaultResourceProvider();
-    System::setModuleDirEnvVar(moduleDir);
     System::create(renderer, rp);
 
     return renderer;
@@ -75,17 +76,21 @@ Direct3D9Renderer& Direct3D9Renderer::bootstrapSystem(LPDIRECT3DDEVICE9 device,
 //----------------------------------------------------------------------------//
 void Direct3D9Renderer::destroySystem()
 {
-    System* sys;
-    if (!(sys = System::getSingletonPtr()))
-        CEGUI_THROW(InvalidRequestException(
-            "CEGUI::System object is not created or was already destroyed."));
+    System* sys = System::getSingletonPtr();
+    if (sys == nullptr)
+    {
+        throw InvalidRequestException("CEGUI::System object is not created or was already destroyed.");
+    }
 
-    Direct3D9Renderer* renderer =
-        static_cast<Direct3D9Renderer*>(sys->getRenderer());
-    DefaultResourceProvider* rp =
-        static_cast<DefaultResourceProvider*>(sys->getResourceProvider());
+    Direct3D9Renderer* renderer = static_cast<Direct3D9Renderer*>(sys->getRenderer());
+    ResourceProvider* rp = sys->getResourceProvider();
+
+    // ImageCodec* ic = &(sys->getImageCodec());
 
     System::destroy();
+    // ImageCodec used is currently the system default, so we do not destroy
+    // it here (since System already did that).
+    // delete ic;
     delete rp;
     destroy(*renderer);
 }
@@ -112,11 +117,51 @@ RenderTarget& Direct3D9Renderer::getDefaultRenderTarget()
 }
 
 //----------------------------------------------------------------------------//
-GeometryBuffer& Direct3D9Renderer::createGeometryBuffer()
+RefCounted<RenderMaterial> Direct3D9Renderer::createRenderMaterial(const DefaultShaderType shaderType) const
 {
-    Direct3D9GeometryBuffer* b = new Direct3D9GeometryBuffer(*this, d_device);
-    d_geometryBuffers.push_back(b);
-    return *b;
+    if (shaderType == DefaultShaderType::Textured)
+    {
+        RefCounted<RenderMaterial> render_material(new RenderMaterial(d_shaderWrapperTextured));
+
+        return render_material;
+    }
+    else if (shaderType == DefaultShaderType::Solid)
+    {
+        RefCounted<RenderMaterial> render_material(new RenderMaterial(d_shaderWrapperSolid));
+
+        return render_material;
+    }
+    else
+    {
+        throw RendererException("A default shader of this type does not exist.");
+
+        return RefCounted<RenderMaterial>();
+    }
+}
+
+//----------------------------------------------------------------------------//
+GeometryBuffer& Direct3D9Renderer::createGeometryBufferTextured(CEGUI::RefCounted<RenderMaterial> renderMaterial)
+{
+    Direct3D9GeometryBuffer* geom_buffer = new Direct3D9GeometryBuffer(*this, this->d_device, renderMaterial);
+
+    geom_buffer->addVertexAttribute(VertexAttributeType::Position0);
+    geom_buffer->addVertexAttribute(VertexAttributeType::Colour0);
+    geom_buffer->addVertexAttribute(VertexAttributeType::TexCoord0);
+
+    addGeometryBuffer(*geom_buffer);
+    return *geom_buffer;
+}
+
+//----------------------------------------------------------------------------//
+GeometryBuffer& Direct3D9Renderer::createGeometryBufferColoured(CEGUI::RefCounted<RenderMaterial> renderMaterial)
+{
+    Direct3D9GeometryBuffer* geom_buffer = new Direct3D9GeometryBuffer(*this, this->d_device, renderMaterial);
+
+    geom_buffer->addVertexAttribute(VertexAttributeType::Position0);
+    geom_buffer->addVertexAttribute(VertexAttributeType::Colour0);
+
+    addGeometryBuffer(*geom_buffer);
+    return *geom_buffer;
 }
 
 //----------------------------------------------------------------------------//
@@ -141,7 +186,7 @@ void Direct3D9Renderer::destroyAllGeometryBuffers()
 }
 
 //----------------------------------------------------------------------------//
-TextureTarget* Direct3D9Renderer::createTextureTarget()
+TextureTarget* Direct3D9Renderer::createTextureTarget(bool addStencilBuffer)
 {
     TextureTarget* t = new Direct3D9TextureTarget(*this);
     d_textureTargets.push_back(t);
@@ -215,8 +260,8 @@ Texture& Direct3D9Renderer::createTexture(const String& name, const Sizef& size)
 void Direct3D9Renderer::throwIfNameExists(const String& name) const
 {
     if (d_textures.find(name) != d_textures.end())
-        CEGUI_THROW(AlreadyExistsException(
-            "[Direct3D9Renderer] Texture already exists: " + name));
+        throw AlreadyExistsException(
+            "[Direct3D9Renderer] Texture already exists: " + name);
 }
 
 //----------------------------------------------------------------------------//
@@ -267,8 +312,8 @@ Texture& Direct3D9Renderer::getTexture(const String& name) const
     TextureMap::const_iterator i = d_textures.find(name);
     
     if (i == d_textures.end())
-        CEGUI_THROW(UnknownObjectException(
-            "[Direct3D9Renderer] Texture does not exist: " + name));
+        throw UnknownObjectException(
+            "[Direct3D9Renderer] Texture does not exist: " + name);
 
     return *i->second;
 }
@@ -323,7 +368,7 @@ void Direct3D9Renderer::beginRendering()
     d_device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 
     // put alpha blend operations into a known state
-    setupRenderingBlendMode(BM_NORMAL, true);
+    setupRenderingBlendMode(CEGUI::BlendMode::Normal, true);
 
     // set view matrix back to identity.
     d_device->SetTransform(D3DTS_VIEW, &s_identityMatrix);
@@ -355,13 +400,13 @@ const Sizef& Direct3D9Renderer::getDisplaySize() const
 }
 
 //----------------------------------------------------------------------------//
-const Vector2f& Direct3D9Renderer::getDisplayDPI() const
+const glm::vec2& Direct3D9Renderer::getDisplayDPI() const
 {
     return d_displayDPI;
 }
 
 //----------------------------------------------------------------------------//
-uint Direct3D9Renderer::getMaxTextureSize() const
+unsigned int Direct3D9Renderer::getMaxTextureSize() const
 {
     return d_maxTextureSize;
 }
@@ -383,16 +428,19 @@ Direct3D9Renderer::Direct3D9Renderer(LPDIRECT3DDEVICE9 device) :
     device->GetDeviceCaps(&caps);
 
     if (!caps.RasterCaps && D3DPRASTERCAPS_SCISSORTEST)
-        CEGUI_THROW(RendererException(
+        throw RendererException(
             "Hardware does not support D3DPRASTERCAPS_SCISSORTEST. "
-            "Unable to proceed."));
+            "Unable to proceed.");
 
-    d_maxTextureSize = ceguimin(caps.MaxTextureHeight, caps.MaxTextureWidth);
+    d_maxTextureSize = std::min(caps.MaxTextureHeight, caps.MaxTextureWidth);
 
     d_supportNonSquareTex = !(caps.TextureCaps & D3DPTEXTURECAPS_SQUAREONLY);
 
     d_supportNPOTTex = !(caps.TextureCaps & D3DPTEXTURECAPS_POW2) ||
                        (caps.TextureCaps & D3DPTEXTURECAPS_NONPOW2CONDITIONAL);
+
+    d_shaderWrapperTextured = new Direct3D9ShaderWrapper();
+    d_shaderWrapperSolid = new Direct3D9ShaderWrapper();
 
     d_defaultTarget = new Direct3D9ViewportTarget(*this);
 }
@@ -400,6 +448,9 @@ Direct3D9Renderer::Direct3D9Renderer(LPDIRECT3DDEVICE9 device) :
 //----------------------------------------------------------------------------//
 Direct3D9Renderer::~Direct3D9Renderer()
 {
+    delete d_shaderWrapperTextured;
+    delete d_shaderWrapperSolid;
+
     destroyAllGeometryBuffers();
     destroyAllTextureTargets();
     destroyAllTextures();
@@ -413,9 +464,9 @@ Sizef Direct3D9Renderer::getViewportSize()
     D3DVIEWPORT9 vp;
 
     if (FAILED(d_device->GetViewport(&vp)))
-        CEGUI_THROW(RendererException(
+        throw RendererException(
             "Unable to access required view port information from "
-            "Direct3DDevice9."));
+            "Direct3DDevice9.");
     else
         return Sizef(static_cast<float>(vp.Width),
                       static_cast<float>(vp.Height));
@@ -496,7 +547,7 @@ Sizef Direct3D9Renderer::getAdjustedSize(const Sizef& sz)
     }
     if (!d_supportNonSquareTex)
         s.d_width = s.d_height =
-                        ceguimax(s.d_width, s.d_height);
+                        std::max(s.d_width, s.d_height);
 
     return s;
 }
@@ -504,7 +555,7 @@ Sizef Direct3D9Renderer::getAdjustedSize(const Sizef& sz)
 //----------------------------------------------------------------------------//
 float Direct3D9Renderer::getSizeNextPOT(float sz) const
 {
-    uint size = static_cast<uint>(sz);
+    unsigned int size = static_cast<unsigned int>(sz);
 
     // if not power of 2
     if ((size & (size - 1)) || !size)
@@ -532,7 +583,7 @@ void Direct3D9Renderer::setupRenderingBlendMode(const BlendMode mode,
 
     d_activeBlendMode = mode;
 
-    if (d_activeBlendMode == BM_RTT_PREMULTIPLIED)
+    if (d_activeBlendMode == CEGUI::BlendMode::RttPremultiplied)
     {
         d_device->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
         d_device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);

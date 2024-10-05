@@ -27,10 +27,12 @@
 #ifndef _CEGUIDirect3D9Texture_h_
 #define _CEGUIDirect3D9Texture_h_
 
-#include "../../Base.h"
-#include "../../Renderer.h"
-#include "../../Texture.h"
+#include "CEGUI/Base.h"
+#include "CEGUI/Renderer.h"
+#include "CEGUI/Texture.h"
 #include "CEGUI/RendererModules/Direct3D9/Renderer.h"
+
+#include <glm/glm.hpp>
 
 #if defined(_MSC_VER)
 #	pragma warning(push)
@@ -79,7 +81,7 @@ public:
     const String& getName() const;
     const Sizef& getSize() const;
     const Sizef& getOriginalDataSize() const;
-    const Vector2f& getTexelScaling() const;
+    const glm::vec2& getTexelScaling() const;
     void loadFromFile(const String& filename, const String& resourceGroup);
     void loadFromMemory(const void* buffer, const Sizef& buffer_size,
                         PixelFormat pixel_format);
@@ -134,7 +136,7 @@ protected:
     //! original pixel of size data loaded into texture
     Sizef d_dataSize;
     //! cached pixel to texel mapping scale values.
-    Vector2f d_texelScaling;
+    glm::vec2 d_texelScaling;
     //! holds info about the texture surface before we released it for reset.
     D3DSURFACE_DESC d_savedSurfaceDesc;
     //! true when d_savedSurfaceDesc is valid and texture can be restored.

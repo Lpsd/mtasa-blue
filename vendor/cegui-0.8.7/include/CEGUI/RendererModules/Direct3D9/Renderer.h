@@ -27,14 +27,14 @@
 #ifndef _CEGUIDirect3D9Renderer_h_
 #define _CEGUIDirect3D9Renderer_h_
 
-#include "../../Base.h"
-#include "../../Renderer.h"
-#include "../../Size.h"
-#include "../../Vector.h"
+#include "CEGUI/Base.h"
+#include "CEGUI/Renderer.h"
+#include "CEGUI/Sizef.h"
+#include "CEGUI/UVector.h"
 
 #include <d3d9.h>
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 #if (defined( __WIN32__ ) || defined( _WIN32 )) && !defined(CEGUI_STATIC)
 #   ifdef CEGUIDIRECT3D9RENDERER_EXPORTS
@@ -56,6 +56,7 @@ namespace CEGUI
 {
 class Direct3D9Texture;
 class Direct3D9GeometryBuffer;
+class Direct3D9ShaderWrapper;
 
 /*!
 \brief
@@ -163,31 +164,31 @@ public:
     void setupRenderingBlendMode(const BlendMode mode,
                                  const bool force = false);
 
-    // implement Renderer interface
-    RenderTarget& getDefaultRenderTarget();
-    GeometryBuffer& createGeometryBuffer();
-    void destroyGeometryBuffer(const GeometryBuffer& buffer);
-    void destroyAllGeometryBuffers();
-    TextureTarget* createTextureTarget();
-    void destroyTextureTarget(TextureTarget* target);
-    void destroyAllTextureTargets();
-    Texture& createTexture(const String& name);
-    Texture& createTexture(const String& name,
-                           const String& filename,
-                           const String& resourceGroup);
-    Texture& createTexture(const String& name, const Sizef& size);
-    void destroyTexture(Texture& texture);
-    void destroyTexture(const String& name);
-    void destroyAllTextures();
-    Texture& getTexture(const String& name) const;
-    bool isTextureDefined(const String& name) const;
-    void beginRendering();
-    void endRendering();
-    void setDisplaySize(const Sizef& sz);
-    const Sizef& getDisplaySize() const;
-    const Vector2f& getDisplayDPI() const;
-    uint getMaxTextureSize() const;
-    const String& getIdentifierString() const;
+    // Implementation of Renderer interface.
+    virtual RenderTarget&   getDefaultRenderTarget();
+    virtual RefCounted<RenderMaterial> createRenderMaterial(const DefaultShaderType shaderType) const;
+    virtual GeometryBuffer& createGeometryBufferColoured(RefCounted<RenderMaterial> renderMaterial);
+    virtual GeometryBuffer& createGeometryBufferTextured(RefCounted<RenderMaterial> renderMaterial);
+    virtual void            destroyGeometryBuffer(const GeometryBuffer& buffer);
+    virtual void            destroyAllGeometryBuffers();
+    virtual TextureTarget*  createTextureTarget(bool addStencilBuffer);
+    virtual void            destroyTextureTarget(TextureTarget* target);
+    virtual void            destroyAllTextureTargets();
+    virtual Texture&        createTexture(const CEGUI::String& name);
+    virtual Texture&        createTexture(const CEGUI::String& name, const String& filename, const String& resourceGroup);
+    virtual Texture&        createTexture(const CEGUI::String& name, const Sizef& size);
+    virtual void            destroyTexture(Texture& texture);
+    virtual void            destroyTexture(const CEGUI::String& name);
+    virtual void            destroyAllTextures();
+    virtual Texture&        getTexture(const String&) const;
+    virtual bool            isTextureDefined(const String& name) const;
+    virtual void            beginRendering();
+    virtual void            endRendering();
+    virtual void            setDisplaySize(const Sizef& sz);
+    virtual const Sizef&    getDisplaySize() const;
+    virtual unsigned int    getMaxTextureSize() const;
+    virtual const String&   getIdentifierString() const;
+    const glm::vec2&        getDisplayDPI() const;
 
 private:
     //! Constructor for Direct3D9 Renderer objects.
@@ -208,6 +209,17 @@ private:
     //! returns next power of 2 size if \a size is not power of 2
     float getSizeNextPOT(float sz) const;
 
+    //! Initialises the ShaderManager and the required D3D9 shaders
+    void initialiseShaders();
+    //! Initialises the D3D9 ShaderWrapper for textured objects
+    void initialiseStandardTexturedShaderWrapper();
+    //! Initialises the D3D9 ShaderWrapper for coloured objects
+    void initialiseStandardColouredShaderWrapper();
+    //! Wrapper of the OpenGL shader we will use for textured geometry
+    Direct3D9ShaderWrapper* d_shaderWrapperTextured;
+    //! Wrapper of the OpenGL shader we will use for solid geometry
+    Direct3D9ShaderWrapper* d_shaderWrapperSolid;
+
     //! String holding the renderer identification text.
     static String d_rendererID;
     //! Direct3DDevice9 interface we were given when constructed.
@@ -215,7 +227,7 @@ private:
     //! What the renderer considers to be the current display size.
     Sizef d_displaySize;
     //! What the renderer considers to be the current display DPI resolution.
-    Vector2f d_displayDPI;
+    glm::vec2 d_displayDPI;
     //! The default RenderTarget
     RenderTarget* d_defaultTarget;
     //! container type used to hold TextureTargets we create.
@@ -227,12 +239,11 @@ private:
     //! Container used to track geometry buffers.
     GeometryBufferList d_geometryBuffers;
     //! container type used to hold Textures we create.
-    typedef std::map<String, Direct3D9Texture*, StringFastLessCompare
-                     CEGUI_MAP_ALLOC(String, Direct3D9Texture*)> TextureMap;
+    typedef std::unordered_map<String, Direct3D9Texture*> TextureMap;
     //! Container used to track textures.
     TextureMap d_textures;
     //! What the renderer thinks the max texture size is.
-    uint d_maxTextureSize;
+    unsigned int d_maxTextureSize;
     //! whether the hardware supports non-power of two textures
     bool d_supportNPOTTex;
     //! whether the hardware supports non-square textures.

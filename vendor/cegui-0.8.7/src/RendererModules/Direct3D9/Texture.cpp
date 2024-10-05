@@ -29,6 +29,9 @@
 #include "CEGUI/Exceptions.h"
 #include "CEGUI/System.h"
 #include "CEGUI/ImageCodec.h"
+#include "CEGUI/Rectf.h"
+#include "CEGUI/DataContainer.h"
+#include "CEGUI/ResourceProvider.h"
 
 // Start of CEGUI namespace section
 namespace CEGUI
@@ -39,14 +42,22 @@ static D3DFORMAT toD3DPixelFormat(const Texture::PixelFormat fmt)
 {
     switch (fmt)
     {
-        case Texture::PF_RGBA:      return D3DFMT_A8R8G8B8;
-        case Texture::PF_RGB:       return D3DFMT_X8R8G8B8;
-        case Texture::PF_RGB_565:   return D3DFMT_R5G6B5;
-        case Texture::PF_RGBA_4444: return D3DFMT_A4R4G4B4;
-        case Texture::PF_RGBA_DXT1: return D3DFMT_DXT1;
-        case Texture::PF_RGBA_DXT3: return D3DFMT_DXT3;
-        case Texture::PF_RGBA_DXT5: return D3DFMT_DXT5;
-        default:                    return D3DFMT_UNKNOWN;
+        case Texture::PixelFormat::Rgba:
+            return D3DFMT_A8R8G8B8;
+        case Texture::PixelFormat::Rgb:
+            return D3DFMT_X8R8G8B8;
+        case Texture::PixelFormat::Rgb565:
+            return D3DFMT_R5G6B5;
+        case Texture::PixelFormat::Rgba4444:
+            return D3DFMT_A4R4G4B4;
+        case Texture::PixelFormat::RgbaDxt1:
+            return D3DFMT_DXT1;
+        case Texture::PixelFormat::RgbaDxt3:
+            return D3DFMT_DXT3;
+        case Texture::PixelFormat::RgbaDxt5:
+            return D3DFMT_DXT5;
+        default:                    
+            return D3DFMT_UNKNOWN;
     }
 }
 
@@ -56,21 +67,21 @@ static size_t calculateDataWidth(const size_t width, Texture::PixelFormat fmt)
 {
     switch (fmt)
     {
-    case Texture::PF_RGBA:
+        case Texture::PixelFormat::Rgba:
         return width * 4;
 
-    case Texture::PF_RGB:
+    case Texture::PixelFormat::Rgb:
         return width * 3;
 
-    case Texture::PF_RGB_565:
-    case Texture::PF_RGBA_4444:
+    case Texture::PixelFormat::Rgb565:
+    case Texture::PixelFormat::Rgba4444:
         return width * 2;
 
-    case Texture::PF_RGBA_DXT1:
+    case Texture::PixelFormat::RgbaDxt1:
         return ((width + 3) / 4) * 8;
 
-    case Texture::PF_RGBA_DXT3:
-    case Texture::PF_RGBA_DXT5:
+    case Texture::PixelFormat::RgbaDxt3:
+    case Texture::PixelFormat::RgbaDxt5:
         return ((width + 3) / 4) * 16;
 
     default:
@@ -81,11 +92,11 @@ static size_t calculateDataWidth(const size_t width, Texture::PixelFormat fmt)
 //----------------------------------------------------------------------------//
 // Helper utility function that copies an RGB buffer into a region of a second
 // buffer as BGR data values (i.e swap red and blue)
-static void blitRGBToBGRSurface(const uchar* src, uchar* dst, const Sizef& sz)
+static void blitRGBToBGRSurface(const unsigned char* src, unsigned char* dst, const Sizef& sz)
 {
-    for (uint i = 0; i < sz.d_height; ++i)
+    for (unsigned int i = 0; i < sz.d_height; ++i)
     {
-        for (uint j = 0; j < sz.d_width; ++j)
+        for (unsigned int j = 0; j < sz.d_width; ++j)
         {
             *dst++ = src[2];
             *dst++ = src[1];
@@ -98,40 +109,40 @@ static void blitRGBToBGRSurface(const uchar* src, uchar* dst, const Sizef& sz)
 //----------------------------------------------------------------------------//
 // Helper utility function that copies an RGBA buffer into a region of a second
 // buffer as D3DCOLOR data values
-static void blitRGBAToD3DCOLORSurface(const uint32* src, uint32* dst,
+static void blitRGBAToD3DCOLORSurface(const std::uint32_t* src, std::uint32_t* dst,
                                       const Sizef& sz, size_t dest_pitch)
 {
-    for (uint i = 0; i < sz.d_height; ++i)
+    for (unsigned int i = 0; i < sz.d_height; ++i)
     {
-        for (uint j = 0; j < sz.d_width; ++j)
+        for (unsigned int j = 0; j < sz.d_width; ++j)
         {
-            const uint32 pixel = src[j];
-            const uint32 tmp = pixel & 0x00FF00FF;
+            const std::uint32_t pixel = src[j];
+            const std::uint32_t tmp = pixel & 0x00FF00FF;
             dst[j] = (pixel & 0xFF00FF00) | (tmp << 16) | (tmp >> 16);
         }
 
-        dst += dest_pitch / sizeof(uint32);
-        src += static_cast<uint32>(sz.d_width);
+        dst += dest_pitch / sizeof(std::uint32_t);
+        src += static_cast<std::uint32_t>(sz.d_width);
     }
 }
 
 //----------------------------------------------------------------------------//
 // Helper utility function that copies a region of a buffer containing D3DCOLOR
 // values into a second buffer as RGBA values.
-static void blitD3DCOLORSurfaceToRGBA(const uint32* src, uint32* dst,
+static void blitD3DCOLORSurfaceToRGBA(const std::uint32_t* src, std::uint32_t* dst,
                                       const Sizef& sz, size_t source_pitch)
 {
-    for (uint i = 0; i < sz.d_height; ++i)
+    for (unsigned int i = 0; i < sz.d_height; ++i)
     {
-        for (uint j = 0; j < sz.d_width; ++j)
+        for (unsigned int j = 0; j < sz.d_width; ++j)
         {
-            const uint32 pixel = src[j];
-            const uint32 tmp = pixel & 0x00FF00FF;
+            const std::uint32_t pixel = src[j];
+            const std::uint32_t tmp = pixel & 0x00FF00FF;
             dst[j] = (pixel & 0xFF00FF00) | (tmp << 16) | (tmp >> 16);
         }
 
-        src += source_pitch / sizeof(uint32);
-        dst += static_cast<uint32>(sz.d_width);
+        src += source_pitch / sizeof(std::uint32_t);
+        dst += static_cast<std::uint32_t>(sz.d_width);
     }
 }
 
@@ -142,25 +153,24 @@ static void blitD3DCOLORSurfaceToRGBA(const uint32* src, uint32* dst,
 // keeping code clean).
 class PixelBuffer
 {
-    const uchar* d_sourceBuffer;
-    uchar* d_workBuffer;
+    const unsigned char* d_sourceBuffer;
+    unsigned char* d_workBuffer;
     size_t d_pitch;
 
 public:
     //------------------------------------------------------------------------//
     PixelBuffer(const void* data, const Sizef& size, Texture::PixelFormat format) :
-        d_sourceBuffer(static_cast<const uchar*>(data)),
+        d_sourceBuffer(static_cast<const unsigned char*>(data)),
         d_workBuffer(0),
         d_pitch(calculateDataWidth(static_cast<size_t>(size.d_width), format))
     {
-        if (format != Texture::PF_RGBA && format != Texture::PF_RGB)
+        if (format != Texture::PixelFormat::Rgba && format != Texture::PixelFormat::Rgb)
             return;
 
-        d_workBuffer = new uchar[d_pitch * static_cast<size_t>(size.d_height)];
+        d_workBuffer = new unsigned char[d_pitch * static_cast<size_t>(size.d_height)];
 
-        if (format == Texture::PF_RGBA)
-            blitRGBAToD3DCOLORSurface(reinterpret_cast<const uint32*>(d_sourceBuffer),
-                                      reinterpret_cast<uint32*>(d_workBuffer),
+        if (format == Texture::PixelFormat::Rgba)
+            blitRGBAToD3DCOLORSurface(reinterpret_cast<const std::uint32_t*>(d_sourceBuffer), reinterpret_cast<std::uint32_t*>(d_workBuffer),
                                       size, d_pitch);
         else
             blitRGBToBGRSurface(d_sourceBuffer, d_workBuffer, size);
@@ -179,7 +189,7 @@ public:
     }
 
     //------------------------------------------------------------------------//
-    const uchar* getPixelDataPtr() const
+    const unsigned char* getPixelDataPtr() const
     {
         return d_workBuffer ? d_workBuffer : d_sourceBuffer;
     }
@@ -210,7 +220,7 @@ public:
     }
 
     //------------------------------------------------------------------------//
-    void blitFromMemory(const uint32* source, const Rectf& area)
+    void blitFromMemory(const std::uint32_t* source, const Rectf& area)
     {
         if (!d_texture)
             return;
@@ -220,23 +230,21 @@ public:
 
         lockRect(&target_rect);
 
-        blitRGBAToD3DCOLORSurface(
-            source, static_cast<uint32*>(d_lockedRect.pBits),
+        blitRGBAToD3DCOLORSurface(source, static_cast<std::uint32_t*>(d_lockedRect.pBits),
             area.getSize(), d_lockedRect.Pitch);
 
         unlockRect(&target_rect, true);
     }
 
     //------------------------------------------------------------------------//
-    void blitToMemory(uint32* dest)
+    void blitToMemory(std::uint32_t* dest)
     {
         if (!d_texture)
             return;
 
         lockRect(0, true);
 
-        blitD3DCOLORSurfaceToRGBA(
-            static_cast<uint32*>(d_lockedRect.pBits), dest,
+        blitD3DCOLORSurfaceToRGBA(static_cast<std::uint32_t*>(d_lockedRect.pBits), dest,
             Sizef(static_cast<float>(d_surfDesc.Width), static_cast<float>(d_surfDesc.Height)),
             d_lockedRect.Pitch);
 
@@ -322,8 +330,8 @@ private:
     void populateTextureSurfaceDescription()
     {
         if (FAILED(d_texture->GetLevelDesc(0, &d_surfDesc)))
-            CEGUI_THROW(RendererException(
-                "IDirect3DTexture9::GetLevelDesc failed."));
+            throw RendererException(
+                "IDirect3DTexture9::GetLevelDesc failed.");
 
         d_fullArea.left = 0;
         d_fullArea.top = 0;
@@ -338,8 +346,8 @@ private:
             d_surfDesc.Width, d_surfDesc.Height, d_surfDesc.Format,
             D3DPOOL_SYSTEMMEM, &d_offscreen, 0)))
         {
-            CEGUI_THROW(RendererException(
-                "IDirect3DDevice9::CreateOffscreenPlainSurface failed."));
+            throw RendererException(
+                "IDirect3DDevice9::CreateOffscreenPlainSurface failed.");
         }
     }
 
@@ -347,24 +355,24 @@ private:
     void getTextureSurface()
     {
         if (FAILED(d_texture->GetSurfaceLevel(0, &d_renderTarget)))
-            CEGUI_THROW(RendererException(
-                "IDirect3DTexture9::GetSurfaceLevel failed."));
+            throw RendererException(
+                "IDirect3DTexture9::GetSurfaceLevel failed.");
     }
 
     //------------------------------------------------------------------------//
     void lockSurfaceRect(RECT* area)
     {
         if (FAILED(d_offscreen->LockRect(&d_lockedRect, area, 0)))
-            CEGUI_THROW(RendererException(
-                "IDirect3DSurface9::LockRect failed."));
+            throw RendererException(
+                "IDirect3DSurface9::LockRect failed.");
     }
 
     //------------------------------------------------------------------------//
     void lockTextureRect(RECT* area)
     {
         if (FAILED(d_texture->LockRect(0, &d_lockedRect, area, 0)))
-            CEGUI_THROW(RendererException(
-                "IDirect3DTexture9::LockRect failed."));
+            throw RendererException(
+                "IDirect3DTexture9::LockRect failed.");
     }
 
     //------------------------------------------------------------------------//
@@ -375,8 +383,8 @@ private:
                                            area ? area : &d_fullArea,
                                            d_renderTarget, &pt)))
         {
-            CEGUI_THROW(RendererException(
-                "IDirect3DDevice9::UpdateSurface failed."));
+            throw RendererException(
+                "IDirect3DDevice9::UpdateSurface failed.");
         }
     }
 
@@ -384,8 +392,8 @@ private:
     void getRenderTargetData()
     {
         if (FAILED(d_device->GetRenderTargetData(d_renderTarget, d_offscreen)))
-            CEGUI_THROW(RendererException(
-                "IDirect3DDevice9::GetRenderTargetData failed."));
+            throw RendererException(
+                "IDirect3DDevice9::GetRenderTargetData failed.");
     }
 
     //------------------------------------------------------------------------//
@@ -498,7 +506,7 @@ const Sizef& Direct3D9Texture::getOriginalDataSize() const
 }
 
 //----------------------------------------------------------------------------//
-const Vector2f& Direct3D9Texture::getTexelScaling() const
+const glm::vec2& Direct3D9Texture::getTexelScaling() const
 {
     return d_texelScaling;
 }
@@ -510,8 +518,8 @@ void Direct3D9Texture::loadFromFile(const String& filename,
     // get and check existence of CEGUI::System object
     System* sys = System::getSingletonPtr();
     if (!sys)
-        CEGUI_THROW(RendererException(
-            "CEGUI::System object has not been created!"));
+        throw RendererException(
+            "CEGUI::System object has not been created!");
 
     // load file to memory via resource provider
     RawDataContainer texFile;
@@ -525,9 +533,9 @@ void Direct3D9Texture::loadFromFile(const String& filename,
 
     if (!res)
         // It's an error
-        CEGUI_THROW(RendererException(
+        throw RendererException(
             sys->getImageCodec().getIdentifierString() +
-            " failed to load image '" + filename + "'."));
+            " failed to load image '" + filename + "'.");
 }
 
 //----------------------------------------------------------------------------//
@@ -536,8 +544,8 @@ void Direct3D9Texture::loadFromMemory(const void* buffer,
                                       PixelFormat pixel_format)
 {
     if (!isPixelFormatSupported(pixel_format))
-        CEGUI_THROW(InvalidRequestException(
-            "Data was supplied in an unsupported pixel format."));
+        throw InvalidRequestException(
+            "Data was supplied in an unsupported pixel format.");
 
     const D3DFORMAT pixfmt = toD3DPixelFormat(pixel_format);
     createDirect3D9Texture(buffer_size, pixfmt);
@@ -557,8 +565,8 @@ void Direct3D9Texture::loadFromMemory(const void* buffer,
     surface->Release();
 
     if (FAILED(hr))
-        CEGUI_THROW(RendererException(
-            "D3DXLoadSurfaceFromMemory failed."));
+        throw RendererException(
+            "D3DXLoadSurfaceFromMemory failed.");
 }
 
 //----------------------------------------------------------------------------//
@@ -574,7 +582,7 @@ void Direct3D9Texture::createDirect3D9Texture(const Sizef sz, D3DFORMAT format)
                                    1, 0, format, D3DPOOL_MANAGED, &d_texture);
 
     if (FAILED(hr))
-        CEGUI_THROW(RendererException("D3DXCreateTexture failed."));
+        throw RendererException("D3DXCreateTexture failed.");
 
     d_dataSize = sz;
     updateTextureSize();
@@ -588,8 +596,8 @@ IDirect3DSurface9* Direct3D9Texture::getTextureSurface() const
     HRESULT hr = d_texture->GetSurfaceLevel(0, &surface);
 
     if (FAILED(hr))
-        CEGUI_THROW(RendererException(
-            "IDirect3DTexture9::GetSurfaceLevel failed."));
+        throw RendererException(
+            "IDirect3DTexture9::GetSurfaceLevel failed.");
 
     return surface;
 }
@@ -598,14 +606,14 @@ IDirect3DSurface9* Direct3D9Texture::getTextureSurface() const
 void Direct3D9Texture::blitFromMemory(const void* sourceData, const Rectf& area)
 {
     D3DSurfaceBlitter blitter(d_owner.getDevice(), d_texture);
-    blitter.blitFromMemory(static_cast<const uint32*>(sourceData), area);
+    blitter.blitFromMemory(static_cast<const std::uint32_t*>(sourceData), area);
 }
 
 //----------------------------------------------------------------------------//
 void Direct3D9Texture::blitToMemory(void* targetData)
 {
     D3DSurfaceBlitter blitter(d_owner.getDevice(), d_texture);
-    blitter.blitToMemory(static_cast<uint32*>(targetData));
+    blitter.blitToMemory(static_cast<std::uint32_t*>(targetData));
 }
 
 //----------------------------------------------------------------------------//
@@ -631,7 +639,7 @@ void Direct3D9Texture::updateCachedScaleValues()
     // on the original size.
     // if texture is wider (and source data was not stretched), scale
     // is based on the size of the resulting texture.
-    d_texelScaling.d_x = 1.0f / ((orgW == texW) ? orgW : texW);
+    d_texelScaling.x = 1.0f / ((orgW == texW) ? orgW : texW);
 
     //
     // calculate what to use for y scale
@@ -643,7 +651,7 @@ void Direct3D9Texture::updateCachedScaleValues()
     // on the original size.
     // if texture is taller (and source data was not stretched), scale
     // is based on the size of the resulting texture.
-    d_texelScaling.d_y = 1.0f / ((orgH == texH) ? orgH : texH);
+    d_texelScaling.y = 1.0f / ((orgH == texH) ? orgH : texH);
 }
 
 //----------------------------------------------------------------------------//

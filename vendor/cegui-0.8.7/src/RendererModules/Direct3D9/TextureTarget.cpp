@@ -25,11 +25,6 @@
  *   OTHER DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
 #include "CEGUI/RendererModules/Direct3D9/TextureTarget.h"
-#include "CEGUI/Exceptions.h"
-#include "CEGUI/Logger.h"
-#include "CEGUI/RenderQueue.h"
-#include "CEGUI/GeometryBuffer.h"
-#include "CEGUI/RendererModules/Direct3D9/Renderer.h"
 #include "CEGUI/RendererModules/Direct3D9/Texture.h"
 #include "CEGUI/PropertyHelper.h"
 
@@ -38,11 +33,11 @@ namespace CEGUI
 {
 //----------------------------------------------------------------------------//
 const float Direct3D9TextureTarget::DEFAULT_SIZE = 128.0f;
-uint Direct3D9TextureTarget::s_textureNumber = 0;
+unsigned int Direct3D9TextureTarget::s_textureNumber = 0;
 
 //----------------------------------------------------------------------------//
 Direct3D9TextureTarget::Direct3D9TextureTarget(Direct3D9Renderer& owner) :
-    Direct3D9RenderTarget<TextureTarget>(owner),
+    Direct3D9RenderTarget(owner),
     d_texture(0),
     d_surface(0)
 {
@@ -224,7 +219,7 @@ void Direct3D9TextureTarget::postD3DReset()
 String Direct3D9TextureTarget::generateTextureName()
 {
     String tmp("_d3d9_tt_tex_");
-    tmp.append(PropertyHelper<uint>::toString(s_textureNumber++));
+    tmp.append(PropertyHelper<unsigned int>::toString(s_textureNumber++));
 
     return tmp;
 }
@@ -232,8 +227,3 @@ String Direct3D9TextureTarget::generateTextureName()
 //----------------------------------------------------------------------------//
 
 } // End of  CEGUI namespace section
-
-//----------------------------------------------------------------------------//
-// Implementation of template base class
-#include "./RenderTarget.inl"
-

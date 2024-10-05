@@ -27,116 +27,115 @@
 #ifndef _CEGUIDirect3D9GeometryBuffer_h_
 #define _CEGUIDirect3D9GeometryBuffer_h_
 
-#include "../../GeometryBuffer.h"
-#include "CEGUI/RendererModules/Direct3D9/Renderer.h"
-#include "../../Rect.h"
-#include "../../Quaternion.h"
+#include "CEGUI/GeometryBuffer.h"
+#include "CEGUI/Rectf.h"
+#include "CEGUI/Vertex.h"
+#include "CEGUI/Sizef.h"
+
 #include <d3dx9.h>
-#include <utility>
 #include <vector>
+#include <cstdint>
 
 #if defined(_MSC_VER)
-#   pragma warning(push)
-#   pragma warning(disable : 4251)
+    #pragma warning(push)
+    #pragma warning(disable : 4251)
 #endif
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
-class Direct3D9Texture;
+    class Direct3D9Renderer;
+    class Direct3D9Texture;
 
-/*!
-\brief
-    Direct3D9 based implementation of the GeometryBuffer interface.
-*/
-class DIRECT3D9_GUIRENDERER_API Direct3D9GeometryBuffer : public GeometryBuffer
-{
-public:
-    //! Constructor
-    Direct3D9GeometryBuffer(Direct3D9Renderer& owner, LPDIRECT3DDEVICE9 device);
-
-    //! return pointer to D3DXMATRIX used as world transform.
-    const D3DXMATRIX* getMatrix() const;
-
-    // implementation of abstract members from GeometryBuffer
-    void draw() const;
-    void setTranslation(const Vector3f& t);
-    void setRotation(const Quaternion& r);
-    void setPivot(const Vector3f& p);
-    void setClippingRegion(const Rectf& region);
-    void appendVertex(const Vertex& vertex);
-    void appendGeometry(const Vertex* const vbuff, uint vertex_count);
-    void setActiveTexture(Texture* texture);
-    void reset();
-    Texture* getActiveTexture() const;
-    uint getVertexCount() const;
-    uint getBatchCount() const;
-    void setRenderEffect(RenderEffect* effect);
-    RenderEffect* getRenderEffect();
-    void setClippingActive(const bool active);
-    bool isClippingActive() const;
-
-protected:
-    //! perform batch management operations prior to adding new geometry.
-    void performBatchManagement();
-    //! update cached matrix
-    void updateMatrix() const;
-
-    //! internal Vertex structure used for Direct3D based geometry.
-    struct D3DVertex
+    //! Implementation of CEGUI::GeometryBuffer for the Direct3D 11 API.
+    class Direct3D9GeometryBuffer : public GeometryBuffer
     {
-        //! The transformed position for the vertex.
-        FLOAT x, y, z;
-        //! colour of the vertex.
-        DWORD diffuse;
-        //! texture coordinates.
-        float tu, tv;
+    public:
+        //! Constructor
+        Direct3D9GeometryBuffer(Direct3D9Renderer& owner, LPDIRECT3DDEVICE9 device, RefCounted<RenderMaterial> renderMaterial);
+
+        //! return pointer to D3DXMATRIX used as world transform.
+        const D3DXMATRIX* getMatrix() const;
+
+        // Implement GeometryBuffer interface.
+        virtual void          draw(std::uint32_t drawModeMask = DrawModeMaskAll) const;
+        virtual void          setTranslation(const glm::vec3& v);
+        virtual void          setRotation(const glm::quat& r);
+        virtual void          setPivot(const glm::vec3& p);
+        virtual void          appendVertex(const TexturedColouredVertex& vertex);
+        virtual void          appendGeometry(const TexturedColouredVertex* const vbuff, unsigned int vertex_count);
+        virtual void          setActiveTexture(Texture* texture);
+        virtual void          reset();
+        virtual Texture*      getActiveTexture() const;
+        virtual unsigned int  getVertexCount() const;
+        virtual unsigned int  getBatchCount() const;
+        virtual void          setRenderEffect(RenderEffect* effect);
+        virtual RenderEffect* getRenderEffect();
+        virtual void          setClippingActive(const bool active);
+        virtual bool          isClippingActive() const;
+        virtual void          setClippingRegion(const Rectf& region);
+
+    protected:
+        //! perform batch management operations prior to adding new geometry.
+        void performBatchManagement();
+
+        //! update cached matrix
+        void updateMatrix() const;
+
+        //! internal Vertex structure used for Direct3D based geometry.
+        struct D3DVertex
+        {
+            //! The transformed position for the vertex.
+            FLOAT x, y, z;
+            //! colour of the vertex.
+            DWORD diffuse;
+            //! texture coordinates.
+            float tu, tv;
+        };
+
+        //! type to track info for per-texture sub batches of geometry
+        struct BatchInfo
+        {
+            IDirect3DTexture9* texture;
+            unsigned int       vertexCount;
+            bool               clip;
+        };
+
+        //! Owning Direct3D9Renderer object
+        Direct3D9Renderer& d_owner;
+        //! last texture that was set as active
+        Direct3D9Texture* d_activeTexture;
+        //! type of container that tracks BatchInfos.
+        typedef std::vector<BatchInfo> BatchList;
+        //! list of texture batches added to the geometry buffer
+        BatchList d_batches;
+        //! type of container used to queue the geometry
+        typedef std::vector<D3DVertex> VertexList;
+        //! container where added geometry is stored.
+        VertexList d_vertices;
+        //! rectangular clip region
+        Rectf d_clipRect;
+        //! whether clipping will be active for the current batch
+        bool d_clippingActive;
+        //! translation vector
+        glm::vec3 d_translation;
+        //! rotation vector
+        glm::quat d_rotation;
+        //! pivot point for rotation
+        glm::vec3 d_pivot;
+        //! RenderEffect that will be used by the GeometryBuffer
+        RenderEffect* d_effect;
+        //! model matrix cache
+        mutable D3DXMATRIX d_matrix;
+        //! true when d_matrix is valid and up to date
+        mutable bool d_matrixValid;
+        //! The D3D Device
+        LPDIRECT3DDEVICE9 d_device;
     };
 
-    //! type to track info for per-texture sub batches of geometry
-    struct BatchInfo
-    {
-        LPDIRECT3DTEXTURE9 texture;
-        uint vertexCount;
-        bool clip;
-    };
-
-    //! Owning Direct3D9Renderer object
-    Direct3D9Renderer& d_owner;
-    //! last texture that was set as active
-    Direct3D9Texture* d_activeTexture;
-    //! type of container that tracks BatchInfos.
-    typedef std::vector<BatchInfo> BatchList;
-    //! list of texture batches added to the geometry buffer
-    BatchList d_batches;
-    //! type of container used to queue the geometry
-    typedef std::vector<D3DVertex> VertexList;
-    //! container where added geometry is stored.
-    VertexList d_vertices;
-    //! rectangular clip region
-    Rectf d_clipRect;
-    //! whether clipping will be active for the current batch
-    bool d_clippingActive;
-    //! translation vector
-    Vector3f d_translation;
-    //! rotation vector
-    Quaternion d_rotation;
-    //! pivot point for rotation
-    Vector3f d_pivot;
-    //! RenderEffect that will be used by the GeometryBuffer
-    RenderEffect* d_effect;
-    //! The D3D Device
-    LPDIRECT3DDEVICE9 d_device;
-    //! model matrix cache
-    mutable D3DXMATRIX d_matrix;
-    //! true when d_matrix is valid and up to date
-    mutable bool d_matrixValid;
-};
-
-} // End of  CEGUI namespace section
+}            // namespace CEGUI
 
 #if defined(_MSC_VER)
-#   pragma warning(pop)
+    #pragma warning(pop)
 #endif
 
-#endif  // end of guard _CEGUIDirect3D9GeometryBuffer_h_
+#endif            // end of guard _CEGUIDirect3D9GeometryBuffer_h_

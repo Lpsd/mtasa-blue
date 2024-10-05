@@ -28,7 +28,7 @@
 #define _CEGUIDirect3D9TextureTarget_h_
 
 #include "CEGUI/RendererModules/Direct3D9/RenderTarget.h"
-#include "../../TextureTarget.h"
+#include "CEGUI/TextureTarget.h"
 #include <d3d9.h>
 
 #if defined(_MSC_VER)
@@ -43,7 +43,7 @@ namespace CEGUI
 class Direct3D9Texture;
 
 //! Direct3D9TextureTarget - allows rendering to an Direct3D9 texture via .
-class DIRECT3D9_GUIRENDERER_API Direct3D9TextureTarget : public Direct3D9RenderTarget<TextureTarget>
+class DIRECT3D9_GUIRENDERER_API Direct3D9TextureTarget : public Direct3D9RenderTarget, public TextureTarget
 {
 public:
     Direct3D9TextureTarget(Direct3D9Renderer& owner);
@@ -70,7 +70,7 @@ protected:
     //! default size of created texture objects
     static const float DEFAULT_SIZE;
     //! static data used for creating texture names
-    static uint s_textureNumber;
+    static unsigned int s_textureNumber;
     //! helper to generate unique texture names
     static String generateTextureName();
 

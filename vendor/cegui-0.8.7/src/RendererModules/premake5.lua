@@ -7,13 +7,13 @@ project "CEGUIDirect3D9Renderer"
 	includedirs {
 		"../../include",
 		"../../../freetype/include",
-		"../../dependencies/pcre-8.12"
+        "../../dependencies/glm-0.9.4.5"
 	}
     
     links {
+        "glm-0.9.4.5",
         "CEGUI-0.8.7",
 		"freetype", 
-		"pcre-8.12",
 		"dbghelp",
         "winmm",
         "d3d9",

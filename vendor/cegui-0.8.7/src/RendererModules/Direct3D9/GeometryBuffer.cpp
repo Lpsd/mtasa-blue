@@ -28,20 +28,20 @@
 #include "CEGUI/RendererModules/Direct3D9/Texture.h"
 #include "CEGUI/RenderEffect.h"
 #include "CEGUI/Vertex.h"
-#include <d3d9.h>
+#include "CEGUI/Rectf.h"
 
 // Start of CEGUI namespace section
 namespace CEGUI
 {
 //----------------------------------------------------------------------------//
-Direct3D9GeometryBuffer::Direct3D9GeometryBuffer(Direct3D9Renderer& owner,
-                                                 LPDIRECT3DDEVICE9 device) :
+Direct3D9GeometryBuffer::Direct3D9GeometryBuffer(Direct3D9Renderer& owner, LPDIRECT3DDEVICE9 device, RefCounted<RenderMaterial> renderMaterial)
+    : GeometryBuffer(renderMaterial),
     d_owner(owner),
     d_activeTexture(0),
     d_clipRect(0, 0, 0, 0),
     d_clippingActive(true),
     d_translation(0, 0, 0),
-    d_rotation(0, 0, 0),
+    d_rotation(0, 0, 0, 0),
     d_pivot(0, 0, 0),
     d_effect(0),
     d_device(device),
@@ -50,7 +50,7 @@ Direct3D9GeometryBuffer::Direct3D9GeometryBuffer(Direct3D9Renderer& owner,
 }
 
 //----------------------------------------------------------------------------//
-void Direct3D9GeometryBuffer::draw() const
+void Direct3D9GeometryBuffer::draw(std::uint32_t drawModeMask) const
 {
     RECT saved_clip;
     d_device->GetScissorRect(&saved_clip);
@@ -101,21 +101,21 @@ void Direct3D9GeometryBuffer::draw() const
 }
 
 //----------------------------------------------------------------------------//
-void Direct3D9GeometryBuffer::setTranslation(const Vector3f& t)
+void Direct3D9GeometryBuffer::setTranslation(const glm::vec3& v)
 {
-    d_translation = t;
+    d_translation = v;
     d_matrixValid = false;
 }
 
 //----------------------------------------------------------------------------//
-void Direct3D9GeometryBuffer::setRotation(const Quaternion& r)
+void Direct3D9GeometryBuffer::setRotation(const glm::quat& r)
 {
     d_rotation = r;
     d_matrixValid = false;
 }
 
 //----------------------------------------------------------------------------//
-void Direct3D9GeometryBuffer::setPivot(const Vector3f& p)
+void Direct3D9GeometryBuffer::setPivot(const glm::vec3& p)
 {
     d_pivot = p;
     d_matrixValid = false;
@@ -124,21 +124,20 @@ void Direct3D9GeometryBuffer::setPivot(const Vector3f& p)
 //----------------------------------------------------------------------------//
 void Direct3D9GeometryBuffer::setClippingRegion(const Rectf& region)
 {
-    d_clipRect.top(ceguimax(0.0f, region.top()));
-    d_clipRect.bottom(ceguimax(0.0f, region.bottom()));
-    d_clipRect.left(ceguimax(0.0f, region.left()));
-    d_clipRect.right(ceguimax(0.0f, region.right()));
+    d_clipRect.top(std::max(0.0f, region.top()));
+    d_clipRect.bottom(std::max(0.0f, region.bottom()));
+    d_clipRect.left(std::max(0.0f, region.left()));
+    d_clipRect.right(std::max(0.0f, region.right()));
 }
 
 //----------------------------------------------------------------------------//
-void Direct3D9GeometryBuffer::appendVertex(const Vertex& vertex)
+void Direct3D9GeometryBuffer::appendVertex(const TexturedColouredVertex& vertex)
 {
     appendGeometry(&vertex, 1);
 }
 
 //----------------------------------------------------------------------------//
-void Direct3D9GeometryBuffer::appendGeometry(const Vertex* const vbuff,
-                                             uint vertex_count)
+void Direct3D9GeometryBuffer::appendGeometry(const TexturedColouredVertex* const vbuff, unsigned int vertex_count)
 {
     performBatchManagement();
 
@@ -147,17 +146,20 @@ void Direct3D9GeometryBuffer::appendGeometry(const Vertex* const vbuff,
 
     // buffer these vertices
     D3DVertex vd;
-    const Vertex* vs = vbuff;
-    for (uint i = 0; i < vertex_count; ++i, ++vs)
+    const TexturedColouredVertex* vs = vbuff;
+    for (unsigned int i = 0; i < vertex_count; ++i, ++vs)
     {
         // copy vertex info the buffer, converting from CEGUI::Vertex to
         // something directly usable by D3D as needed.
-        vd.x       = vs->position.d_x - 0.5f;
-        vd.y       = vs->position.d_y - 0.5f;
-        vd.z       = vs->position.d_z;
-        vd.diffuse = vs->colour_val.getARGB();
-        vd.tu      = vs->tex_coords.d_x;
-        vd.tv      = vs->tex_coords.d_y;
+        vd.x = vs->d_position.x - 0.5f;
+        vd.y = vs->d_position.y - 0.5f;
+        vd.z = vs->d_position.z;
+
+        Colour c = CEGUI::Colour(vs->d_colour.r, vs->d_colour.g, vs->d_colour.b, vs->d_colour.a);
+        vd.diffuse = c.getARGB();
+
+        vd.tu      = vs->d_texCoords.x;
+        vd.tv      = vs->d_texCoords.y;
         d_vertices.push_back(vd);
     }
 }
@@ -183,13 +185,13 @@ Texture* Direct3D9GeometryBuffer::getActiveTexture() const
 }
 
 //----------------------------------------------------------------------------//
-uint Direct3D9GeometryBuffer::getVertexCount() const
+unsigned int Direct3D9GeometryBuffer::getVertexCount() const
 {
     return d_vertices.size();
 }
 
 //----------------------------------------------------------------------------//
-uint Direct3D9GeometryBuffer::getBatchCount() const
+unsigned int Direct3D9GeometryBuffer::getBatchCount() const
 {
     return d_batches.size();
 }
@@ -226,16 +228,16 @@ void Direct3D9GeometryBuffer::performBatchManagement()
 //----------------------------------------------------------------------------//
 void Direct3D9GeometryBuffer::updateMatrix() const
 {
-    const D3DXVECTOR3 p(d_pivot.d_x, d_pivot.d_y, d_pivot.d_z);
-    const D3DXVECTOR3 t(d_translation.d_x, d_translation.d_y, d_translation.d_z);
+    const D3DXVECTOR3 p(d_pivot.x, d_pivot.y, d_pivot.z);
+    const D3DXVECTOR3 t(d_translation.x, d_translation.y, d_translation.z);
 
     D3DXQUATERNION r;
-    r.x = d_rotation.d_x;
-    r.y = d_rotation.d_y;
-    r.z = d_rotation.d_z;
-    r.w = d_rotation.d_w;
+    r.x = d_rotation.x;
+    r.y = d_rotation.y;
+    r.z = d_rotation.z;
+    r.w = d_rotation.w;
 
-    D3DXMatrixTransformation(&d_matrix, 0, 0, 0, &p, &r, &t);
+    D3DXMatrixTransformation(&d_matrix, 0, 0, 0, &p,&r, &t);
 
     d_matrixValid = true;
 }

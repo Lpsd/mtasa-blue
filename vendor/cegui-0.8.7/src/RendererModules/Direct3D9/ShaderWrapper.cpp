@@ -1,9 +1,9 @@
 /***********************************************************************
-    created:    Fri Feb 13 2009
-    author:     Paul D Turner
+    created:    7th December 2013
+    author:     Lukas Meindl
 *************************************************************************/
 /***************************************************************************
- *   Copyright (C) 2004 - 2011 Paul D Turner & The CEGUI Development Team
+ *   Copyright (C) 2004 - 2013 Paul D Turner & The CEGUI Development Team
  *
  *   Permission is hereby granted, free of charge, to any person obtaining
  *   a copy of this software and associated documentation files (the
@@ -24,46 +24,27 @@
  *   ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  *   OTHER DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
-#include "CEGUI/RendererModules/Direct3D9/ViewportTarget.h"
-#include "CEGUI/RenderQueue.h"
-#include "CEGUI/GeometryBuffer.h"
-#include "CEGUI/Exceptions.h"
-#include <d3d9.h>
+#include "CEGUI/RendererModules/Direct3D9/ShaderWrapper.h"
+#include "CEGUI/ShaderParameterBindings.h"
 
-// Start of CEGUI namespace section
 namespace CEGUI
 {
+
 //----------------------------------------------------------------------------//
-Direct3D9ViewportTarget::Direct3D9ViewportTarget(Direct3D9Renderer& owner) : Direct3D9RenderTarget(owner) 
+Direct3D9ShaderWrapper::Direct3D9ShaderWrapper()
 {
-    // initialise renderer size
-    D3DVIEWPORT9 vp;
-    if (FAILED(d_owner.getDevice()->GetViewport(&vp)))
-        throw RendererException("Unable to access "
-            "required view port information from Direct3DDevice9.");
-
-    Rectf area(
-        glm::vec2(static_cast<float>(vp.X), static_cast<float>(vp.Y)),
-        Sizef(static_cast<float>(vp.Width), static_cast<float>(vp.Height))
-    );
-
-    setArea(area);
 }
 
 //----------------------------------------------------------------------------//
-Direct3D9ViewportTarget::Direct3D9ViewportTarget(Direct3D9Renderer& owner,
-    const Rectf& area) :
-        Direct3D9RenderTarget(owner)
+Direct3D9ShaderWrapper::~Direct3D9ShaderWrapper()
 {
-    setArea(area);
 }
 
 //----------------------------------------------------------------------------//
-bool Direct3D9ViewportTarget::isImageryCache() const
+void Direct3D9ShaderWrapper::prepareForRendering(const ShaderParameterBindings* shaderParameterBindings)
 {
-    return false;
+    CEGUI_UNUSED(shaderParameterBindings);
 }
 
-//----------------------------------------------------------------------------//
+}
 
-} // End of  CEGUI namespace section
