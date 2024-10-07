@@ -11,8 +11,8 @@
 
 #include "StdInc.h"
 
-#define CGUISCROLLBAR_HORIZONTAL_NAME   "CGUI/HorizontalScrollbar"
-#define CGUISCROLLBAR_VERTICAL_NAME     "CGUI/VerticalScrollbar"
+#define CGUISCROLLBAR_HORIZONTAL_NAME   "HorizontalScrollbar"
+#define CGUISCROLLBAR_VERTICAL_NAME     "VerticalScrollbar"
 
 CGUIScrollBar_Impl::CGUIScrollBar_Impl(CGUI_Impl* pGUI, bool bHorizontal, CGUIElement* pParent)
 {
@@ -23,7 +23,7 @@ CGUIScrollBar_Impl::CGUIScrollBar_Impl(CGUI_Impl* pGUI, bool bHorizontal, CGUIEl
     pGUI->GetUniqueName(szUnique);
 
     // Create the window and set default settings
-    m_pWindow = pGUI->GetWindowManager()->createWindow(bHorizontal ? CGUISCROLLBAR_HORIZONTAL_NAME : CGUISCROLLBAR_VERTICAL_NAME, szUnique);
+    m_pWindow = pGUI->GetWindowManager()->createWindow(bHorizontal ? pGUI->GetElementPrefix() + "/" + CGUISCROLLBAR_HORIZONTAL_NAME : pGUI->GetElementPrefix() + "/" + CGUISCROLLBAR_VERTICAL_NAME, szUnique);
     m_pWindow->setDestroyedByParent(false);
 
     // Store the pointer to this CGUI element in the CEGUI element

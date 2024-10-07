@@ -14,16 +14,21 @@
 CGUITexture_Impl::CGUITexture_Impl(CGUI_Impl* pGUI)
 {
     // Save the renderer
-    m_pRenderer = pGUI->GetRenderer();
+    m_pRenderer = &pGUI->GetRenderer();
+    m_pGUI = pGUI;
+
+    // Get an unique identifier for CEGUI for the texture
+    char szUnique[CGUI_CHAR_SIZE];
+    m_pGUI->GetUniqueName(szUnique);
 
     // Create the texture
-    m_pTexture = m_pRenderer->createTexture();
+    m_pTexture = &m_pRenderer->createTexture(szUnique);
 }
 
 CGUITexture_Impl::~CGUITexture_Impl()
 {
     if (m_pTexture)
-        m_pRenderer->destroyTexture(m_pTexture);
+        m_pRenderer->destroyTexture(*m_pTexture);
 }
 
 bool CGUITexture_Impl::LoadFromFile(const char* szFilename, const char* szResourceGroup)
@@ -31,9 +36,9 @@ bool CGUITexture_Impl::LoadFromFile(const char* szFilename, const char* szResour
     // Try to load it
     try
     {
-        m_pTexture->loadFromFile(szFilename, "");
+        m_pTexture->loadFromFile(szFilename, szResourceGroup);
     }
-    catch (CEGUI::Exception)
+    catch (CEGUI::FileIOException)
     {
         return false;
     }
@@ -42,14 +47,18 @@ bool CGUITexture_Impl::LoadFromFile(const char* szFilename, const char* szResour
 
 void CGUITexture_Impl::LoadFromMemory(const void* pBuffer, unsigned int uiWidth, unsigned int uiHeight)
 {
-    m_pTexture->loadFromMemory(pBuffer, uiWidth, uiHeight);
+    m_pTexture->loadFromMemory(pBuffer, CEGUI::Sizef(uiWidth, uiHeight), CEGUI::Texture::PixelFormat::Rgba);
 }
 
 void CGUITexture_Impl::Clear()
 {
     // Destroy the previous texture and recreate it (empty)
-    m_pRenderer->destroyTexture(m_pTexture);
-    m_pTexture = m_pRenderer->createTexture();
+    m_pRenderer->destroyTexture(*m_pTexture);
+
+    // Get an unique identifier for CEGUI for the texture
+    char szUnique[CGUI_CHAR_SIZE];
+    m_pGUI->GetUniqueName(szUnique);
+    m_pTexture = &m_pRenderer->createTexture(szUnique);
 }
 
 CEGUI::Texture* CGUITexture_Impl::GetTexture()
@@ -64,10 +73,10 @@ void CGUITexture_Impl::SetTexture(CEGUI::Texture* pTexture)
 
 LPDIRECT3DTEXTURE9 CGUITexture_Impl::GetD3DTexture()
 {
-    return reinterpret_cast<CEGUI::DirectX9Texture*>(m_pTexture)->getD3DTexture();
+    return reinterpret_cast<CEGUI::Direct3D9Texture*>(m_pTexture)->getDirect3D9Texture();
 }
 
 void CGUITexture_Impl::CreateTexture(unsigned int width, unsigned int height)
 {
-    return reinterpret_cast<CEGUI::DirectX9Texture*>(m_pTexture)->createRenderTarget(width, height);
+    //return reinterpret_cast<CEGUI::Direct3D9Texture*>(m_pTexture)->createRenderTarget(width, height);
 }

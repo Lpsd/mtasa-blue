@@ -142,7 +142,7 @@ CLocalServer::~CLocalServer()
 
 bool CLocalServer::OnAddButtonClick(CGUIElement* pElement)
 {
-    CGUIListItem* pItem = m_pResourcesAll->GetSelectedItem();
+    CGUIGridListItem* pItem = m_pResourcesAll->GetSelectedItem();
     if (pItem)
     {
         m_pResourcesCur->SetItemText(m_pResourcesCur->AddRow(), m_hResourcesCur, &pItem->GetText().c_str()[3]);
@@ -153,7 +153,7 @@ bool CLocalServer::OnAddButtonClick(CGUIElement* pElement)
 
 bool CLocalServer::OnDelButtonClick(CGUIElement* pElement)
 {
-    CGUIListItem* pItem = m_pResourcesCur->GetSelectedItem();
+    CGUIGridListItem* pItem = m_pResourcesCur->GetSelectedItem();
     if (pItem)
     {
         m_pResourcesAll->SetItemText(m_pResourcesAll->AddRow(), m_hResourcesAll, &pItem->GetText().c_str()[3]);

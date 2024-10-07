@@ -12,13 +12,13 @@
 #pragma once
 
 #include <gui/CGUIFont.h>
-#include <CEGUI.h>
+#include <CEGUI/CEGUI.h>
 
 class CGUIFont_Impl : public CGUIFont
 {
 public:
     CGUIFont_Impl(class CGUI_Impl* pManager, const char* szFontName, const char* szFontFile, unsigned int uSize = 8, unsigned int uFlags = 0,
-                  bool bAutoScale = false);
+                  bool bAutoScale = false, bool isWinFont = false);
     ~CGUIFont_Impl();
 
     void SetAntiAliasingEnabled(bool bAntialiased);
@@ -38,6 +38,8 @@ public:
                         float fScaleY);
 
 private:
-    CEGUI::Font*        m_pFont;
-    CEGUI::FontManager* m_pFontManager;
+    CEGUI::Font*           m_pFont;
+    CEGUI::FontManager*    m_pFontManager;
+    CEGUI::GeometryBuffer* m_pGeometryBuffer;
+    CEGUI::RenderedText*   m_pRenderedText;
 };

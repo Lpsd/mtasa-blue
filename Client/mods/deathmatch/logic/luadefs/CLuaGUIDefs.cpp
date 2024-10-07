@@ -2591,7 +2591,7 @@ int CLuaGUIDefs::GUIGridListGetSelectedItems(lua_State* luaVM)
     if (!argStream.HasErrors())
     {
         CGUIGridList* pList = static_cast<CGUIGridList*>(guiGridlist->GetCGUIElement());
-        CGUIListItem* pItem = NULL;
+        CGUIGridListItem* pItem = NULL;
 
         lua_newtable(luaVM);
 

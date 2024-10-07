@@ -11,7 +11,7 @@
 
 #include "StdInc.h"
 
-#define CGUIMEMO_NAME "CGUI/MultiLineEditbox"
+#define CGUIMEMO_NAME "MultiLineEditbox"
 
 CGUIMemo_Impl::CGUIMemo_Impl(CGUI_Impl* pGUI, CGUIElement* pParent, const char* szEdit)
 {
@@ -22,7 +22,7 @@ CGUIMemo_Impl::CGUIMemo_Impl(CGUI_Impl* pGUI, CGUIElement* pParent, const char* 
     pGUI->GetUniqueName(szUnique);
 
     // Create the window and set default settings
-    m_pWindow = pGUI->GetWindowManager()->createWindow(CGUIMEMO_NAME, szUnique);
+    m_pWindow = pGUI->GetWindowManager()->createWindow(pGUI->GetElementPrefix() + "/" + CGUIMEMO_NAME, szUnique);
     m_pWindow->setDestroyedByParent(false);
 
     // Store the pointer to this CGUI element in the CEGUI element
@@ -78,22 +78,22 @@ bool CGUIMemo_Impl::IsReadOnly()
 void CGUIMemo_Impl::EnsureCaratIsVisible()
 {
     CEGUI::MultiLineEditbox* wndMemo = reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow);
-    wndMemo->setCaratIndex((wndMemo->getText()).length());
+    wndMemo->setCaretIndex((wndMemo->getText()).length());
 }
 
 unsigned int CGUIMemo_Impl::GetCaretIndex()
 {
-    return static_cast<unsigned int>(reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->getCaratIndex());
+    return static_cast<unsigned int>(reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->getCaretIndex());
 }
 
 void CGUIMemo_Impl::SetCaretIndex(unsigned int uiIndex)
 {
-    reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->setCaratIndex(uiIndex);
+    reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->setCaretIndex(uiIndex);
 }
 
 float CGUIMemo_Impl::GetVerticalScrollPosition()
 {
-    CEGUI::Scrollbar* pScrollbar = reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->d_vertScrollbar;
+    CEGUI::Scrollbar* pScrollbar = reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->getVertScrollbar();
     if (pScrollbar)
     {
         return pScrollbar->getScrollPosition();
@@ -104,7 +104,7 @@ float CGUIMemo_Impl::GetVerticalScrollPosition()
 
 void CGUIMemo_Impl::SetVerticalScrollPosition(float fPosition)
 {
-    CEGUI::Scrollbar* pScrollbar = reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->d_vertScrollbar;
+    CEGUI::Scrollbar* pScrollbar = reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->getVertScrollbar();
     if (pScrollbar)
     {
         pScrollbar->setScrollPosition(fPosition);
@@ -118,7 +118,7 @@ float CGUIMemo_Impl::GetMaxVerticalScrollPosition()
 
 float CGUIMemo_Impl::GetScrollbarDocumentSize()
 {
-    CEGUI::Scrollbar* pScrollbar = reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->d_vertScrollbar;
+    CEGUI::Scrollbar* pScrollbar = reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->getVertScrollbar();
     if (pScrollbar)
     {
         return pScrollbar->getDocumentSize();
@@ -129,7 +129,7 @@ float CGUIMemo_Impl::GetScrollbarDocumentSize()
 
 float CGUIMemo_Impl::GetScrollbarPageSize()
 {
-    CEGUI::Scrollbar* pScrollbar = reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->d_vertScrollbar;
+    CEGUI::Scrollbar* pScrollbar = reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->getVertScrollbar();
     if (pScrollbar)
     {
         return pScrollbar->getPageSize();
@@ -145,12 +145,12 @@ void CGUIMemo_Impl::SetSelection(unsigned int uiStart, unsigned int uiEnd)
 
 unsigned int CGUIMemo_Impl::GetSelectionStart()
 {
-    return static_cast<unsigned int>(reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->getSelectionStartIndex());
+    return static_cast<unsigned int>(reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->getSelectionStart());
 }
 
 unsigned int CGUIMemo_Impl::GetSelectionEnd()
 {
-    return static_cast<unsigned int>(reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->getSelectionEndIndex());
+    return static_cast<unsigned int>(reinterpret_cast<CEGUI::MultiLineEditbox*>(m_pWindow)->getSelectionEnd());
 }
 
 unsigned int CGUIMemo_Impl::GetSelectionLength()
@@ -185,7 +185,7 @@ bool CGUIMemo_Impl::Event_TextChanged(const CEGUI::EventArgs& e)
 bool CGUIMemo_Impl::Event_OnKeyDown(const CEGUI::EventArgs& e)
 {
     const CEGUI::KeyEventArgs& KeyboardArgs = reinterpret_cast<const CEGUI::KeyEventArgs&>(e);
-    if (KeyboardArgs.scancode == CGUIKeys::Tab)
+    if ((CGUIKeys::Scan)KeyboardArgs.d_key == CGUIKeys::Scan::Tab)
     {
         // tab pressed, if we are in a window with tab enabled, just switch to the next element
         if (GetParent() == NULL)

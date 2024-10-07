@@ -11,7 +11,7 @@
 
 #include "StdInc.h"
 
-#define CGUICHECKBOX_NAME "CGUI/Checkbox"
+#define CGUICHECKBOX_NAME "Checkbox"
 
 CGUICheckBox_Impl::CGUICheckBox_Impl(CGUI_Impl* pGUI, CGUIElement* pParent, const char* szCaption, bool bChecked)
 {
@@ -22,12 +22,12 @@ CGUICheckBox_Impl::CGUICheckBox_Impl(CGUI_Impl* pGUI, CGUIElement* pParent, cons
     pGUI->GetUniqueName(szUnique);
 
     // Create the window and set default settings
-    m_pWindow = pGUI->GetWindowManager()->createWindow(CGUICHECKBOX_NAME, szUnique);
+    m_pWindow = pGUI->GetWindowManager()->createWindow(pGUI->GetElementPrefix() + "/" + CGUICHECKBOX_NAME, szUnique);
     m_pWindow->setDestroyedByParent(false);
 
     m_pWindow->setText(CGUI_Impl::GetUTFString(szCaption));
 
-    m_pWindow->setSize(CEGUI::Absolute, CEGUI::Size(128.0f, 16.0f));
+    m_pWindow->setSize(pGUI->CreateAbsoluteSize(128.0f, 16.0f));
     m_pWindow->setVisible(true);
 
     // Store the pointer to this CGUI element in the CEGUI element
@@ -58,10 +58,10 @@ CGUICheckBox_Impl::~CGUICheckBox_Impl()
 
 void CGUICheckBox_Impl::SetSelected(bool bChecked)
 {
-    reinterpret_cast<CEGUI::Checkbox*>(m_pWindow)->setSelected(!bChecked);
+    reinterpret_cast<CEGUI::ToggleButton*>(m_pWindow)->setSelected(!bChecked);
 }
 
 bool CGUICheckBox_Impl::GetSelected()
 {
-    return !(reinterpret_cast<CEGUI::Checkbox*>(m_pWindow)->isSelected());
+    return !(reinterpret_cast<CEGUI::ToggleButton*>(m_pWindow)->isSelected());
 }

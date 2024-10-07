@@ -38,6 +38,7 @@ class CGUI;
 #include "CGUITabPanel.h"
 #include "CGUIComboBox.h"
 #include "CGUITypes.h"
+#include "CGUIStandardItem.h"
 
 // Path defines for CGUI
 #define CGUI_ICON_MESSAGEBOX_INFO       "cgui\\images\\info.png"

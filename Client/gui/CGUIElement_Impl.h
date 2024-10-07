@@ -100,6 +100,12 @@ public:
     CGUIPropertyIter GetPropertiesBegin();
     CGUIPropertyIter GetPropertiesEnd();
 
+    void SetCursorPassThroughEnabled(bool enabled);
+    bool IsCursorPassThroughEnabled();
+
+    void SetDistributeCapturedInputs(bool enabled);
+    bool DistributesCapturedInputs();
+
     void SetMovedHandler(GUI_CALLBACK Callback);
     void SetSizedHandler(GUI_CALLBACK Callback);
     void SetClickHandler(GUI_CALLBACK Callback);

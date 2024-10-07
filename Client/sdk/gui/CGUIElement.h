@@ -122,6 +122,12 @@ public:
     virtual CGUIPropertyIter GetPropertiesBegin() = 0;
     virtual CGUIPropertyIter GetPropertiesEnd() = 0;
 
+    virtual void SetCursorPassThroughEnabled(bool enabled) = 0;
+    virtual bool IsCursorPassThroughEnabled() = 0;
+
+    virtual void SetDistributeCapturedInputs(bool enabled) = 0;
+    virtual bool DistributesCapturedInputs() = 0;
+
     virtual void SetMovedHandler(GUI_CALLBACK Callback) = 0;
     virtual void SetSizedHandler(GUI_CALLBACK Callback) = 0;
     virtual void SetClickHandler(GUI_CALLBACK Callback) = 0;

@@ -11,7 +11,7 @@
 
 #include "StdInc.h"
 
-#define CGUISCROLLPANE_NAME "CGUI/ScrollablePane"
+#define CGUISCROLLPANE_NAME "ScrollablePane"
 
 CGUIScrollPane_Impl::CGUIScrollPane_Impl(CGUI_Impl* pGUI, CGUIElement* pParent)
 {
@@ -25,9 +25,9 @@ CGUIScrollPane_Impl::CGUIScrollPane_Impl(CGUI_Impl* pGUI, CGUIElement* pParent)
     pGUI->GetUniqueName(szUnique);
 
     // Create the window and set default settings
-    m_pWindow = pGUI->GetWindowManager()->createWindow(CGUISCROLLPANE_NAME, szUnique);
+    m_pWindow = pGUI->GetWindowManager()->createWindow(pGUI->GetElementPrefix() + "/" + CGUISCROLLPANE_NAME, szUnique);
     m_pWindow->setDestroyedByParent(false);
-    m_pWindow->setRect(CEGUI::Relative, CEGUI::Rect(0.9f, 0.9f, 0.9f, 0.9f));
+    m_pWindow->setArea(CEGUI::URect(CEGUI::UDim(0.9f, 0), CEGUI::UDim(0.9f, 0), CEGUI::UDim(0.9f, 0), CEGUI::UDim(0.9f, 0)));
 
     // Store the pointer to this CGUI element in the CEGUI element
     m_pWindow->setUserData(reinterpret_cast<void*>(this));
@@ -54,12 +54,12 @@ CGUIScrollPane_Impl::~CGUIScrollPane_Impl()
 
 void CGUIScrollPane_Impl::SetHorizontalScrollBar(bool bEnabled)
 {
-    reinterpret_cast<CEGUI::ScrollablePane*>(m_pWindow)->setShowHorzScrollbar(bEnabled);
+    reinterpret_cast<CEGUI::ScrollablePane*>(m_pWindow)->setAlwaysShowHorizontalScrollbar(bEnabled);
 }
 
 void CGUIScrollPane_Impl::SetVerticalScrollBar(bool bEnabled)
 {
-    reinterpret_cast<CEGUI::ScrollablePane*>(m_pWindow)->setShowVertScrollbar(bEnabled);
+    reinterpret_cast<CEGUI::ScrollablePane*>(m_pWindow)->setAlwaysShowVerticalScrollbar(bEnabled);
 }
 
 void CGUIScrollPane_Impl::SetHorizontalScrollPosition(float fPosition)
@@ -67,8 +67,8 @@ void CGUIScrollPane_Impl::SetHorizontalScrollPosition(float fPosition)
     try
     {
         CEGUI::ScrollablePane* pScrollPane = reinterpret_cast<CEGUI::ScrollablePane*>(m_pWindow);
-        float                  fFullWidth = pScrollPane->getContentPaneArea().getWidth();
-        float                  fViewWidth = pScrollPane->getAbsoluteWidth();
+        float                  fFullWidth = pScrollPane->getContentPane()->getWidth().d_offset;
+        float                  fViewWidth = pScrollPane->getWidth().d_offset;
 
         pScrollPane->setHorizontalScrollPosition(fPosition * ((fFullWidth - fViewWidth) / fFullWidth));
     }
@@ -82,8 +82,8 @@ void CGUIScrollPane_Impl::SetVerticalScrollPosition(float fPosition)
     try
     {
         CEGUI::ScrollablePane* pScrollPane = reinterpret_cast<CEGUI::ScrollablePane*>(m_pWindow);
-        float                  fFullHeight = pScrollPane->getContentPaneArea().getHeight();
-        float                  fViewHeight = pScrollPane->getAbsoluteHeight();
+        float                  fFullHeight = pScrollPane->getContentPane()->getHeight().d_offset;
+        float                  fViewHeight = pScrollPane->getHeight().d_offset;
 
         pScrollPane->setVerticalScrollPosition(fPosition * ((fFullHeight - fViewHeight) / fFullHeight));
     }
@@ -98,8 +98,8 @@ float CGUIScrollPane_Impl::GetHorizontalScrollPosition()
     {
         CEGUI::ScrollablePane* pScrollPane = reinterpret_cast<CEGUI::ScrollablePane*>(m_pWindow);
 
-        float fFullWidth = pScrollPane->getContentPaneArea().getWidth();
-        float fViewWidth = pScrollPane->getAbsoluteWidth();
+        float fFullWidth = pScrollPane->getContentPane()->getWidth().d_offset;
+        float fViewWidth = pScrollPane->getWidth().d_offset;
 
         // Prevent division by zero
         if (fFullWidth == fViewWidth)
@@ -119,8 +119,8 @@ float CGUIScrollPane_Impl::GetVerticalScrollPosition()
     {
         CEGUI::ScrollablePane* pScrollPane = reinterpret_cast<CEGUI::ScrollablePane*>(m_pWindow);
 
-        float fFullHeight = pScrollPane->getContentPaneArea().getHeight();
-        float fViewHeight = pScrollPane->getAbsoluteHeight();
+        float fFullHeight = pScrollPane->getContentPane()->getHeight().d_offset;
+        float fViewHeight = pScrollPane->getHeight().d_offset;
 
         // Prevent division by zero
         if (fFullHeight == fViewHeight)

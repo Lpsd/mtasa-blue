@@ -36,6 +36,7 @@ public:
     void CreateTexture(unsigned int width, unsigned int height);
 
 private:
-    CEGUI::Renderer* m_pRenderer;
-    CEGUI::Texture*  m_pTexture;
+    class CGUI_Impl*           m_pGUI;
+    CEGUI::Direct3D9Renderer*  m_pRenderer;
+    CEGUI::Texture*            m_pTexture;
 };

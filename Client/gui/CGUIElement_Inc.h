@@ -2,7 +2,7 @@
  *
  *  PROJECT:     Multi Theft Auto v1.0
  *  LICENSE:     See LICENSE in the top level directory
- *  FILE:        gui/CGUIElement_Impl.cpp
+ *  FILE:        gui/CGUIElement_Inc.h
  *  PURPOSE:     Element derived class inclusion header
  *               (fixes C++-language issues regarding inheritance)
  *
@@ -242,6 +242,25 @@ void SetUserData(void* pData)
 void* GetUserData()
 {
     return CGUIElement_Impl::GetUserData();
+};
+
+void SetCursorPassThroughEnabled(bool enabled)
+{
+    CGUIElement_Impl::SetCursorPassThroughEnabled(enabled);
+};
+bool IsCursorPassThroughEnabled()
+{
+    return CGUIElement_Impl::IsCursorPassThroughEnabled();
+};
+
+
+void SetDistributeCapturedInputs(bool enabled)
+{
+    CGUIElement_Impl::SetDistributeCapturedInputs(enabled);
+};
+bool DistributesCapturedInputs()
+{
+    return CGUIElement_Impl::DistributesCapturedInputs();
 };
 
 void SetClickHandler(GUI_CALLBACK Callback)

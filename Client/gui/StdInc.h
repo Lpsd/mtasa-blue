@@ -1,5 +1,5 @@
 
-#include <CEGUI.h>
+#include <CEGUI/CEGUI.h>
 #include <windows.h>
 #define MTA_CLIENT
 #define SHARED_UTIL_WITH_FAST_HASH_MAP
@@ -8,10 +8,11 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <glm/glm.hpp>
 
 #include <d3dx9.h>
-#include <renderers/directx9GUIRenderer/d3d9renderer.h>
-#include <renderers/directx9GUIRenderer/d3d9texture.h>
+#include <CEGUI/RendererModules/Direct3D9/Renderer.h>
+#include <CEGUI/RendererModules/Direct3D9/Texture.h>
 
 #include "CGUITabListItem.h"
 #include "CGUITabList.h"
@@ -22,7 +23,8 @@
 #include "CGUIFont_Impl.h"
 #include "CGUIGridList_Impl.h"
 #include "CGUILabel_Impl.h"
-#include "CGUIListItem_Impl.h"
+#include "CGUIStandardItem_Impl.h"
+#include "CGUIGridListItem_Impl.h"
 #include "CGUIMemo_Impl.h"
 #include "CGUIProgressBar_Impl.h"
 #include "CGUIRadioButton_Impl.h"

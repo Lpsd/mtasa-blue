@@ -12,10 +12,9 @@
 
 #include <gui/CGUIWebBrowser.h>
 #include "CGUITexture_Impl.h"
-#include <renderers/directx9GUIRenderer/d3d9texture.h>
 
 // Use StaticImage here as we'd have to add the same definition twice to the Falagard definition file otherwise
-#define CGUIWEBBROWSER_NAME "StaticImage"
+#define CGUIWEBBROWSER_NAME "TaharezLook/StaticImage"
 
 class CGUITexture;
 class CGUITexture_Impl;
@@ -53,35 +52,35 @@ protected:
     bool Event_Deactivated(const CEGUI::EventArgs& e);
 
 private:
-    CGUI_Impl*              m_pGUI;
-    CEGUI::ImagesetManager* m_pImagesetManager;
-    CEGUI::Imageset*        m_pImageset;
-    CEGUI::Image*           m_pImage;
+    CGUI_Impl*                m_pGUI;
+    CEGUI::BitmapImage*       m_pImage;
+    CEGUI::Texture*           m_pTexture;
+    CEGUI::Direct3D9Renderer* m_pRenderer;
 
-    CWebViewInterface* m_pWebView;
+    ::CWebViewInterface* m_pWebView;
 
-    #define EXCLUDE_SET_SIZE // WTF? TODO: Refactor this
-    #include "CGUIElement_Inc.h"
-    #undef EXCLUDE_SET_SIZE
+#define EXCLUDE_SET_SIZE            // WTF? TODO: Refactor this
+#include "CGUIElement_Inc.h"
+#undef EXCLUDE_SET_SIZE
 };
 
 // The purpose of this class is to provide an externally managed DirectX texture
-class CGUIWebBrowserTexture : public CEGUI::DirectX9Texture
-{
-public:
-    CGUIWebBrowserTexture(CEGUI::Renderer* pOwner, CWebViewInterface* pWebView);
-
-    virtual ushort getWidth() const override;
-    virtual ushort getHeight() const override;
-
-    // Override with empty function (--> eliminate the functinions from DirectX9Texture)
-    virtual void loadFromFile(const CEGUI::String& filename, const CEGUI::String& resourceGroup) override{};
-    virtual void loadFromMemory(const void* buffPtr, uint buffWidth, uint buffHeight) override{};
-
-    virtual LPDIRECT3DTEXTURE9 getD3DTexture() const override;
-    virtual void               preD3DReset(){};
-    virtual void               postD3DReset(){};
-
-private:
-    CWebViewInterface* m_pWebView;
-};
+// class CGUIWebBrowserTexture : public CEGUI::Direct3D9Texture
+//{
+// public:
+//    CGUIWebBrowserTexture(CEGUI::Renderer* pOwner, CWebViewInterface* pWebView);
+//
+//    virtual ushort getWidth() const;
+//    virtual ushort getHeight() const;
+//
+//    // Override with empty function (--> eliminate the functinions from DirectX9Texture)
+//    virtual void loadFromFile(const CEGUI::String& filename, const CEGUI::String& resourceGroup) override{};
+//    virtual void loadFromMemory(const void* buffPtr, uint buffWidth, uint buffHeight) override{};
+//
+//    virtual LPDIRECT3DTEXTURE9 getD3DTexture() const override;
+//    virtual void               preD3DReset(){};
+//    virtual void               postD3DReset(){};
+//
+// private:
+//    CWebViewInterface* m_pWebView;
+//};

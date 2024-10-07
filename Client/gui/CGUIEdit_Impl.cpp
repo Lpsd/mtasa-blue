@@ -11,7 +11,7 @@
 
 #include "StdInc.h"
 
-#define CGUIEDIT_NAME "CGUI/Editbox"
+#define CGUIEDIT_NAME "Editbox"
 
 CGUIEdit_Impl::CGUIEdit_Impl(CGUI_Impl* pGUI, CGUIElement* pParent, const char* szEdit)
 {
@@ -22,9 +22,9 @@ CGUIEdit_Impl::CGUIEdit_Impl(CGUI_Impl* pGUI, CGUIElement* pParent, const char* 
     pGUI->GetUniqueName(szUnique);
 
     // Create the edit and set default settings
-    m_pWindow = pGUI->GetWindowManager()->createWindow(CGUIEDIT_NAME, szUnique);
+    m_pWindow = pGUI->GetWindowManager()->createWindow(pGUI->GetElementPrefix() + "/" + CGUIEDIT_NAME, szUnique);
     m_pWindow->setDestroyedByParent(false);
-    m_pWindow->setRect(CEGUI::Absolute, CEGUI::Rect(0.00f, 0.00f, 0.128f, 0.24f));
+    m_pWindow->setArea(CEGUI::URect(CEGUI::UDim(0, 0.00f), CEGUI::UDim(0, 0.00f), CEGUI::UDim(0, 0.128f), CEGUI::UDim(0, 0.24f)));
 
     // Store the pointer to this CGUI element in the CEGUI element
     m_pWindow->setUserData(reinterpret_cast<void*>(this));
@@ -78,12 +78,12 @@ bool CGUIEdit_Impl::IsReadOnly()
 
 void CGUIEdit_Impl::SetMasked(bool bMasked)
 {
-    reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->setTextMasked(bMasked);
+    reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->setTextMaskingEnabled(bMasked);
 }
 
 bool CGUIEdit_Impl::IsMasked()
 {
-    return reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->isTextMasked();
+    return reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->isTextMaskingEnabled();
 }
 
 void CGUIEdit_Impl::SetMaxLength(unsigned int uiMaxLength)
@@ -103,12 +103,12 @@ void CGUIEdit_Impl::SetSelection(unsigned int uiStart, unsigned int uiEnd)
 
 unsigned int CGUIEdit_Impl::GetSelectionStart()
 {
-    return static_cast<unsigned int>(reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->getSelectionStartIndex());
+    return static_cast<unsigned int>(reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->getSelectionStart());
 }
 
 unsigned int CGUIEdit_Impl::GetSelectionEnd()
 {
-    return static_cast<unsigned int>(reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->getSelectionEndIndex());
+    return static_cast<unsigned int>(reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->getSelectionEnd());
 }
 
 unsigned int CGUIEdit_Impl::GetSelectionLength()
@@ -118,22 +118,22 @@ unsigned int CGUIEdit_Impl::GetSelectionLength()
 
 void CGUIEdit_Impl::SetCaretIndex(unsigned int uiIndex)
 {
-    return reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->setCaratIndex(uiIndex);
+    return reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->setCaretIndex(uiIndex);
 }
 
 void CGUIEdit_Impl::SetCaretAtStart()
 {
-    reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->setCaratIndex(0);
+    reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->setCaretIndex(0);
 }
 
 void CGUIEdit_Impl::SetCaretAtEnd()
 {
-    reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->setCaratIndex(GetText().length());
+    reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->setCaretIndex(GetText().length());
 }
 
 unsigned int CGUIEdit_Impl::GetCaretIndex()
 {
-    return static_cast<unsigned int>(reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->getCaratIndex());
+    return static_cast<unsigned int>(reinterpret_cast<CEGUI::Editbox*>(m_pWindow)->getCaretIndex());
 }
 
 void CGUIEdit_Impl::SetTextAcceptedHandler(GUI_CALLBACK Callback)
@@ -192,7 +192,8 @@ bool CGUIEdit_Impl::Event_OnRenderingStarted(const CEGUI::EventArgs& e)
 bool CGUIEdit_Impl::Event_OnKeyDown(const CEGUI::EventArgs& e)
 {
     const CEGUI::KeyEventArgs& KeyboardArgs = reinterpret_cast<const CEGUI::KeyEventArgs&>(e);
-    if (KeyboardArgs.scancode == CGUIKeys::Tab)
+    auto                       scancode = (CGUIKeys::Scan)KeyboardArgs.d_key;
+    if (scancode == CGUIKeys::Scan::Tab)
     {
         // tab pressed, if we are in a window with tab enabled, just switch to the next element
         if (GetParent() == NULL)
@@ -204,7 +205,7 @@ bool CGUIEdit_Impl::Event_OnKeyDown(const CEGUI::EventArgs& e)
             pTabList->SelectNext(this);
         }
     }
-    else if (KeyboardArgs.scancode == CGUIKeys::Return || KeyboardArgs.scancode == CGUIKeys::NumpadEnter)
+    else if (scancode == CGUIKeys::Return || scancode == CGUIKeys::NumpadEnter)
     {
         // Enter/Return event is split from Tab now, since we use that for Console, Quick Connect, etc. as enter-only
         if (m_OnTextAccepted)

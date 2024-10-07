@@ -31,7 +31,7 @@ public:
 
     void SetClickHandler(GUI_CALLBACK Callback);
 
-    CGUIWindow* GetWindow();
+    ::CGUIWindow* GetWindow();
 
 private:
     bool OnResponseHandler(CGUIElement* pElement);

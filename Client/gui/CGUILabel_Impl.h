@@ -46,4 +46,6 @@ public:
     #define EXCLUDE_SET_TEXT
     #include "CGUIElement_Inc.h"
     #undef EXCLUDE_SET_TEXT
+private:
+    CEGUI::TextComponent* m_pLabel;
 };

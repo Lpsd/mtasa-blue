@@ -9,10 +9,13 @@ project "GUI"
 
 	filter {}
 		includedirs {
-			"../../Shared/sdk",
+            "../../Shared/sdk",
 			"../sdk",
-			"../../vendor/cegui-0.4.0-custom/include",
-			"../../vendor/sparsehash/src/"
+			"../../vendor/cegui-0.8.7/include",
+            "../../vendor/cegui-0.8.7/dependencies/glm-0.9.4.5",
+            "../../vendor/cegui-0.8.7/dependencies/pcre-8.12",
+			"../../vendor/sparsehash/src/",
+			"../../vendor/freetype/include",
 		}
 
 	pchheader "StdInc.h"
@@ -23,8 +26,15 @@ project "GUI"
 	}
 
 	links {
-		"CEGUI", "DirectX9GUIRenderer", "Falagard",
+		"CEGUI-0.8.7",
+		"CEGUICoreWindowRendererSet",
+		"CEGUISILLYImageCodec",
+		"CEGUIDirect3D9Renderer",
+		"CEGUITinyXML2Parser",
+        "glm-0.9.4.5",
+        "pcre-8.12",
 		"d3dx9.lib",
+		"d3d9.lib",
 		"dxerr.lib"
 	}
 
@@ -38,10 +48,16 @@ project "GUI"
 		"premake5.lua",
 		"*.h",
 		"*.cpp"
-	}
+    }
 	
-	filter "architecture:not x86"
+	filter "architecture:x64"
 		flags { "ExcludeFromBuild" }
 
 	filter "system:not windows"
-		flags { "ExcludeFromBuild" }
+        flags { "ExcludeFromBuild" }
+        
+	filter {"system:windows"}
+        buildoptions { "-Zm180" }
+
+	filter {"configurations:Debug"}
+		links { "dbghelp" }

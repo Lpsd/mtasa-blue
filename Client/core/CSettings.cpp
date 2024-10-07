@@ -372,8 +372,8 @@ void CSettings::CreateGUI()
     m_pButtonGenerateNickIcon = reinterpret_cast<CGUIStaticImage*>(pManager->CreateStaticImage(m_pButtonGenerateNick));
     m_pButtonGenerateNickIcon->SetSize(CVector2D(1, 1), true);
     m_pButtonGenerateNickIcon->LoadFromFile("cgui\\images\\serverbrowser\\refresh.png");
-    m_pButtonGenerateNickIcon->SetProperty("MousePassThroughEnabled", "True");
-    m_pButtonGenerateNickIcon->SetProperty("DistributeCapturedInputs", "True");
+    m_pButtonGenerateNickIcon->SetCursorPassThroughEnabled(true);
+    m_pButtonGenerateNickIcon->SetDistributeCapturedInputs(true);
 
     m_pSavePasswords = reinterpret_cast<CGUICheckBox*>(pManager->CreateCheckBox(pTabMultiplayer, _("Save server passwords"), true));
     m_pSavePasswords->SetPosition(CVector2D(vecTemp.fX, vecTemp.fY + 50.0f));
@@ -933,8 +933,8 @@ void CSettings::CreateGUI()
     m_pLabelBrowserBlacklistAdd->SetTextColor(0, 0, 0);
     m_pLabelBrowserBlacklistAdd->SetSize(CVector2D(1, 1), true);
     m_pLabelBrowserBlacklistAdd->SetAlpha(0.7f);
-    m_pLabelBrowserBlacklistAdd->SetProperty("MousePassThroughEnabled", "True");
-    m_pLabelBrowserBlacklistAdd->SetProperty("DistributeCapturedInputs", "True");
+    m_pLabelBrowserBlacklistAdd->SetCursorPassThroughEnabled(true);
+    m_pLabelBrowserBlacklistAdd->SetDistributeCapturedInputs(true);
 
     m_pButtonBrowserBlacklistAdd = reinterpret_cast<CGUIButton*>(pManager->CreateButton(m_pTabBrowser, _("Block")));
     m_pButtonBrowserBlacklistAdd->SetPosition(CVector2D(vecTemp.fX + m_pEditBrowserBlacklistAdd->GetSize().fX + 2.0f, vecTemp.fY));
@@ -968,8 +968,8 @@ void CSettings::CreateGUI()
     m_pLabelBrowserWhitelistAdd->SetTextColor(0, 0, 0);
     m_pLabelBrowserWhitelistAdd->SetSize(CVector2D(1, 1), true);
     m_pLabelBrowserWhitelistAdd->SetAlpha(0.7f);
-    m_pLabelBrowserWhitelistAdd->SetProperty("MousePassThroughEnabled", "True");
-    m_pLabelBrowserWhitelistAdd->SetProperty("DistributeCapturedInputs", "True");
+    m_pLabelBrowserWhitelistAdd->SetCursorPassThroughEnabled(true);
+    m_pLabelBrowserWhitelistAdd->SetDistributeCapturedInputs(true);
 
     m_pButtonBrowserWhitelistAdd = reinterpret_cast<CGUIButton*>(pManager->CreateButton(m_pTabBrowser, _("Allow")));
     m_pButtonBrowserWhitelistAdd->SetPosition(CVector2D(vecTemp.fX + m_pEditBrowserWhitelistAdd->GetSize().fX + 2.0f, vecTemp.fY));
@@ -2590,10 +2590,10 @@ void CSettings::ProcessKeyBinds()
 
 bool CSettings::OnBindsListClick(CGUIElement* pElement)
 {
-    CGUIListItem* pItem = m_pBindsList->GetSelectedItem();
+    CGUIGridListItem* pItem = m_pBindsList->GetSelectedItem();
     if (pItem)
     {
-        CGUIListItem* pItemBind = m_pBindsList->GetItem(m_pBindsList->GetItemRowIndex(pItem), m_hBind);
+        CGUIGridListItem* pItemBind = m_pBindsList->GetItem(m_pBindsList->GetItemRowIndex(pItem), m_hBind);
 
         // Proceed if the user didn't select the "Bind"-column
         if (pItem != pItemBind)
@@ -3112,7 +3112,7 @@ void CSettings::LoadData()
     unsigned int uiIndex = 0;
     while (uiIndex != m_pInterfaceLanguageSelector->GetItemCount())
     {
-        CGUIListItem* pItem = m_pInterfaceLanguageSelector->GetItemByIndex(uiIndex);
+        CGUIStandardItem* pItem = m_pInterfaceLanguageSelector->GetItemByIndex(uiIndex);
         if (((const char*)pItem->GetData()) == strLocale)
             break;
 
@@ -3373,17 +3373,17 @@ void CSettings::SaveData()
 
     // update from gui
     bNextWindowed = m_pCheckBoxWindowed->GetSelected();
-    if (CGUIListItem* pSelected = m_pComboResolution->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pComboResolution->GetSelectedItem())
         iNextVidMode = (int)pSelected->GetData();
     bNextFSMinimize = m_pCheckBoxMinimize->GetSelected();
-    if (CGUIListItem* pSelected = m_pFullscreenStyleCombo->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pFullscreenStyleCombo->GetSelectedItem())
         iNextFullscreenStyle = (int)pSelected->GetData();
-    if (CGUIListItem* pSelected = m_pComboAntiAliasing->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pComboAntiAliasing->GetSelectedItem())
         iAntiAliasing = (int)pSelected->GetData();
     bool bCustomizedSAFilesEnabled = m_pCheckBoxCustomizedSAFiles->GetSelected();
     bool bCustomizedSAFilesWasEnabled = GetApplicationSettingInt("customized-sa-files-request") != 0;
 
-    if (CGUIListItem* pSelected = m_pPriorityCombo->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pPriorityCombo->GetSelectedItem())
     {
         int iSelected = (int)pSelected->GetData();
         CVARS_SET("process_priority", iSelected);
@@ -3422,13 +3422,13 @@ void CSettings::SaveData()
     CVARS_SET("anisotropic", iAnisotropic);
 
     // Visual FX Quality
-    if (CGUIListItem* pQualitySelected = m_pComboFxQuality->GetSelectedItem())
+    if (CGUIStandardItem* pQualitySelected = m_pComboFxQuality->GetSelectedItem())
     {
         gameSettings->SetFXQuality((int)pQualitySelected->GetData());
     }
 
     // Aspect ratio
-    if (CGUIListItem* pRatioSelected = m_pComboAspectRatio->GetSelectedItem())
+    if (CGUIStandardItem* pRatioSelected = m_pComboAspectRatio->GetSelectedItem())
     {
         eAspectRatio aspectRatio = (eAspectRatio)(int)pRatioSelected->GetData();
         CVARS_SET("aspect_ratio", aspectRatio);
@@ -3531,7 +3531,7 @@ void CSettings::SaveData()
     gameSettings->SetDynamicPedShadowsEnabled(bDynamicPedShadows);
 
     // Fast clothes loading
-    if (CGUIListItem* pSelected = m_pFastClothesCombo->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pFastClothesCombo->GetSelectedItem())
     {
         int iSelected = (int)pSelected->GetData();
         CVARS_SET("fast_clothes_loading", iSelected);
@@ -3543,34 +3543,34 @@ void CSettings::SaveData()
     gameSettings->SetRadioAutotuneEnabled(m_pCheckBoxAudioAutotune->GetSelected());
     gameSettings->SetUsertrackAutoScan(m_pCheckBoxUserAutoscan->GetSelected());
 
-    if (CGUIListItem* pSelected = m_pComboUsertrackMode->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pComboUsertrackMode->GetSelectedItem())
     {
         gameSettings->SetUsertrackMode((int)pSelected->GetData());
     }
 
     // Browser speed
-    if (CGUIListItem* pSelected = m_pBrowserSpeedCombo->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pBrowserSpeedCombo->GetSelectedItem())
     {
         int iSelected = (int)pSelected->GetData();
         CVARS_SET("browser_speed", iSelected);
     }
 
     // Single download
-    if (CGUIListItem* pSelected = m_pSingleDownloadCombo->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pSingleDownloadCombo->GetSelectedItem())
     {
         int iSelected = (int)pSelected->GetData();
         CVARS_SET("single_download", iSelected);
     }
 
     // Packet tag
-    if (CGUIListItem* pSelected = m_pPacketTagCombo->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pPacketTagCombo->GetSelectedItem())
     {
         int iSelected = (int)pSelected->GetData();
         CVARS_SET("packet_tag", iSelected);
     }
 
     // Progress animation
-    if (CGUIListItem* pSelected = m_pProgressAnimationCombo->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pProgressAnimationCombo->GetSelectedItem())
     {
         int iSelected = (int)pSelected->GetData();
         CVARS_SET("progress_animation", iSelected);
@@ -3583,21 +3583,21 @@ void CSettings::SaveData()
     SetApplicationSettingInt("Win8MouseFix", m_pWin8MouseCheckBox->GetSelected());
 
     // Debug setting
-    if (CGUIListItem* pSelected = m_pDebugSettingCombo->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pDebugSettingCombo->GetSelectedItem())
     {
         EDiagnosticDebugType iSelected = (EDiagnosticDebugType)(int)pSelected->GetData();
         g_pCore->SetDiagnosticDebug(iSelected);
     }
 
     // Update build type
-    if (CGUIListItem* pSelected = m_pUpdateBuildTypeCombo->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pUpdateBuildTypeCombo->GetSelectedItem())
     {
         int iSelected = (int)pSelected->GetData();
         CVARS_SET("update_build_type", iSelected);
     }
 
     // Update auto install
-    if (CGUIListItem* pSelected = m_pUpdateAutoInstallCombo->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pUpdateAutoInstallCombo->GetSelectedItem())
     {
         int iSelected = (int)pSelected->GetData();
         CVARS_SET("update_auto_install", iSelected);
@@ -3610,7 +3610,7 @@ void CSettings::SaveData()
     CVARS_SET("mapalpha", fMapAlpha);
 
     // Language
-    CGUIListItem* pItem = m_pInterfaceLanguageSelector->GetSelectedItem();
+    CGUIStandardItem* pItem = m_pInterfaceLanguageSelector->GetSelectedItem();
     if (pItem)
     {
         const char* szItemText = (const char*)pItem->GetData();
@@ -3645,17 +3645,17 @@ void CSettings::SaveData()
 
     CVARS_SET("chat_position_offset_x", m_pChatOffsetX->GetText());
     CVARS_SET("chat_position_offset_y", m_pChatOffsetY->GetText());
-    if (CGUIListItem* pSelected = m_pChatHorizontalCombo->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pChatHorizontalCombo->GetSelectedItem())
     {
         int iSelected = (int)pSelected->GetData();
         CVARS_SET("chat_position_horizontal", iSelected);
     }
-    if (CGUIListItem* pSelected = m_pChatVerticalCombo->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pChatVerticalCombo->GetSelectedItem())
     {
         int iSelected = (int)pSelected->GetData();
         CVARS_SET("chat_position_vertical", iSelected);
     }
-    if (CGUIListItem* pSelected = m_pChatTextAlignCombo->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pChatTextAlignCombo->GetSelectedItem())
     {
         int iSelected = (int)pSelected->GetData();
         CVARS_SET("chat_text_alignment", iSelected);
@@ -3949,7 +3949,7 @@ void CSettings::LoadChatPresets()
                 CXMLAttribute* pName = pNode->GetAttributes().Find("name");
                 if (pName && pName->GetValue()[1])
                 {
-                    CGUIListItem* pItem = m_pChatPresets->AddItem(pName->GetValue().c_str());
+                    CGUIStandardItem* pItem = m_pChatPresets->AddItem(pName->GetValue().c_str());
                     pItem->SetData(pNode);
                 }
             }
@@ -3966,7 +3966,7 @@ void CSettings::LoadSkins()
 
     for (std::vector<SString>::iterator it = directories.begin(); it != directories.end(); ++it)
     {
-        CGUIListItem* item = m_pInterfaceSkinSelector->AddItem((*it));
+        CGUIStandardItem* item = m_pInterfaceSkinSelector->AddItem((*it));
         // TODO: add validation of the skin
 
         if (currentSkin == (*it))
@@ -4012,7 +4012,7 @@ void CSettings::SetMilliseconds(CGUIEdit* pEdit, int iValue)
 
 bool CSettings::OnChatLoadPresetClick(CGUIElement* pElement)
 {
-    CGUIListItem* pItem = m_pChatPresets->GetSelectedItem();
+    CGUIStandardItem* pItem = m_pChatPresets->GetSelectedItem();
     if (!pItem)
         return true;
 
@@ -4147,7 +4147,7 @@ bool CSettings::OnChatLoadPresetClick(CGUIElement* pElement)
 
 bool CSettings::OnLanguageChanged(CGUIElement* pElement)
 {
-    CGUIListItem* pItem = m_pInterfaceLanguageSelector->GetSelectedItem();
+    CGUIStandardItem* pItem = m_pInterfaceLanguageSelector->GetSelectedItem();
     if (!pItem)
         return true;
 
@@ -4159,7 +4159,7 @@ bool CSettings::OnLanguageChanged(CGUIElement* pElement)
         unsigned int uiIndex = 0;
         while (uiIndex != m_pInterfaceLanguageSelector->GetItemCount())
         {
-            CGUIListItem* pItem = m_pInterfaceLanguageSelector->GetItemByIndex(uiIndex);
+            CGUIStandardItem* pItem = m_pInterfaceLanguageSelector->GetItemByIndex(uiIndex);
             if (((const char*)pItem->GetData()) == strLocale)
                 break;
 
@@ -4177,7 +4177,7 @@ bool CSettings::OnLanguageChanged(CGUIElement* pElement)
 
 bool CSettings::OnSkinChanged(CGUIElement* pElement)
 {
-    CGUIListItem* pItem = m_pInterfaceSkinSelector->GetSelectedItem();
+    CGUIStandardItem* pItem = m_pInterfaceSkinSelector->GetSelectedItem();
     if (!pItem)
         return true;
 
@@ -4429,7 +4429,7 @@ bool CSettings::OnChatAlphaChanged(CGUIElement* pElement)
 bool CSettings::OnUpdateButtonClick(CGUIElement* pElement)
 {
     // Update build type
-    if (CGUIListItem* pSelected = m_pUpdateBuildTypeCombo->GetSelectedItem())
+    if (CGUIStandardItem* pSelected = m_pUpdateBuildTypeCombo->GetSelectedItem())
     {
         int iSelected = (int)pSelected->GetData();
         CVARS_SET("update_build_type", iSelected);
@@ -4449,7 +4449,7 @@ bool CSettings::OnCachePathShowButtonClick(CGUIElement* pElement)
 
 bool CSettings::OnFxQualityChanged(CGUIElement* pElement)
 {
-    CGUIListItem* pItem = m_pComboFxQuality->GetSelectedItem();
+    CGUIStandardItem* pItem = m_pComboFxQuality->GetSelectedItem();
     if (!pItem)
         return true;
 

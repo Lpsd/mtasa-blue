@@ -11,7 +11,7 @@
 
 #include "StdInc.h"
 
-#define CGUIRADIOBUTTON_NAME "CGUI/RadioButton"
+#define CGUIRADIOBUTTON_NAME "RadioButton"
 
 CGUIRadioButton_Impl::CGUIRadioButton_Impl(CGUI_Impl* pGUI, CGUIElement* pParent, const char* szCaption)
 {
@@ -22,12 +22,12 @@ CGUIRadioButton_Impl::CGUIRadioButton_Impl(CGUI_Impl* pGUI, CGUIElement* pParent
     pGUI->GetUniqueName(szUnique);
 
     // Create the window and set default settings
-    m_pWindow = pGUI->GetWindowManager()->createWindow(CGUIRADIOBUTTON_NAME, szUnique);
+    m_pWindow = pGUI->GetWindowManager()->createWindow(pGUI->GetElementPrefix() + "/" + CGUIRADIOBUTTON_NAME, szUnique);
     m_pWindow->setDestroyedByParent(false);
 
-    m_pWindow->setText(CGUI_Impl::GetUTFString(szCaption));
+    m_pWindow->setText(szCaption);
 
-    m_pWindow->setSize(CEGUI::Absolute, CEGUI::Size(128.0f, 16.0f));
+    m_pWindow->setSize(pGUI->CreateAbsoluteSize(128.0f, 16.0f));
     m_pWindow->setVisible(true);
 
     // Store the pointer to this CGUI element in the CEGUI element

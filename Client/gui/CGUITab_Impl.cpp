@@ -36,7 +36,7 @@ CGUITab_Impl::CGUITab_Impl(CGUI_Impl* pGUI, CGUIElement_Impl* pParent, const cha
         SetParent(pParent);
 
         // Adjust the tab button (pParent should be a TabControl!)
-        reinterpret_cast<CEGUI::TabControl*>(((CGUITabPanel_Impl*)pParent)->m_pWindow)->setAbsoluteTabHeight(24.0f);
+        reinterpret_cast<CEGUI::TabControl*>(((CGUITabPanel_Impl*)pParent)->m_pWindow)->setTabHeight(CEGUI::UDim(0, 24.0f));
     }
     else
     {
@@ -63,27 +63,27 @@ void CGUITab_Impl::SetVisible(bool bVisible)
 {
     CGUIElement_Impl*  pParent = static_cast<CGUIElement_Impl*>(m_pParent);
     CEGUI::TabControl* pControl = reinterpret_cast<CEGUI::TabControl*>(((CGUITabPanel_Impl*)pParent)->m_pWindow);
-    pControl->getButtonForTabContents(m_pWindow)->setVisible(bVisible);
-    pControl->requestChildWindowLayout();
+    m_pWindow->setVisible(bVisible);
+    //pControl->requestChildWindowLayout();
 }
 
 bool CGUITab_Impl::IsVisible()
 {
     CGUIElement_Impl*  pParent = static_cast<CGUIElement_Impl*>(m_pParent);
     CEGUI::TabControl* pControl = reinterpret_cast<CEGUI::TabControl*>(((CGUITabPanel_Impl*)pParent)->m_pWindow);
-    return pControl->getButtonForTabContents(m_pWindow)->isVisible();
+    return m_pWindow->isVisible();
 }
 
 void CGUITab_Impl::SetEnabled(bool bEnabled)
 {
     CGUIElement_Impl*  pParent = static_cast<CGUIElement_Impl*>(m_pParent);
     CEGUI::TabControl* pControl = reinterpret_cast<CEGUI::TabControl*>(((CGUITabPanel_Impl*)pParent)->m_pWindow);
-    pControl->getButtonForTabContents(m_pWindow)->setEnabled(bEnabled);
+    m_pWindow->setEnabled(bEnabled);
 }
 
 bool CGUITab_Impl::IsEnabled()
 {
     CGUIElement_Impl*  pParent = static_cast<CGUIElement_Impl*>(m_pParent);
     CEGUI::TabControl* pControl = reinterpret_cast<CEGUI::TabControl*>(((CGUITabPanel_Impl*)pParent)->m_pWindow);
-    return !pControl->getButtonForTabContents(m_pWindow)->isDisabled();
+    return !m_pWindow->isDisabled();
 }

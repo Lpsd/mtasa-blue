@@ -183,9 +183,6 @@ public:
     void DeinitGUI();
     void DestroyGUI();
 
-    // Temporary to get if using new CEGUI
-    bool IsUsingNewCEGUI();
-
     // Web
     bool IsWebCoreLoaded() { return m_pWebCore != nullptr; }
     void DestroyWeb();

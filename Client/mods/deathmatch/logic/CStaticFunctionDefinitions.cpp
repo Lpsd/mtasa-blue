@@ -5520,7 +5520,7 @@ int CStaticFunctionDefinitions::GUIComboBoxAddItem(CClientEntity& Entity, const 
         if (IS_CGUIELEMENT_COMBOBOX(&GUIElement))
         {
             // Add a new item.
-            CGUIListItem* item = static_cast<CGUIComboBox*>(GUIElement.GetCGUIElement())->AddItem(szText);
+            CGUIStandardItem* item = static_cast<CGUIComboBox*>(GUIElement.GetCGUIElement())->AddItem(szText);
             // Return it's id + 1 so indexes start at 1.
             return static_cast<CGUIComboBox*>(GUIElement.GetCGUIElement())->GetItemIndex(item);
         }

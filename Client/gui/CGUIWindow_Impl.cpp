@@ -11,7 +11,7 @@
 
 #include "StdInc.h"
 
-#define CGUIWINDOW_NAME "CGUI/FrameWindow"
+#define CGUIWINDOW_NAME "FrameWindow"
 
 CGUIWindow_Impl::CGUIWindow_Impl(CGUI_Impl* pGUI, CGUIElement* pParent, const char* szCaption, const SString& strLayoutFile)
 {
@@ -26,14 +26,14 @@ CGUIWindow_Impl::CGUIWindow_Impl(CGUI_Impl* pGUI, CGUIElement* pParent, const ch
     if (!strLayoutFile.empty())
     {
         // Load from XML file
-        m_pWindow = pGUI->GetWindowManager()->loadWindowLayout(strLayoutFile);
+        m_pWindow = pGUI->GetWindowManager()->loadLayoutFromFile(strLayoutFile);
     }
 
     if (!m_pWindow)
     {
         // Create new here
-        m_pWindow = pGUI->GetWindowManager()->createWindow(CGUIWINDOW_NAME, szUnique);
-        m_pWindow->setRect(CEGUI::Relative, CEGUI::Rect(0.10f, 0.10f, 0.60f, 0.90f));
+        m_pWindow = pGUI->GetWindowManager()->createWindow(pGUI->GetElementPrefix() + "/" + CGUIWINDOW_NAME, szUnique);
+        m_pWindow->setArea(CEGUI::URect(CEGUI::UDim(0.10f, 0), CEGUI::UDim(0.10f, 0), CEGUI::UDim(0.60f, 0), CEGUI::UDim(0.90f, 0)));
         m_pWindow->setAlpha(0.8f);
 
         // Give the window a caption
@@ -46,14 +46,17 @@ CGUIWindow_Impl::CGUIWindow_Impl(CGUI_Impl* pGUI, CGUIElement* pParent, const ch
     m_pWindow->setUserData(reinterpret_cast<void*>(this));
 
     // Set fixed minimum size to 96x48
-    m_pWindow->setMetricsMode(CEGUI::Absolute);
-    m_pWindow->setMinimumSize(CEGUI::Size(96.0f, 48.0f));
+    //m_pWindow->setMetricsMode(CEGUI::Absolute);
+    m_pWindow->setMinSize(CEGUI::USize(CEGUI::UDim(0, 96.0f), CEGUI::UDim(0, 48.0f)));
+
+    // Don't enable the close button by default
+    reinterpret_cast<CEGUI::FrameWindow*>(m_pWindow)->setCloseButtonEnabled(false);
 
     // Some window specific style options
-    reinterpret_cast<CEGUI::FrameWindow*>(m_pWindow)->setTitlebarFont("default-bold-small");
+    reinterpret_cast<CEGUI::FrameWindow*>(m_pWindow)->getTitlebar()->setFont("default-bold-small");
 
     // Register our events
-    m_pWindow->subscribeEvent(CEGUI::FrameWindow::EventCloseClicked, CEGUI::Event::Subscriber(&CGUIWindow_Impl::Event_OnCloseClick, this));
+    m_pWindow->subscribeEvent(CEGUI::FrameWindow::EventCloseClicked, &CGUIWindow_Impl::Event_OnCloseClick, this);
     AddEvents();
 
     // Disable rolling up, because we don't need it and it causes a freeze
@@ -98,12 +101,12 @@ bool CGUIWindow_Impl::IsSizingEnabled()
 
 void CGUIWindow_Impl::SetFrameEnabled(bool bFrameEnabled)
 {
-    reinterpret_cast<CEGUI::FrameWindow*>(m_pWindow)->setFrameEnabled(bFrameEnabled);
+    m_pWindow->setProperty("FrameEnabled", bFrameEnabled ? "True" : "False");
 }
 
 bool CGUIWindow_Impl::IsFrameEnabled()
 {
-    return reinterpret_cast<CEGUI::FrameWindow*>(m_pWindow)->isFrameEnabled();
+    return m_pWindow->getProperty("FrameEnabled") == "True" ? true : false;
 }
 
 void CGUIWindow_Impl::SetCloseButtonEnabled(bool bCloseButtonEnabled)

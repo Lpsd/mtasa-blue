@@ -11,7 +11,7 @@
 
 #include "StdInc.h"
 
-#define CGUILABEL_NAME "CGUI/ProgressBar"
+#define CGUILABEL_NAME "ProgressBar"
 
 CGUIProgressBar_Impl::CGUIProgressBar_Impl(CGUI_Impl* pGUI, CGUIElement* pParent)
 {
@@ -22,7 +22,7 @@ CGUIProgressBar_Impl::CGUIProgressBar_Impl(CGUI_Impl* pGUI, CGUIElement* pParent
     pGUI->GetUniqueName(szUnique);
 
     // Create the window and set default settings
-    m_pWindow = pGUI->GetWindowManager()->createWindow(CGUILABEL_NAME, szUnique);
+    m_pWindow = pGUI->GetWindowManager()->createWindow(pGUI->GetElementPrefix() + "/" + CGUILABEL_NAME, szUnique);
     m_pWindow->setDestroyedByParent(false);
 
     // Store the pointer to this CGUI element in the CEGUI element

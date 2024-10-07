@@ -21,9 +21,9 @@
   <FalagardMapping lookNFeel="GWEN/HorizontalScrollbar" renderer="Core/Scrollbar" targetType="CEGUI/Scrollbar" windowType="GWEN/HorizontalScrollbar" />
   <FalagardMapping lookNFeel="GWEN/VerticalScrollbarThumb" renderer="Core/Button" targetType="CEGUI/Thumb" windowType="GWEN/VerticalScrollbarThumb" />
   <FalagardMapping lookNFeel="GWEN/VerticalScrollbar" renderer="Core/Scrollbar" targetType="CEGUI/Scrollbar" windowType="GWEN/VerticalScrollbar" />
-  <FalagardMapping lookNFeel="GWEN/Listbox" renderer="Core/Listbox" targetType="CEGUI/Listbox" windowType="GWEN/Listbox" />
+  <FalagardMapping lookNFeel="GWEN/ListView" renderer="Core/ListView" targetType="CEGUI/ListView" windowType="GWEN/ListView" />
   <FalagardMapping lookNFeel="GWEN/ListboxItem" renderer="Core/ItemEntry" targetType="CEGUI/ItemEntry" windowType="GWEN/ListboxItem" />
-  <FalagardMapping lookNFeel="GWEN/ComboDropList" renderer="Core/Listbox" targetType="CEGUI/ComboDropList" windowType="GWEN/ComboDropList" />
+  <FalagardMapping lookNFeel="GWEN/ComboDropList" renderer="Core/ListView" targetType="CEGUI/ComboDropList" windowType="GWEN/ComboDropList" />
   <FalagardMapping lookNFeel="GWEN/ComboEditbox" renderer="Core/Editbox" targetType="CEGUI/Editbox" windowType="GWEN/ComboEditbox" />
   <FalagardMapping lookNFeel="GWEN/Combobox" renderer="Core/Default" targetType="CEGUI/Combobox" windowType="GWEN/Combobox" />
   <FalagardMapping lookNFeel="GWEN/Spinner" renderer="Core/Default" targetType="CEGUI/Spinner" windowType="GWEN/Spinner" />

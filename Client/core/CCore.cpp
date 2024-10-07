@@ -1019,26 +1019,15 @@ void CCore::DeinitGUI()
 
 void CCore::InitGUI(IDirect3DDevice9* pDevice)
 {
-    SString sModuleName = IsUsingNewCEGUI() ? "GUINew" : "GUI";
-    SString sInitMethodName = IsUsingNewCEGUI() ? "InitNewGUIInterface" : "InitGUIInterface";
+    SString sModuleName = "GUI";
+    SString sInitMethodName = "InitGUIInterface";
 
     m_pGUI = InitModule<CGUI>(m_GUIModule, sModuleName, sInitMethodName, pDevice);
 }
 
 void CCore::CreateGUI()
 {
-    CVARS_GET("use_new_cegui", m_bUsingNewCEGUI);
-    m_bUsingNewCEGUI = true;
-
-    if (IsUsingNewCEGUI())
-        LoadModule(m_GUIModule, "GUINew", "cgui_new");
-    else
-        LoadModule(m_GUIModule, "GUI", "cgui");
-}
-
-bool CCore::IsUsingNewCEGUI()
-{
-    return true;
+    LoadModule(m_GUIModule, "GUI", "cgui");
 }
 
 void CCore::DestroyGUI()

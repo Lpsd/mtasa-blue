@@ -317,8 +317,8 @@ void CServerBrowser::CreateTab(ServerBrowserType type, const char* szName)
     m_pButtonRefreshIcon[type] = reinterpret_cast<CGUIStaticImage*>(pManager->CreateStaticImage(m_pButtonRefresh[type]));
     m_pButtonRefreshIcon[type]->SetSize(CVector2D(1, 1), true);
     m_pButtonRefreshIcon[type]->LoadFromFile("cgui\\images\\serverbrowser\\refresh.png");
-    m_pButtonRefreshIcon[type]->SetProperty("MousePassThroughEnabled", "True");
-    m_pButtonRefreshIcon[type]->SetProperty("DistributeCapturedInputs", "True");
+    m_pButtonRefreshIcon[type]->SetCursorPassThroughEnabled(true);
+    m_pButtonRefreshIcon[type]->SetDistributeCapturedInputs(true);
 
     // Address Bar + History Combo
     fX = fX + SB_BUTTON_SIZE_X + SB_SMALL_SPACER;
@@ -336,8 +336,8 @@ void CServerBrowser::CreateTab(ServerBrowserType type, const char* szName)
     m_pLabelAddressDescription[type]->SetTextColor(0, 0, 0);
     m_pLabelAddressDescription[type]->AutoSize(m_pLabelAddressDescription[type]->GetText().c_str());
     m_pLabelAddressDescription[type]->SetAlpha(0.6f);
-    m_pLabelAddressDescription[type]->SetProperty("MousePassThroughEnabled", "True");
-    m_pLabelAddressDescription[type]->SetProperty("DistributeCapturedInputs", "True");
+    m_pLabelAddressDescription[type]->SetCursorPassThroughEnabled(true);
+    m_pLabelAddressDescription[type]->SetDistributeCapturedInputs(true);
 
     // Favourite icon
     m_pAddressFavoriteIcon[type] = reinterpret_cast<CGUIStaticImage*>(pManager->CreateStaticImage(m_pEditAddress[type]));
@@ -380,7 +380,7 @@ void CServerBrowser::CreateTab(ServerBrowserType type, const char* szName)
     m_pButtonConnectIcon[type] = reinterpret_cast<CGUIStaticImage*>(pManager->CreateStaticImage(m_pButtonConnect[type]));
     m_pButtonConnectIcon[type]->SetSize(CVector2D(SB_BUTTON_SIZE_Y, SB_BUTTON_SIZE_Y), false);
     m_pButtonConnectIcon[type]->LoadFromFile("cgui\\images\\serverbrowser\\connect.png");
-    m_pButtonConnectIcon[type]->SetProperty("MousePassThroughEnabled", "True");
+    m_pButtonConnectIcon[type]->SetCursorPassThroughEnabled(true);
 
     // Info button + icon
     fX = fX + fConnectButtonWidth + SB_SMALL_SPACER;
@@ -392,7 +392,7 @@ void CServerBrowser::CreateTab(ServerBrowserType type, const char* szName)
     m_pButtonInfoIcon[type] = reinterpret_cast<CGUIStaticImage*>(pManager->CreateStaticImage(m_pButtonInfo[type]));
     m_pButtonInfoIcon[type]->SetSize(CVector2D(1, 1), true);
     m_pButtonInfoIcon[type]->LoadFromFile("cgui\\images\\serverbrowser\\info.png");
-    m_pButtonInfoIcon[type]->SetProperty("MousePassThroughEnabled", "True");
+    m_pButtonInfoIcon[type]->SetCursorPassThroughEnabled(true);
 
     // Search bar + type combo
     fX = m_WidgetSize.fX - SB_SMALL_SPACER - fSearchBarSizeX;
@@ -409,7 +409,7 @@ void CServerBrowser::CreateTab(ServerBrowserType type, const char* szName)
     m_pSearchTypeIcon[type] = reinterpret_cast<CGUIStaticImage*>(pManager->CreateStaticImage(m_pComboSearchType[type]));
     m_pSearchTypeIcon[type]->SetPosition(CVector2D(2, 4), false);
     m_pSearchTypeIcon[type]->SetSize(CVector2D(29, SB_SEARCHBAR_COMBOBOX_SIZE_Y - 6), false);
-    m_pSearchTypeIcon[type]->SetProperty("MousePassThroughEnabled", "True");
+    m_pSearchTypeIcon[type]->SetCursorPassThroughEnabled(true);
     m_pSearchTypeIcon[type]->SetAlwaysOnTop(true);
     m_pSearchTypeIcon[type]->LoadFromFile(m_szSearchTypePath[SearchTypes::SERVERS]);
 
@@ -424,16 +424,16 @@ void CServerBrowser::CreateTab(ServerBrowserType type, const char* szName)
     m_pLabelSearchDescription[type]->SetTextColor(0, 0, 0);
     m_pLabelSearchDescription[type]->SetSize(CVector2D(1, 1), true);
     m_pLabelSearchDescription[type]->SetAlpha(0.6f);
-    m_pLabelSearchDescription[type]->SetProperty("MousePassThroughEnabled", "True");
-    m_pLabelSearchDescription[type]->SetProperty("DistributeCapturedInputs", "True");
+    m_pLabelSearchDescription[type]->SetCursorPassThroughEnabled(true);
+    m_pLabelSearchDescription[type]->SetDistributeCapturedInputs(true);
 
     // Server search icon
     m_pServerSearchIcon[type] = reinterpret_cast<CGUIStaticImage*>(pManager->CreateStaticImage(m_pEditSearch[type]));
     m_pServerSearchIcon[type]->SetPosition(CVector2D(fWidth - 18, (SB_SEARCHBAR_COMBOBOX_SIZE_Y - 16) / 2), false);
     m_pServerSearchIcon[type]->SetSize(CVector2D(16, 16), false);
     m_pServerSearchIcon[type]->LoadFromFile("cgui\\images\\serverbrowser\\search.png");
-    m_pServerSearchIcon[type]->SetProperty("MousePassThroughEnabled", "True");
-    m_pServerSearchIcon[type]->SetProperty("DistributeCapturedInputs", "True");
+    m_pServerSearchIcon[type]->SetCursorPassThroughEnabled(true);
+    m_pServerSearchIcon[type]->SetDistributeCapturedInputs(true);
 
     // Create the serverlist
     fX = 5;
@@ -541,8 +541,8 @@ void CServerBrowser::CreateTab(ServerBrowserType type, const char* szName)
     m_pServerListStatus[type]->SetSize(CVector2D(m_WidgetSize.fX, fLineHeight), true);
     m_pServerListStatus[type]->MoveToBack();
     m_pServerListStatus[type]->SetZOrderingEnabled(false);
-    m_pServerListStatus[type]->SetProperty("MousePassThroughEnabled", "True");
-    m_pServerListStatus[type]->SetProperty("DistributeCapturedInputs", "True");
+    m_pServerListStatus[type]->SetCursorPassThroughEnabled(true);
+    m_pServerListStatus[type]->SetDistributeCapturedInputs(true);
 
     // Back button
     fX = m_WidgetSize.fX - fPlayerListSizeX - SB_SMALL_SPACER;
@@ -961,7 +961,7 @@ void CServerBrowser::UpdateHistoryList()
     int           iRowCount = pServerList->GetItemCount();
     for (int i = 0; i < iRowCount; i++)
     {
-        CGUIListItem* item = pServerList->GetItemByIndex(i);
+        CGUIStandardItem* item = pServerList->GetItemByIndex(i);
         const char*   szAddress = (const char*)item->GetData();
 
         // Find our corresponding server item
@@ -2251,7 +2251,7 @@ void CServerBrowser::SetNextHistoryText(bool bDown)
     int               iRowCount = pServerList->GetItemCount();
     for (int i = 0; i < iRowCount; i++)
     {
-        CGUIListItem* item = pServerList->GetItemByIndex(i);
+        CGUIStandardItem* item = pServerList->GetItemByIndex(i);
         const char*   szAddress = (const char*)item->GetData();
         if (("mtasa://" + std::string(szAddress)) == m_pEditAddress[Type]->GetText())
         {

@@ -14,22 +14,22 @@
 CGUIWebBrowser_Impl::CGUIWebBrowser_Impl(CGUI_Impl* pGUI, CGUIElement* pParent)
 {
     // Initialize
-    m_pImagesetManager = pGUI->GetImageSetManager();
-    m_pImageset = nullptr;
     m_pImage = nullptr;
     m_pGUI = pGUI;
-    m_pManager = pGUI;
     m_pWebView = nullptr;
+
+    // Save the renderer
+    m_pRenderer = &m_pGUI->GetRenderer();
 
     // Get an unique identifier for CEGUI
     char szUnique[CGUI_CHAR_SIZE];
     pGUI->GetUniqueName(szUnique);
 
     // Create the control and set default properties
-    m_pWindow = pGUI->GetWindowManager()->createWindow(CGUIWEBBROWSER_NAME, szUnique);
+    m_pWindow = pGUI->GetWindowManager()->createWindow(pGUI->GetElementPrefix() + "/" + CGUIWEBBROWSER_NAME, szUnique);
     m_pWindow->setDestroyedByParent(false);
-    m_pWindow->setRect(CEGUI::Relative, CEGUI::Rect(0.0f, 0.0f, 1.0f, 1.0f));
-    reinterpret_cast<CEGUI::StaticImage*>(m_pWindow)->setBackgroundEnabled(false);
+    m_pWindow->setArea(CEGUI::URect(CEGUI::UDim(0.0f, 0), CEGUI::UDim(0.0f, 0), CEGUI::UDim(1.0f, 0), CEGUI::UDim(1.0f, 0)));
+    m_pWindow->setProperty("BackgroundEnabled", "false");
 
     // Store the pointer to this CGUI element in the CEGUI element
     m_pWindow->setUserData(reinterpret_cast<void*>(this));
@@ -38,10 +38,10 @@ CGUIWebBrowser_Impl::CGUIWebBrowser_Impl(CGUI_Impl* pGUI, CGUIElement* pParent)
 
     // Apply browser events
     m_pWindow->subscribeEvent(CEGUI::Window::EventMouseButtonDown, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseButtonDown, this));
+    m_pWindow->subscribeEvent(CEGUI::Window::EventDoubleClick, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseDoubleClick, this));
     m_pWindow->subscribeEvent(CEGUI::Window::EventMouseButtonUp, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseButtonUp, this));
-    m_pWindow->subscribeEvent(CEGUI::Window::EventMouseDoubleClick, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseDoubleClick, this));
-    m_pWindow->subscribeEvent(CEGUI::Window::EventMouseMove, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseMove, this));
-    m_pWindow->subscribeEvent(CEGUI::Window::EventMouseWheel, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseWheel, this));
+    m_pWindow->subscribeEvent(CEGUI::Window::EventCursorMove, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseMove, this));
+    m_pWindow->subscribeEvent(CEGUI::Window::EventScroll, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_MouseWheel, this));
     m_pWindow->subscribeEvent(CEGUI::Window::EventActivated, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_Activated, this));
     m_pWindow->subscribeEvent(CEGUI::Window::EventDeactivated, CEGUI::Event::Subscriber(&CGUIWebBrowser_Impl::Event_Deactivated, this));
 
@@ -66,72 +66,73 @@ CGUIWebBrowser_Impl::~CGUIWebBrowser_Impl()
 
 void CGUIWebBrowser_Impl::Clear()
 {
-    // Stop the control from using it
-    reinterpret_cast<CEGUI::StaticImage*>(m_pWindow)->setImage(nullptr);
-
     // Kill the images
-    if (m_pImageset)
+    if (m_pImage)
     {
-        m_pImageset->undefineAllImages();
-        m_pImagesetManager->destroyImageset(m_pImageset);
+        delete m_pImage;
         m_pImage = nullptr;
-        m_pImageset = nullptr;
+
+        m_pRenderer->destroyTexture(m_pTexture->getName());
+        m_pTexture = nullptr;
     }
 }
 
-void CGUIWebBrowser_Impl::LoadFromWebView(CWebViewInterface* pWebView)
+void CGUIWebBrowser_Impl::LoadFromWebView(::CWebViewInterface* pWebView)
 {
     m_pWebView = pWebView;
 
-    if (m_pImageset && m_pImage)
-    {
-        m_pImageset->undefineAllImages();
-    }
+    if (m_pImage)
+        Clear();
 
-    CGUIWebBrowserTexture* pCEGUITexture = new CGUIWebBrowserTexture(m_pGUI->GetRenderer(), m_pWebView);
+    //CGUIWebBrowserTexture* pCEGUITexture = new CGUIWebBrowserTexture(&m_pGUI->GetRenderer(), m_pWebView, *m_pTexture);
 
     // Get an unique identifier for CEGUI for the imageset
     char szUnique[CGUI_CHAR_SIZE];
     m_pGUI->GetUniqueName(szUnique);
 
+    m_pTexture = &m_pRenderer->createTexture(szUnique, pWebView->GetTexture());
+
+    // Set the BasicImage texture
+    m_pImage->setTexture(m_pTexture);
+
     // Create an imageset
-    if (!m_pImageset)
-    {
-        while (m_pImagesetManager->isImagesetPresent(szUnique))
-            m_pGUI->GetUniqueName(szUnique);
-        m_pImageset = m_pImagesetManager->createImageset(szUnique, pCEGUITexture, true);
-    }
+    //if (!m_pImageset)
+    //{
+    //    while (m_pImagesetManager->isImagesetPresent(szUnique))
+    //        m_pGUI->GetUniqueName(szUnique);
+    //    m_pImageset = m_pImagesetManager->createImageset(szUnique, pCEGUITexture, true);
+    //}
 
     // Get an unique identifier for CEGUI for the image
     m_pGUI->GetUniqueName(szUnique);
 
     // Define an image and get its pointer
-    m_pImageset->defineImage(szUnique, CEGUI::Point(0, 0), CEGUI::Size(pCEGUITexture->getWidth(), pCEGUITexture->getHeight()), CEGUI::Point(0, 0));
-    m_pImage = const_cast<CEGUI::Image*>(
-        &m_pImageset->getImage(szUnique));            // const_cast here is a huge hack, but is okay here since all images generated here are unique
+    //m_pImageset->defineImage(szUnique, CEGUI::Point(0, 0), CEGUI::Size(pCEGUITexture->getWidth(), pCEGUITexture->getHeight()), CEGUI::Point(0, 0));
+    //m_pImage = const_cast<CEGUI::Image*>(
+    //    &m_pImageset->getImage(szUnique));            // const_cast here is a huge hack, but is okay here since all images generated here are unique
 
     // Set the image just loaded as the image to be drawn for the widget
-    reinterpret_cast<CEGUI::StaticImage*>(m_pWindow)->setImage(m_pImage);
+    //reinterpret_cast<CEGUI::StaticImage*>(m_pWindow)->setImage(m_pImage);
 }
 
 void CGUIWebBrowser_Impl::SetFrameEnabled(bool bFrameEnabled)
 {
-    reinterpret_cast<CEGUI::StaticImage*>(m_pWindow)->setFrameEnabled(bFrameEnabled);
+    reinterpret_cast<CEGUI::FrameWindow*>(m_pWindow)->setFrameEnabled(bFrameEnabled);
 }
 
 bool CGUIWebBrowser_Impl::IsFrameEnabled()
 {
-    return reinterpret_cast<CEGUI::StaticImage*>(m_pWindow)->isFrameEnabled();
+    return reinterpret_cast<CEGUI::FrameWindow*>(m_pWindow)->isFrameEnabled();
 }
 
 CEGUI::Image* CGUIWebBrowser_Impl::GetDirectImage()
 {
-    return const_cast<CEGUI::Image*>(reinterpret_cast<CEGUI::StaticImage*>(m_pWindow)->getImage());
+    return m_pImage;
 }
 
 void CGUIWebBrowser_Impl::Render()
 {
-    return reinterpret_cast<CEGUI::StaticImage*>(m_pWindow)->render();
+    return m_pWindow->draw();
 }
 
 bool CGUIWebBrowser_Impl::HasInputFocus()
@@ -145,9 +146,11 @@ void CGUIWebBrowser_Impl::SetSize(const CVector2D& vecSize, bool bRelative)
     CGUIElement_Impl::SetSize(vecSize, bRelative);
     auto absSize = CGUIElement_Impl::GetSize(false);
 
+    CEGUI::Rectf imageSize = CEGUI::Rectf(glm::vec2(0.0f, 0.0f), CEGUI::Sizef(absSize.fX, absSize.fY));
+
     // Update image area
     if (m_pImage)
-        m_pImage->setSourceTextureArea(CEGUI::Rect(0, 0, absSize.fX, absSize.fY));
+        m_pImage->setImageArea(imageSize);
 
     // Resize underlying web view as well
     if (m_pWebView)
@@ -156,59 +159,60 @@ void CGUIWebBrowser_Impl::SetSize(const CVector2D& vecSize, bool bRelative)
 
 bool CGUIWebBrowser_Impl::Event_MouseButtonDown(const CEGUI::EventArgs& e)
 {
-    const CEGUI::MouseEventArgs& args = reinterpret_cast<const CEGUI::MouseEventArgs&>(e);
+    const CEGUI::MouseButtonEventArgs& args = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(e);
 
-    if (args.button == CEGUI::MouseButton::LeftButton)
+    if (args.d_button == CEGUI::MouseButton::Left)
         m_pWebView->InjectMouseDown(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_LEFT, 1);
-    else if (args.button == CEGUI::MouseButton::MiddleButton)
+    else if (args.d_button == CEGUI::MouseButton::Middle)
         m_pWebView->InjectMouseDown(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_MIDDLE, 1);
-    else if (args.button == CEGUI::MouseButton::RightButton)
+    else if (args.d_button == CEGUI::MouseButton::Right)
         m_pWebView->InjectMouseDown(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_RIGHT, 1);
-
-    return true;
-}
-
-bool CGUIWebBrowser_Impl::Event_MouseButtonUp(const CEGUI::EventArgs& e)
-{
-    const CEGUI::MouseEventArgs& args = reinterpret_cast<const CEGUI::MouseEventArgs&>(e);
-
-    if (args.button == CEGUI::MouseButton::LeftButton)
-        m_pWebView->InjectMouseUp(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_LEFT);
-    else if (args.button == CEGUI::MouseButton::MiddleButton)
-        m_pWebView->InjectMouseUp(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_MIDDLE);
-    else if (args.button == CEGUI::MouseButton::RightButton)
-        m_pWebView->InjectMouseUp(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_RIGHT);
 
     return true;
 }
 
 bool CGUIWebBrowser_Impl::Event_MouseDoubleClick(const CEGUI::EventArgs& e)
 {
-    const CEGUI::MouseEventArgs& args = reinterpret_cast<const CEGUI::MouseEventArgs&>(e);
+    const CEGUI::MouseButtonEventArgs& args = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(e);
 
-    if (args.button == CEGUI::MouseButton::LeftButton)
+    if (args.d_button == CEGUI::MouseButton::Left)
         m_pWebView->InjectMouseDown(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_LEFT, 2);
-    else if (args.button == CEGUI::MouseButton::MiddleButton)
+    else if (args.d_button == CEGUI::MouseButton::Middle)
         m_pWebView->InjectMouseDown(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_MIDDLE, 2);
-    else if (args.button == CEGUI::MouseButton::RightButton)
+    else if (args.d_button == CEGUI::MouseButton::Right)
         m_pWebView->InjectMouseDown(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_RIGHT, 2);
+
+    return true;
+}
+
+bool CGUIWebBrowser_Impl::Event_MouseButtonUp(const CEGUI::EventArgs& e)
+{
+    const CEGUI::MouseButtonEventArgs& args = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(e);
+
+    if (args.d_button == CEGUI::MouseButton::Left)
+        m_pWebView->InjectMouseUp(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_LEFT);
+    else if (args.d_button == CEGUI::MouseButton::Middle)
+        m_pWebView->InjectMouseUp(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_MIDDLE);
+    else if (args.d_button == CEGUI::MouseButton::Right)
+        m_pWebView->InjectMouseUp(eWebBrowserMouseButton::BROWSER_MOUSEBUTTON_RIGHT);
 
     return true;
 }
 
 bool CGUIWebBrowser_Impl::Event_MouseMove(const CEGUI::EventArgs& e)
 {
-    const CEGUI::MouseEventArgs& args = reinterpret_cast<const CEGUI::MouseEventArgs&>(e);
+    const CEGUI::MouseButtonEventArgs& args = reinterpret_cast<const CEGUI::MouseButtonEventArgs&>(e);
+    CEGUI::UVector2 position = m_pWindow->getPosition();
 
-    m_pWebView->InjectMouseMove((int)(args.position.d_x - m_pWindow->windowToScreenX(0.0f)), (int)(args.position.d_y - m_pWindow->windowToScreenY(0.0f)));
+    m_pWebView->InjectMouseMove((int)(args.d_globalPos.x - position.d_x.d_offset), (int)(args.d_globalPos.y - position.d_y.d_offset));
     return true;
 }
 
 bool CGUIWebBrowser_Impl::Event_MouseWheel(const CEGUI::EventArgs& e)
 {
-    const CEGUI::MouseEventArgs& args = reinterpret_cast<const CEGUI::MouseEventArgs&>(e);
+    const CEGUI::ScrollEventArgs& args = reinterpret_cast<const CEGUI::ScrollEventArgs&>(e);
 
-    m_pWebView->InjectMouseWheel((int)(args.wheelChange * 40), 0);
+    m_pWebView->InjectMouseWheel((int)(args.d_delta * 40), 0);
     return true;
 }
 
@@ -224,21 +228,21 @@ bool CGUIWebBrowser_Impl::Event_Deactivated(const CEGUI::EventArgs& e)
     return true;
 }
 
-CGUIWebBrowserTexture::CGUIWebBrowserTexture(CEGUI::Renderer* pOwner, CWebViewInterface* pWebView) : CEGUI::DirectX9Texture(pOwner), m_pWebView(pWebView)
-{
-}
-
-ushort CGUIWebBrowserTexture::getWidth() const
-{
-    return static_cast<ushort>(m_pWebView->GetSize().fX);
-}
-
-ushort CGUIWebBrowserTexture::getHeight() const
-{
-    return static_cast<ushort>(m_pWebView->GetSize().fY);
-}
-
-LPDIRECT3DTEXTURE9 CGUIWebBrowserTexture::getD3DTexture() const
-{
-    return m_pWebView->GetTexture();
-}
+//CGUIWebBrowserTexture::CGUIWebBrowserTexture(CEGUI::Renderer* pOwner, CWebViewInterface* pWebView) : CEGUI::Direct3D9Texture(pOwner), m_pWebView(pWebView)
+//{
+//}
+//
+//ushort CGUIWebBrowserTexture::getWidth() const
+//{
+//    return static_cast<ushort>(m_pWebView->GetSize().fX);
+//}
+//
+//ushort CGUIWebBrowserTexture::getHeight() const
+//{
+//    return static_cast<ushort>(m_pWebView->GetSize().fY);
+//}
+//
+//LPDIRECT3DTEXTURE9 CGUIWebBrowserTexture::getD3DTexture() const
+//{
+//    return m_pWebView->GetTexture();
+//}

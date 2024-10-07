@@ -11,7 +11,7 @@
 
 #include "StdInc.h"
 
-#define CGUITABPANEL_NAME "CGUI/TabControl"
+#define CGUITABPANEL_NAME "TabControl"
 
 CGUITabPanel_Impl::CGUITabPanel_Impl(CGUI_Impl* pGUI, CGUIElement* pParent)
 {
@@ -25,10 +25,11 @@ CGUITabPanel_Impl::CGUITabPanel_Impl(CGUI_Impl* pGUI, CGUIElement* pParent)
     pGUI->GetUniqueName(szUnique);
 
     // Create the window and set default settings
-    m_pWindow = pGUI->GetWindowManager()->createWindow(CGUITABPANEL_NAME, szUnique);
+    m_pWindow = pGUI->GetWindowManager()->createWindow(pGUI->GetElementPrefix() + "/" + CGUITABPANEL_NAME, szUnique);
     m_pWindow->setDestroyedByParent(false);
-    m_pWindow->setRect(CEGUI::Relative, CEGUI::Rect(0.9f, 0.9f, 0.9f, 0.9f));
-    reinterpret_cast<CEGUI::TabControl*>(m_pWindow)->setAbsoluteTabTextPadding(10.0f);
+    m_pWindow->setArea(CEGUI::URect(CEGUI::UDim(0.9f, 0), CEGUI::UDim(0.9f, 0), CEGUI::UDim(0.9f, 0), CEGUI::UDim(0.9f, 0)));
+
+    dynamic_cast<CEGUI::TabControl*>(m_pWindow)->setTabTextPadding(CEGUI::UDim(0, 10.0f));
 
     // Store the pointer to this CGUI element in the CEGUI element
     m_pWindow->setUserData(reinterpret_cast<void*>(this));

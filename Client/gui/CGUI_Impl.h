@@ -9,8 +9,6 @@
  *
  *****************************************************************************/
 
-class CGUI_Impl;
-
 #pragma once
 
 #include <gui/CGUI.h>
@@ -19,28 +17,6 @@ class CGUI_Impl;
 
 #define CGUI_CHAR_SIZE 6
 
-class CGUIElement;
-class CGUIElement_Impl;
-class CGUIButton;
-class CGUICheckBox;
-class CGUIEdit;
-class CGUIEvent;
-class CGUIFont;
-class CGUIFont_Impl;
-class CGUIGridList;
-class CGUILabel;
-class CGUIMemo;
-class CGUIMessageBox;
-class CGUIProgressBar;
-class CGUIRadioButton;
-class CGUIStaticImage;
-class CGUIScrollBar;
-class CGUIScrollPane;
-class CGUIComboBox;
-class CGUITexture;
-class CGUIWindow;
-class CGUITab;
-class CGUITabPanel;
 struct IDirect3DDevice9;
 
 namespace CEGUI
@@ -48,20 +24,23 @@ namespace CEGUI
     class FontManager;
     class ImagesetManager;
     class Renderer;
-    class System;
     class SchemeManager;
     class WindowManager;
     class Image;
+    class Texture;
     class EventArgs;
     class GUISheet;
-    typedef GUISheet DefaultWindow;
+    // typedef GUISheet DefaultWindow;
 }            // namespace CEGUI
+
+class CGUIElement_Impl;
+class CGUIFont_Impl;
 
 class CGUI_Impl : public CGUI, public CGUITabList
 {
 public:
     CGUI_Impl(IDirect3DDevice9* pDevice);
-    ~CGUI_Impl();
+    void destroy();
 
     void SetSkin(const char* szName);
     void SetBidiEnabled(bool bEnabled);
@@ -70,15 +49,9 @@ public:
     void Invalidate();
     void Restore();
 
-    void DrawMouseCursor();
-
     void ProcessMouseInput(CGUIMouseInput eMouseInput, unsigned long ulX = 0, unsigned long ulY = 0, CGUIMouseButton eMouseButton = NoButton);
     void ProcessKeyboardInput(unsigned long ulKey, bool bIsDown);
     void ProcessCharacter(unsigned long ulCharacter);
-    
-    SString GetDefaultSkinName();
-    SString GetElementPrefix();
-    SString GetImagesetPrefix();
 
     //
     bool                 GetGUIInputEnabled();
@@ -86,7 +59,11 @@ public:
     eInputMode           GetGUIInputMode();
     static CEGUI::String GetUTFString(const char* szInput);
     static CEGUI::String GetUTFString(const std::string& strInput);
-    static CEGUI::String GetUTFString(const CEGUI::String& strInput);            // Not defined
+    // static CEGUI::String GetUTFString(const CEGUI::String& strInput);            // Not defined
+
+    SString GetDefaultSkinName();
+    SString GetElementPrefix();
+    SString GetImagesetPrefix();
 
     //
     CGUIMessageBox* CreateMessageBox(const char* szTitle, const char* szMessage, unsigned int uiFlags);
@@ -142,7 +119,9 @@ public:
     //
 
     CGUITexture* CreateTexture();
-    CGUIFont*    CreateFnt(const char* szFontName, const char* szFontFile, unsigned int uSize = 8, unsigned int uFlags = 0, bool bAutoScale = false, bool isWinFont = false);
+
+    CGUIFont* CreateFnt(const char* szFontName, const char* szFontFile, unsigned int uSize = 8, unsigned int uFlags = 0, bool bAutoScale = false,
+                        bool isWinFont = false);
 
     void        SetCursorEnabled(bool bEnabled);
     bool        IsCursorEnabled();
@@ -151,15 +130,20 @@ public:
     float       GetCurrentServerCursorAlpha();
     eCursorType GetCursorType();
 
-    void                    AddChild(CGUIElement_Impl* pChild);
-    CEGUI::FontManager*     GetFontManager();
-    CEGUI::ImagesetManager* GetImageSetManager();
-    CEGUI::Renderer*        GetRenderer();
-    CEGUI::System*          GetGUISystem();
-    CEGUI::SchemeManager*   GetSchemeManager();
-    CEGUI::WindowManager*   GetWindowManager();
-    void                    GetUniqueName(char* pBuf);
-    CEGUI::Window*          GetMasterWindow(CEGUI::Window* Window);
+    void                      AddChild(CGUIElement_Impl* pChild);
+    CEGUI::FontManager*       GetFontManager();
+    CEGUI::ImageManager*      GetImageManager();
+    CEGUI::Direct3D9Renderer& GetRenderer();
+    CEGUI::System*            GetGUISystem();
+    CEGUI::SchemeManager*     GetSchemeManager();
+    CEGUI::WindowManager*     GetWindowManager();
+    void                      GetUniqueName(char* pBuf);
+    CEGUI::Window*            GetMasterWindow(CEGUI::Window* Window);
+
+    CEGUI::GeometryBuffer* GetGeometryBuffer();
+
+    CEGUI::USize CreateAbsoluteSize(float width, float height);
+    CEGUI::USize CreateRelativeSize(float width, float height);
 
     CVector2D GetResolution();
     void      SetResolution(float fWidth, float fHeight);
@@ -171,7 +155,7 @@ public:
     CGUIFont* GetSAHeaderFont();
     CGUIFont* GetSAGothicFont();
     CGUIFont* GetSansFont();
-    bool      IsFontPresent(const char* szFont) { return m_pFontManager->isFontPresent(szFont); }
+    bool      IsFontPresent(const char* szFont) { return m_pFontManager->isDefined(szFont); }
 
     float GetTextExtent(const char* szText, const char* szFont = "default-normal");
     float GetMaxTextExtent(SString strFont, SString arg, ...);
@@ -260,6 +244,9 @@ public:
     void ClearInputHandlers(eInputChannel channel);
     void ClearSystemKeys();
 
+    bool IsTransferBoxVisible() { return m_bTransferBoxVisible; };
+    void SetTransferBoxVisible(bool bVisible) { m_bTransferBoxVisible = bVisible; };
+
     bool Event_CharacterKey(const CEGUI::EventArgs& e);
     bool Event_KeyDown(const CEGUI::EventArgs& e);
     bool Event_MouseClick(const CEGUI::EventArgs& e);
@@ -306,16 +293,25 @@ private:
 
     IDirect3DDevice9* m_pDevice;
 
-    CEGUI::Renderer*        m_pRenderer;
-    CEGUI::System*          m_pSystem;
-    CEGUI::FontManager*     m_pFontManager;
-    CEGUI::ImagesetManager* m_pImageSetManager;
-    CEGUI::SchemeManager*   m_pSchemeManager;
-    CEGUI::WindowManager*   m_pWindowManager;
+    CEGUI::Direct3D9Renderer*    m_pRenderer;
+    CEGUI::System*               m_pSystem;
+    CEGUI::FontManager*          m_pFontManager;
+    CEGUI::ImageManager*         m_pImageSetManager;
+    CEGUI::SchemeManager*        m_pSchemeManager;
+    CEGUI::WindowManager*        m_pWindowManager;
+    CEGUI::WindowFactoryManager* m_pWindowFactoryManager;
 
-    CEGUI::DefaultWindow* m_pTop;
-    const CEGUI::Image*   m_pCursor;
-    float                 m_fCurrentServerCursorAlpha;
+    CEGUI::XMLParser* m_pXMLParser;
+
+    CEGUI::ResourceProvider*        m_pResourceProvider;
+    CEGUI::DefaultResourceProvider* m_pDefaultResourceProvider;
+
+    CEGUI::GeometryBuffer* m_pGeometryBuffer;
+    CEGUI::GUIContext*     m_pDefaultGUIContext;
+
+    CEGUI::Window*      m_pTop;
+    const CEGUI::Image* m_pCursor;
+    float               m_fCurrentServerCursorAlpha;
 
     CGUIFont_Impl* m_pDefaultFont;
     CGUIFont_Impl* m_pSmallFont;
@@ -351,7 +347,9 @@ private:
 
     std::list<SString> m_GuiWorkingDirectoryStack;
 
-    bool         m_HasSchemeLoaded;
-    SString      m_CurrentSchemeName;
-    CElapsedTime m_RenderOkTimer;
+    bool m_bTransferBoxVisible;
+
+    bool           m_HasSchemeLoaded;
+    CEGUI::Scheme* m_CurrentScheme;
+    CElapsedTime   m_RenderOkTimer;
 };

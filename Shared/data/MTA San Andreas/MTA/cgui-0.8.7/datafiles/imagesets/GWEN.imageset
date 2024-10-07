@@ -70,12 +70,12 @@
   <Image height="15" name="Scroller.ButtonH.Hover.Left" width="2" xPos="384" yPos="160" />
   <Image height="15" name="Scroller.ButtonH.Down.Left" width="2" xPos="384" yPos="176" />
   <Image height="15" name="Scroller.ButtonH.Disabled.Middle" width="123" xPos="386" yPos="192" />
-  <Image height="4" name="Input.ListBox.Top.Left" width="4" xPos="256" yPos="256" />
-  <Image height="31" name="Input.ListBox.Hovered" width="31" xPos="320" yPos="320" />
-  <Image height="31" name="Input.ListBox.EvenLine" width="31" xPos="352" yPos="256" />
-  <Image height="31" name="Input.ListBox.OddLine" width="31" xPos="352" yPos="288" />
-  <Image height="31" name="Input.ListBox.EvenLineSelected" width="31" xPos="320" yPos="256" />
-  <Image height="31" name="Input.ListBox.OddLineSelected" width="31" xPos="320" yPos="288" />
+  <Image height="4" name="Input.ListView.Top.Left" width="4" xPos="256" yPos="256" />
+  <Image height="31" name="Input.ListView.Hovered" width="31" xPos="320" yPos="320" />
+  <Image height="31" name="Input.ListView.EvenLine" width="31" xPos="352" yPos="256" />
+  <Image height="31" name="Input.ListView.OddLine" width="31" xPos="352" yPos="288" />
+  <Image height="31" name="Input.ListView.EvenLineSelected" width="31" xPos="320" yPos="256" />
+  <Image height="31" name="Input.ListView.OddLineSelected" width="31" xPos="320" yPos="288" />
   <Image height="2" name="Input.ComboBox.Normal.Top.Middle" width="123" xPos="386" yPos="336" />
   <Image height="31" name="Input.ComboBox.Hover.Middle" width="123" xPos="386" yPos="368" />
   <Image height="31" name="Input.ComboBox.Down.Middle" width="123" xPos="386" yPos="400" />
@@ -167,14 +167,14 @@
   <Image height="2" name="Scroller.ButtonV.Hover.Bottom" width="15" xPos="416" yPos="333" />
   <Image height="2" name="Scroller.ButtonV.Normal.Top" width="15" xPos="400" yPos="208" />
   <Image height="2" name="Scroller.ButtonV.Normal.Bottom" width="15" xPos="400" yPos="333" />
-  <Image height="4" name="Input.ListBox.Top.Middle" width="55" xPos="260" yPos="256" />
-  <Image height="4" name="Input.ListBox.Top.Right" width="4" xPos="315" yPos="256" />
-  <Image height="119" name="Input.ListBox.Middle.Left" width="4" xPos="256" yPos="260" />
-  <Image height="119" name="Input.ListBox.Middle.Middle" width="55" xPos="260" yPos="260" />
-  <Image height="119" name="Input.ListBox.Middle.Right" width="4" xPos="315" yPos="260" />
-  <Image height="4" name="Input.ListBox.Bottom.Left" width="4" xPos="256" yPos="379" />
-  <Image height="4" name="Input.ListBox.Bottom.Middle" width="55" xPos="260" yPos="379" />
-  <Image height="4" name="Input.ListBox.Bottom.Right" width="4" xPos="315" yPos="379" />
+  <Image height="4" name="Input.ListView.Top.Middle" width="55" xPos="260" yPos="256" />
+  <Image height="4" name="Input.ListView.Top.Right" width="4" xPos="315" yPos="256" />
+  <Image height="119" name="Input.ListView.Middle.Left" width="4" xPos="256" yPos="260" />
+  <Image height="119" name="Input.ListView.Middle.Middle" width="55" xPos="260" yPos="260" />
+  <Image height="119" name="Input.ListView.Middle.Right" width="4" xPos="315" yPos="260" />
+  <Image height="4" name="Input.ListView.Bottom.Left" width="4" xPos="256" yPos="379" />
+  <Image height="4" name="Input.ListView.Bottom.Middle" width="55" xPos="260" yPos="379" />
+  <Image height="4" name="Input.ListView.Bottom.Right" width="4" xPos="315" yPos="379" />
   <Image height="1" name="Menu.Background.Top.Left" width="1" xPos="128" yPos="192" />
   <Image height="1" name="Menu.Background.Top.Right" width="1" xPos="254" yPos="192" />
   <Image height="61" name="Menu.Background.Middle.Left" width="1" xPos="128" yPos="193" />

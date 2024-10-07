@@ -60,7 +60,7 @@ struct SKeyBindSection
     char*               szTitle;
     char*               szOriginalTitle;
     int                 rowCount;
-    class CGUIListItem* headerItem;
+    class CGUIGridListItem* headerItem;
 };
 
 class CColor;
@@ -456,7 +456,7 @@ private:
     bool m_bMuteMTA;
     bool m_bMuteVoice;
 
-    CGUIListItem* m_pSelectedBind;
+    CGUIGridListItem* m_pSelectedBind;
 
     DWORD m_dwFrameCount;
     bool  m_bShownVolumetricShadowsWarning;
