@@ -227,16 +227,6 @@ float CGUIElement_Impl::GetEffectiveAlpha()
     return m_pWindow->getEffectiveAlpha();
 }
 
-void CGUIElement_Impl::SetInheritsAlpha(bool bInheritsAlpha)
-{
-    m_pWindow->setInheritsAlpha(bInheritsAlpha);
-}
-
-bool CGUIElement_Impl::GetInheritsAlpha()
-{
-    return m_pWindow->inheritsAlpha();
-}
-
 void CGUIElement_Impl::Activate()
 {
     m_pWindow->activate();
@@ -456,6 +446,28 @@ bool CGUIElement_Impl::DistributesCapturedInputs()
     try
     {
         return m_pWindow->distributesCapturedInputs();
+    }
+    catch (CEGUI::Exception e)
+    {
+    }
+}
+
+void CGUIElement_Impl::SetInheritsAlpha(bool enabled)
+{
+    try
+    {
+        m_pWindow->setInheritsAlpha(enabled);
+    }
+    catch (CEGUI::Exception e)
+    {
+    }
+}
+
+bool CGUIElement_Impl::GetInheritsAlpha()
+{
+    try
+    {
+        return m_pWindow->inheritsAlpha();
     }
     catch (CEGUI::Exception e)
     {

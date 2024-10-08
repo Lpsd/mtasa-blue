@@ -168,14 +168,6 @@ float GetEffectiveAlpha()
 {
     return CGUIElement_Impl::GetEffectiveAlpha();
 };
-void SetInheritsAlpha(bool bInheritsAlpha)
-{
-    CGUIElement_Impl::SetInheritsAlpha(bInheritsAlpha);
-};
-bool GetInheritsAlpha()
-{
-    return CGUIElement_Impl::GetInheritsAlpha();
-};
 
 void Activate()
 {
@@ -253,7 +245,6 @@ bool IsCursorPassThroughEnabled()
     return CGUIElement_Impl::IsCursorPassThroughEnabled();
 };
 
-
 void SetDistributeCapturedInputs(bool enabled)
 {
     CGUIElement_Impl::SetDistributeCapturedInputs(enabled);
@@ -261,6 +252,15 @@ void SetDistributeCapturedInputs(bool enabled)
 bool DistributesCapturedInputs()
 {
     return CGUIElement_Impl::DistributesCapturedInputs();
+};
+
+void SetInheritsAlpha(bool enabled)
+{
+    CGUIElement_Impl::SetInheritsAlpha(enabled);
+};
+bool GetInheritsAlpha()
+{
+    return CGUIElement_Impl::GetInheritsAlpha();
 };
 
 void SetClickHandler(GUI_CALLBACK Callback)

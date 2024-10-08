@@ -222,7 +222,7 @@ void CSettings::CreateGUI()
 
     // Create a mini-scrollpane for the radio buttons (only way to group them together)
     m_pControlsInputTypePane = reinterpret_cast<CGUIScrollPane*>(pManager->CreateScrollPane(pTabControls));
-    m_pControlsInputTypePane->SetProperty("ContentPaneAutoSized", "False");
+    //m_pControlsInputTypePane->SetProperty("ContentPaneAutoSized", "False");
     m_pControlsInputTypePane->SetPosition(CVector2D(0, vecTemp.fY));
     m_pControlsInputTypePane->SetSize(CVector2D(1.0f, 0.27f), true);
     m_pControlsInputTypePane->SetZOrderingEnabled(false);

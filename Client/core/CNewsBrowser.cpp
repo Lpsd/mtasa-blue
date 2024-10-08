@@ -242,7 +242,7 @@ void CNewsBrowser::AddNewsTab(const SNewsItem& newsItem)
 
     // Create everything under a scrollpane
     CGUIScrollPane* m_pScrollPane = reinterpret_cast<CGUIScrollPane*>(pManager->CreateScrollPane(pTab));
-    m_pScrollPane->SetProperty("ContentPaneAutoSized", "True");
+    //m_pScrollPane->SetProperty("ContentPaneAutoSized", "True");
     m_pScrollPane->SetPosition(CVector2D(3, 3), 0);
     m_pScrollPane->SetSize(CVector2D(618.0f, 390.0f));
     m_pScrollPane->SetVerticalScrollStepSize(0.15f);

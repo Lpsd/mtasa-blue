@@ -126,7 +126,7 @@ CMainMenu::CMainMenu(CGUI* pManager)
     // Background image
     m_pBackground = reinterpret_cast<CGUIStaticImage*>(pManager->CreateStaticImage());
     m_pBackground->LoadFromFile(CORE_MTA_STATIC_BG);
-    m_pBackground->SetProperty("InheritsAlpha", "False");
+    m_pBackground->SetInheritsAlpha(false);
     m_pBackground->SetPosition(CVector2D(iBackgroundX, iBackgroundY), false);
     m_pBackground->SetSize(CVector2D(iBackgroundSizeX, iBackgroundSizeY), false);
     m_pBackground->SetZOrderingEnabled(false);
@@ -145,7 +145,7 @@ CMainMenu::CMainMenu(CGUI* pManager)
     m_pFiller2->SetSize(ScreenSize, false);
 
     m_pCanvas = reinterpret_cast<CGUIScrollPane*>(pManager->CreateScrollPane());
-    m_pCanvas->SetProperty("ContentPaneAutoSized", "False");
+    //m_pCanvas->SetProperty("ContentPaneAutoSized", "False");
     m_pCanvas->SetPosition(CVector2D(m_iXOff, m_iYOff), false);
     m_pCanvas->SetSize(CVector2D(m_iMenuSizeX, m_iMenuSizeY), false);
     m_pCanvas->SetZOrderingEnabled(false);
@@ -157,7 +157,7 @@ CMainMenu::CMainMenu(CGUI* pManager)
     CVector2D logoSize = CVector2D((NATIVE_LOGO_X / NATIVE_RES_X) * m_iMenuSizeX, (NATIVE_LOGO_Y / NATIVE_RES_Y) * m_iMenuSizeY);
     m_pLogo = reinterpret_cast<CGUIStaticImage*>(pManager->CreateStaticImage(m_pCanvas));
     m_pLogo->LoadFromFile(CORE_MTA_LOGO);
-    m_pLogo->SetProperty("InheritsAlpha", "False");
+    m_pLogo->SetInheritsAlpha(false);
     m_pLogo->SetSize(logoSize, false);
     m_pLogo->SetPosition(CVector2D(0.5f * m_iMenuSizeX - logoSize.fX / 2, 0.365f * m_iMenuSizeY - logoSize.fY / 2), false);
     m_pLogo->SetZOrderingEnabled(false);
@@ -168,7 +168,7 @@ CMainMenu::CMainMenu(CGUI* pManager)
     m_pVersion->SetParent(m_pCanvas);
     m_pVersion->SetPosition(CVector2D(0.855f, 0.512f), true);
     m_pVersion->SetSize(CVector2D((32 / NATIVE_RES_X) * m_iMenuSizeX, (32 / NATIVE_RES_Y) * m_iMenuSizeY), false);
-    m_pVersion->SetProperty("InheritsAlpha", "False");
+    m_pVersion->SetInheritsAlpha(false);
 
     float fBase = 0.613f;
     float fGap = 0.043f;
@@ -211,14 +211,14 @@ CMainMenu::CMainMenu(CGUI* pManager)
     m_pMenuArea->SetMouseLeaveHandler(GUI_CALLBACK(&CMainMenu::OnMenuExit, this));
 
     m_pLatestNews = reinterpret_cast<CGUIStaticImage*>(pManager->CreateStaticImage());
-    if (!m_pLatestNews->LoadFromFile(PathJoin(g_pCore->GetLocalization()->GetLanguageDirectory(), "latest_news.png")))
+    if (!m_pLatestNews->LoadFromFile(PathJoin(g_pCore->GetLocalization()->GetLanguageDirectory(), "latest_news.png"), "absolute"))
     {
         // Load en_US if no localization is available
         auto pLanguage = g_pLocalization->GetLanguage("en_US");
-        m_pLatestNews->LoadFromFile(PathJoin(g_pCore->GetLocalization()->GetLanguageDirectory(pLanguage), "latest_news.png"));
+        m_pLatestNews->LoadFromFile(PathJoin(g_pCore->GetLocalization()->GetLanguageDirectory(pLanguage), "latest_news.png"), "absolute");
     }
     m_pLatestNews->SetParent(m_pCanvas);
-    m_pLatestNews->SetProperty("InheritsAlpha", "False");
+    m_pLatestNews->SetInheritsAlpha(false);
     CVector2D vecNativeSize;
     m_pLatestNews->GetNativeSize(vecNativeSize);
     float fDrawSizeX = (vecNativeSize.fX / NATIVE_RES_X) * m_iMenuSizeX;
@@ -1060,7 +1060,7 @@ sMenuItem* CMainMenu::CreateItem(unsigned char menuType, const char* szFilename,
 {
     CGUIStaticImage* pImage = reinterpret_cast<CGUIStaticImage*>(m_pManager->CreateStaticImage());
 
-    if (!pImage->LoadFromFile(PathJoin(g_pCore->GetLocalization()->GetLanguageDirectory(), szFilename)))
+    if (!pImage->LoadFromFile(PathJoin(g_pCore->GetLocalization()->GetLanguageDirectory(), szFilename), "absolute"))
     {
         // Load en_US if no localization is available
         auto pLanguage = g_pLocalization->GetLanguage("en_US");
@@ -1090,7 +1090,7 @@ sMenuItem* CMainMenu::CreateItem(unsigned char menuType, const char* szFilename,
     pImage->SetParent(m_pCanvas);
     pImage->SetPosition(CVector2D(iPosX, iPosY), false);
     pImage->SetSize(CVector2D(iSizeX, iSizeY), false);
-    pImage->SetProperty("InheritsAlpha", "False");
+    pImage->SetInheritsAlpha(false);
     pImage->SetAlpha(CORE_MTA_NORMAL_ALPHA);
 
     sMenuItem* s = new sMenuItem();

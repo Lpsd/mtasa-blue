@@ -71,8 +71,6 @@ public:
     void  SetAlpha(float fAlpha);
     float GetAlpha();
     float GetEffectiveAlpha();
-    void  SetInheritsAlpha(bool bInheritsAlpha);
-    bool  GetInheritsAlpha();
 
     void Activate();
     void Deactivate();
@@ -105,6 +103,9 @@ public:
 
     void SetDistributeCapturedInputs(bool enabled);
     bool DistributesCapturedInputs();
+
+    void SetInheritsAlpha(bool enabled);
+    bool GetInheritsAlpha();
 
     void SetMovedHandler(GUI_CALLBACK Callback);
     void SetSizedHandler(GUI_CALLBACK Callback);

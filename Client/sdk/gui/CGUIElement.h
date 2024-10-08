@@ -93,8 +93,6 @@ public:
     virtual void  SetAlpha(float fAlpha) = 0;
     virtual float GetAlpha() = 0;
     virtual float GetEffectiveAlpha() = 0;
-    virtual void  SetInheritsAlpha(bool bInheritsAlpha) = 0;
-    virtual bool  GetInheritsAlpha() = 0;
 
     virtual void Activate() = 0;
     virtual void Deactivate() = 0;
@@ -127,6 +125,9 @@ public:
 
     virtual void SetDistributeCapturedInputs(bool enabled) = 0;
     virtual bool DistributesCapturedInputs() = 0;
+
+    virtual void SetInheritsAlpha(bool enabled) = 0;
+    virtual bool GetInheritsAlpha() = 0;
 
     virtual void SetMovedHandler(GUI_CALLBACK Callback) = 0;
     virtual void SetSizedHandler(GUI_CALLBACK Callback) = 0;

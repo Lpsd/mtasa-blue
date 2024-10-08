@@ -86,7 +86,7 @@ bool CGUIStaticImage_Impl::LoadFromFile(const char* szFilename, const char* szRe
             return false;
 
         // Get the image from the image manager and cast to BasicImage
-        m_pImage = dynamic_cast<CEGUI::BitmapImage*>(&m_pImagesetManager->get(szFilename));
+        m_pImage = static_cast<CEGUI::BitmapImage*>(&m_pImagesetManager->get(szFilename));
     }
 
     // Set image to window
@@ -116,7 +116,7 @@ bool CGUIStaticImage_Impl::LoadFromTexture(CGUITexture* pTexture)
     m_pGUI->GetUniqueName(szUnique);
 
     // Define a new image in the ImageManager
-    m_pImage = dynamic_cast<CEGUI::BitmapImage*>(&m_pImagesetManager->create("BitmapImage", szUnique));
+    m_pImage = static_cast<CEGUI::BitmapImage*>(&m_pImagesetManager->create("BitmapImage", szUnique));
 
     // Set the texture of the created image
     m_pImage->setTexture(pCEGUITexture);
