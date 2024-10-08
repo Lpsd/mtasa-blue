@@ -86,10 +86,8 @@ CGUI_Impl::CGUI_Impl(IDirect3DDevice9* pDevice)
     // Set XML parser defaults
     m_pXMLParser = m_pSystem->getXMLParser();
 
-    auto& resolution = GetResolution();
-    CEGUI::TextureTarget* renderTextureTarget = m_pSystem->getRenderer()->createTextureTarget(false);
-    renderTextureTarget->declareRenderSize(CEGUI::Sizef(resolution.fX, resolution.fY));
-    m_pDefaultGUIContext = &m_pSystem->createGUIContext(static_cast<CEGUI::RenderTarget&>(*renderTextureTarget));
+    // Create default GUI context
+    m_pDefaultGUIContext = &m_pSystem->createGUIContext(m_pRenderer->getDefaultRenderTarget());
 
     if (m_pXMLParser->isPropertyPresent("SchemaDefaultResourceGroup"))
         m_pXMLParser->setProperty("SchemaDefaultResourceGroup", "mta_xml_schemas");
