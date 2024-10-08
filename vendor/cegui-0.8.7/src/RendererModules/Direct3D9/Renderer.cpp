@@ -173,7 +173,7 @@ namespace CEGUI
     //----------------------------------------------------------------------------//
     TextureTarget* Direct3D9Renderer::createTextureTarget(bool addStencilBuffer = false)
     {
-        TextureTarget* t = new Direct3D9TextureTarget(*this, addStencilBuffer);
+        TextureTarget* t = new Direct3D9TextureTarget(*this);
         d_textureTargets.push_back(t);
         return t;
     }

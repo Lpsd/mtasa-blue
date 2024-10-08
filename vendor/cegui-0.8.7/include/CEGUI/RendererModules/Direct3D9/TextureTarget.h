@@ -46,7 +46,7 @@ class Direct3D9Texture;
 class DIRECT3D9_GUIRENDERER_API Direct3D9TextureTarget : public Direct3D9RenderTarget<TextureTarget>
 {
 public:
-    Direct3D9TextureTarget(Direct3D9Renderer& owner, bool addStencilBuffer);
+    Direct3D9TextureTarget(Direct3D9Renderer& owner);
     virtual ~Direct3D9TextureTarget();
 
     //! auto called via the Renderer prior to Reset on the Direct3DDevice9.

@@ -35,7 +35,7 @@ namespace CEGUI
 {
 //----------------------------------------------------------------------------//
 Direct3D9ViewportTarget::Direct3D9ViewportTarget(Direct3D9Renderer& owner) :
-    Direct3D9RenderTarget<>(owner, false)
+    Direct3D9RenderTarget<>(owner)
 {
     // initialise renderer size
     D3DVIEWPORT9 vp;
@@ -54,7 +54,7 @@ Direct3D9ViewportTarget::Direct3D9ViewportTarget(Direct3D9Renderer& owner) :
 //----------------------------------------------------------------------------//
 Direct3D9ViewportTarget::Direct3D9ViewportTarget(Direct3D9Renderer& owner,
     const Rectf& area) :
-        Direct3D9RenderTarget<>(owner, false)
+        Direct3D9RenderTarget<>(owner)
 {
     setArea(area);
 }

@@ -49,7 +49,7 @@ class DIRECT3D9_GUIRENDERER_API Direct3D9RenderTarget : public T
 {
 public:
     //! Constructor
-    Direct3D9RenderTarget(Direct3D9Renderer& owner, bool addStencilBuffer);
+    Direct3D9RenderTarget(Direct3D9Renderer& owner);
 
     // implement parts of RenderTarget interface
     void draw(const GeometryBuffer& buffer);

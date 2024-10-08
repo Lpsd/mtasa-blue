@@ -35,7 +35,7 @@ namespace CEGUI
 {
 //----------------------------------------------------------------------------//
 template <typename T>
-Direct3D9RenderTarget<T>::Direct3D9RenderTarget(Direct3D9Renderer& owner, bool addStencilBuffer) :
+Direct3D9RenderTarget<T>::Direct3D9RenderTarget(Direct3D9Renderer& owner) :
     d_owner(owner),
     d_device(owner.getDevice()),
     d_area(0, 0, 0, 0),
