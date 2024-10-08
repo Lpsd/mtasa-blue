@@ -1512,7 +1512,7 @@
   
   <WidgetLook name="GWEN/SliderThumb">
     <Property name="VertFree" value="True" />
-    <Property name="MouseInputPropagationEnabled" value="True" />
+    
     <ImagerySection name="normal">
       <ImageryComponent>
         <Area>
@@ -1613,7 +1613,7 @@
   
   <WidgetLook name="GWEN/HorizontalSliderThumb">
     <Property name="VertFree" value="True" />
-    <Property name="MouseInputPropagationEnabled" value="True" />
+    
     <ImagerySection name="normal">
       <ImageryComponent>
         <Area>
@@ -1865,7 +1865,7 @@
   
   <WidgetLook name="GWEN/HorizontalScrollbarThumb">
     <Property name="HorzFree" value="True" />
-    <Property name="MouseInputPropagationEnabled" value="True" />
+    
     <ImagerySection name="normal">
       <FrameComponent>
         <Area>
@@ -2107,7 +2107,7 @@
   
   <WidgetLook name="GWEN/VerticalScrollbarThumb">
     <Property name="VertFree" value="True" />
-    <Property name="MouseInputPropagationEnabled" value="True" />
+    
     <ImagerySection name="normal">
       <FrameComponent>
         <Area>
@@ -2354,7 +2354,7 @@
     <PropertyDefinition initialValue="set:GWEN image:Input.ListView.EvenLineSelected" name="SelectionBrush" redrawOnWrite="true" />
     <PropertyDefinition initialValue="FF5C8FFF" name="SelectionColour" redrawOnWrite="true" />
     <Property name="Selectable" value="True" />
-    <Property name="MouseInputPropagationEnabled" value="True" />
+    
     <NamedArea name="ContentSize">
       <Area>
         <Dim type="LeftEdge">
@@ -3450,7 +3450,7 @@
   </WidgetLook>
   
   <WidgetLook name="GWEN/ListHeaderSegment">
-    <Property name="MouseInputPropagationEnabled" value="True" />
+    
     <ImagerySection name="segment">
       <FrameComponent>
         <Area>
@@ -3597,7 +3597,7 @@
   
   <WidgetLook name="GWEN/ListHeader">
     <Property name="SegmentWidgetType" value="GWEN/ListHeaderSegment" />
-    <Property name="MouseInputPropagationEnabled" value="True" />
+    
     <StateImagery name="Enabled" />
     <StateImagery name="Disabled" />
   </WidgetLook>
