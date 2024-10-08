@@ -27,10 +27,10 @@
 #ifndef _CEGUIDirect3D9Renderer_h_
 #define _CEGUIDirect3D9Renderer_h_
 
-#include "CEGUI/Base.h"
-#include "CEGUI/Renderer.h"
-#include "CEGUI/Sizef.h"
-#include "CEGUI/UVector.h"
+#include "../../Renderer.h"
+#include "../../Sizef.h"
+
+#include <glm/glm.hpp>
 
 #include <d3d9.h>
 #include <vector>
@@ -85,7 +85,7 @@ namespace CEGUI
         \return
             Reference to the CEGUI::Direct3D9Renderer object that was created.
         */
-        static Direct3D9Renderer& bootstrapSystem(LPDIRECT3DDEVICE9 device, const int abi = CEGUI_VERSION_ABI, std::string moduleDir = "");
+        static Direct3D9Renderer& bootstrapSystem(LPDIRECT3DDEVICE9 device, const int abi = CEGUI_VERSION_ABI, String moduleDir = "");
 
         /*!
         \brief
@@ -160,31 +160,31 @@ namespace CEGUI
         //! set the render states for the specified BlendMode.
         void setupRenderingBlendMode(const BlendMode mode, const bool force = false);
 
-        // Implementation of Renderer interface.
-        virtual RenderTarget&              getDefaultRenderTarget();
+        // implement Renderer interface
+        RenderTarget&                      getDefaultRenderTarget();
         virtual RefCounted<RenderMaterial> createRenderMaterial(const DefaultShaderType shaderType) const;
-        virtual GeometryBuffer&            createGeometryBufferColoured(RefCounted<RenderMaterial> renderMaterial);
-        virtual GeometryBuffer&            createGeometryBufferTextured(RefCounted<RenderMaterial> renderMaterial);
-        virtual void                       destroyGeometryBuffer(const GeometryBuffer& buffer);
-        virtual void                       destroyAllGeometryBuffers();
-        virtual TextureTarget*             createTextureTarget(bool addStencilBuffer);
-        virtual void                       destroyTextureTarget(TextureTarget* target);
-        virtual void                       destroyAllTextureTargets();
-        virtual Texture&                   createTexture(const CEGUI::String& name);
-        virtual Texture&                   createTexture(const CEGUI::String& name, const String& filename, const String& resourceGroup);
-        virtual Texture&                   createTexture(const CEGUI::String& name, const Sizef& size);
-        virtual void                       destroyTexture(Texture& texture);
-        virtual void                       destroyTexture(const CEGUI::String& name);
-        virtual void                       destroyAllTextures();
-        virtual Texture&                   getTexture(const String&) const;
-        virtual bool                       isTextureDefined(const String& name) const;
-        virtual void                       beginRendering();
-        virtual void                       endRendering();
-        virtual void                       setDisplaySize(const Sizef& sz);
-        virtual const Sizef&               getDisplaySize() const;
-        virtual unsigned int               getMaxTextureSize() const;
-        virtual const String&              getIdentifierString() const;
+        virtual GeometryBuffer&            createGeometryBufferColoured(CEGUI::RefCounted<RenderMaterial> renderMaterial);
+        virtual GeometryBuffer&            createGeometryBufferTextured(CEGUI::RefCounted<RenderMaterial> renderMaterial);
+        void                               destroyGeometryBuffer(const GeometryBuffer& buffer);
+        void                               destroyAllGeometryBuffers();
+        TextureTarget*                     createTextureTarget(bool addStencilBuffer) override;
+        void                               destroyTextureTarget(TextureTarget* target);
+        void                               destroyAllTextureTargets();
+        Texture&                           createTexture(const String& name);
+        Texture&                           createTexture(const String& name, const String& filename, const String& resourceGroup);
+        Texture&                           createTexture(const String& name, const Sizef& size);
+        void                               destroyTexture(Texture& texture);
+        void                               destroyTexture(const String& name);
+        void                               destroyAllTextures();
+        Texture&                           getTexture(const String& name) const;
+        bool                               isTextureDefined(const String& name) const;
+        void                               beginRendering();
+        void                               endRendering();
+        void                               setDisplaySize(const Sizef& sz);
+        const Sizef&                       getDisplaySize() const;
         const glm::vec2&                   getDisplayDPI() const;
+        unsigned int                       getMaxTextureSize() const;
+        const String&                      getIdentifierString() const;
 
     private:
         //! Constructor for Direct3D9 Renderer objects.
@@ -204,17 +204,6 @@ namespace CEGUI
         Sizef getViewportSize();
         //! returns next power of 2 size if \a size is not power of 2
         float getSizeNextPOT(float sz) const;
-
-        //! Initialises the ShaderManager and the required D3D9 shaders
-        void initialiseShaders();
-        //! Initialises the D3D9 ShaderWrapper for textured objects
-        void initialiseStandardTexturedShaderWrapper();
-        //! Initialises the D3D9 ShaderWrapper for coloured objects
-        void initialiseStandardColouredShaderWrapper();
-        //! Wrapper of the OpenGL shader we will use for textured geometry
-        Direct3D9ShaderWrapper* d_shaderWrapperTextured;
-        //! Wrapper of the OpenGL shader we will use for solid geometry
-        Direct3D9ShaderWrapper* d_shaderWrapperSolid;
 
         //! String holding the renderer identification text.
         static String d_rendererID;
@@ -246,6 +235,11 @@ namespace CEGUI
         bool d_supportNonSquareTex;
         //! What we think is the active blendine mode
         BlendMode d_activeBlendMode;
+
+        //! Shaderwrapper for textured & coloured vertices
+        Direct3D9ShaderWrapper* d_shaderWrapperTextured;
+        //! Shaderwrapper for coloured vertices
+        Direct3D9ShaderWrapper* d_shaderWrapperSolid;
     };
 
 }            // namespace CEGUI

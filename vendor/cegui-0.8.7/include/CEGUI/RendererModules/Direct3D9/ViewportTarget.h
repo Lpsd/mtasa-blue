@@ -28,7 +28,7 @@
 #define _CEGUIDirect3D9ViewportTarget_h_
 
 #include "CEGUI/RendererModules/Direct3D9/RenderTarget.h"
-#include "CEGUI/Rectf.h"
+#include "../../Rectf.h"
 
 // Start of CEGUI namespace section
 namespace CEGUI
@@ -37,7 +37,8 @@ namespace CEGUI
 \brief
     Direct3D9 RenderTarget that represents a screen viewport.
 */
-class DIRECT3D9_GUIRENDERER_API Direct3D9ViewportTarget : public Direct3D9RenderTarget
+class DIRECT3D9_GUIRENDERER_API Direct3D9ViewportTarget : 
+    public Direct3D9RenderTarget<>
 {
 public:
     /*!

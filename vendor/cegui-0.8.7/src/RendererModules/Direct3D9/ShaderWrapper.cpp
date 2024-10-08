@@ -30,21 +30,21 @@
 namespace CEGUI
 {
 
-//----------------------------------------------------------------------------//
-Direct3D9ShaderWrapper::Direct3D9ShaderWrapper()
-{
-}
+    //----------------------------------------------------------------------------//
+    Direct3D9ShaderWrapper::Direct3D9ShaderWrapper()
+    {
+    }
 
-//----------------------------------------------------------------------------//
-Direct3D9ShaderWrapper::~Direct3D9ShaderWrapper()
-{
-}
+    //----------------------------------------------------------------------------//
+    Direct3D9ShaderWrapper::~Direct3D9ShaderWrapper()
+    {
+    }
 
-//----------------------------------------------------------------------------//
-void Direct3D9ShaderWrapper::prepareForRendering(const ShaderParameterBindings* shaderParameterBindings)
-{
-    CEGUI_UNUSED(shaderParameterBindings);
-}
+    //----------------------------------------------------------------------------//
+    void Direct3D9ShaderWrapper::prepareForRendering(const ShaderParameterBindings* shaderParameterBindings)
+    {
+        CEGUI_UNUSED(shaderParameterBindings);
+    }
 
-}
-
+    //----------------------------------------------------------------------------//
+}            // namespace CEGUI

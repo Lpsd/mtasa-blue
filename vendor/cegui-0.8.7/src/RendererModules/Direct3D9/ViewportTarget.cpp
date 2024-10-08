@@ -34,7 +34,8 @@
 namespace CEGUI
 {
 //----------------------------------------------------------------------------//
-Direct3D9ViewportTarget::Direct3D9ViewportTarget(Direct3D9Renderer& owner) : Direct3D9RenderTarget(owner) 
+Direct3D9ViewportTarget::Direct3D9ViewportTarget(Direct3D9Renderer& owner) :
+    Direct3D9RenderTarget<>(owner, false)
 {
     // initialise renderer size
     D3DVIEWPORT9 vp;
@@ -53,7 +54,7 @@ Direct3D9ViewportTarget::Direct3D9ViewportTarget(Direct3D9Renderer& owner) : Dir
 //----------------------------------------------------------------------------//
 Direct3D9ViewportTarget::Direct3D9ViewportTarget(Direct3D9Renderer& owner,
     const Rectf& area) :
-        Direct3D9RenderTarget(owner)
+        Direct3D9RenderTarget<>(owner, false)
 {
     setArea(area);
 }
@@ -67,3 +68,8 @@ bool Direct3D9ViewportTarget::isImageryCache() const
 //----------------------------------------------------------------------------//
 
 } // End of  CEGUI namespace section
+
+//----------------------------------------------------------------------------//
+// Implementation of template base class
+#include "./RenderTarget.inl"
+

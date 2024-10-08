@@ -25,6 +25,11 @@
  *   OTHER DEALINGS IN THE SOFTWARE.
  ***************************************************************************/
 #include "CEGUI/RendererModules/Direct3D9/TextureTarget.h"
+#include "CEGUI/Exceptions.h"
+#include "CEGUI/Logger.h"
+#include "CEGUI/RenderQueue.h"
+#include "CEGUI/GeometryBuffer.h"
+#include "CEGUI/RendererModules/Direct3D9/Renderer.h"
 #include "CEGUI/RendererModules/Direct3D9/Texture.h"
 #include "CEGUI/PropertyHelper.h"
 
@@ -36,8 +41,7 @@ const float Direct3D9TextureTarget::DEFAULT_SIZE = 128.0f;
 unsigned int Direct3D9TextureTarget::s_textureNumber = 0;
 
 //----------------------------------------------------------------------------//
-Direct3D9TextureTarget::Direct3D9TextureTarget(Direct3D9Renderer& owner) :
-    Direct3D9RenderTarget(owner),
+Direct3D9TextureTarget::Direct3D9TextureTarget(Direct3D9Renderer& owner, bool addStencilBuffer) : Direct3D9RenderTarget<TextureTarget>(owner, addStencilBuffer),
     d_texture(0),
     d_surface(0)
 {
@@ -110,8 +114,8 @@ void Direct3D9TextureTarget::initialiseRenderTexture()
 {
     Sizef tex_sz(d_owner.getAdjustedSize(d_area.getSize()));
 
-    d_device->CreateTexture(static_cast<UINT>(tex_sz.d_width),
-                            static_cast<UINT>(tex_sz.d_height),
+    d_device->CreateTexture(static_cast<unsigned int>(tex_sz.d_width),
+                            static_cast<unsigned int>(tex_sz.d_height),
                             1, D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
                             D3DPOOL_DEFAULT, &d_texture, 0);
 
@@ -227,3 +231,8 @@ String Direct3D9TextureTarget::generateTextureName()
 //----------------------------------------------------------------------------//
 
 } // End of  CEGUI namespace section
+
+//----------------------------------------------------------------------------//
+// Implementation of template base class
+#include "./RenderTarget.inl"
+

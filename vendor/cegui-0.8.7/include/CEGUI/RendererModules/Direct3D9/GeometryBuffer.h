@@ -27,57 +27,57 @@
 #ifndef _CEGUIDirect3D9GeometryBuffer_h_
 #define _CEGUIDirect3D9GeometryBuffer_h_
 
-#include "CEGUI/GeometryBuffer.h"
-#include "CEGUI/Rectf.h"
-#include "CEGUI/Vertex.h"
-#include "CEGUI/Sizef.h"
-
+#include "../../GeometryBuffer.h"
+#include "CEGUI/RendererModules/Direct3D9/Renderer.h"
+#include "../../Rectf.h"
+#include "../../Quaternion.h"
 #include <d3dx9.h>
+#include <utility>
 #include <vector>
-#include <cstdint>
+
+#include <glm/glm.hpp>
 
 #if defined(_MSC_VER)
     #pragma warning(push)
     #pragma warning(disable : 4251)
 #endif
 
+// Start of CEGUI namespace section
 namespace CEGUI
 {
-    class Direct3D9Renderer;
     class Direct3D9Texture;
 
-    //! Implementation of CEGUI::GeometryBuffer for the Direct3D 11 API.
-    class Direct3D9GeometryBuffer : public GeometryBuffer
+    /*!
+    \brief
+        Direct3D9 based implementation of the GeometryBuffer interface.
+    */
+    class DIRECT3D9_GUIRENDERER_API Direct3D9GeometryBuffer : public GeometryBuffer
     {
     public:
         //! Constructor
-        Direct3D9GeometryBuffer(Direct3D9Renderer& owner, LPDIRECT3DDEVICE9 device, RefCounted<RenderMaterial> renderMaterial);
+        Direct3D9GeometryBuffer(Direct3D9Renderer& owner, LPDIRECT3DDEVICE9 device, CEGUI::RefCounted<RenderMaterial> renderMaterial);
 
         //! return pointer to D3DXMATRIX used as world transform.
         const D3DXMATRIX* getMatrix() const;
 
-        // Implement GeometryBuffer interface.
-        virtual void          draw(std::uint32_t drawModeMask = DrawModeMaskAll) const;
-        virtual void          setTranslation(const glm::vec3& v);
-        virtual void          setRotation(const glm::quat& r);
-        virtual void          setPivot(const glm::vec3& p);
-        virtual void          appendVertex(const TexturedColouredVertex& vertex);
-        virtual void          appendGeometry(const TexturedColouredVertex* const vbuff, unsigned int vertex_count);
-        virtual void          setActiveTexture(Texture* texture);
-        virtual void          reset();
-        virtual Texture*      getActiveTexture() const;
-        virtual unsigned int  getVertexCount() const;
-        virtual unsigned int  getBatchCount() const;
-        virtual void          setRenderEffect(RenderEffect* effect);
-        virtual RenderEffect* getRenderEffect();
-        virtual void          setClippingActive(const bool active);
-        virtual bool          isClippingActive() const;
-        virtual void          setClippingRegion(const Rectf& region);
+        // implementation of abstract members from GeometryBuffer
+        void          draw(uint32_t drawModeMask = DrawModeMaskAll) const override;
+        void          setTranslation(const glm::vec3& t);
+        void          setRotation(const glm::quat& r);
+        void          setPivot(const glm::vec3& p);
+        void          setClippingRegion(const Rectf& region);
+        void          setActiveTexture(Texture* texture);
+        Texture*      getActiveTexture() const;
+        unsigned int  getVertexCount() const;
+        unsigned int  getBatchCount() const;
+        void          setRenderEffect(RenderEffect* effect);
+        RenderEffect* getRenderEffect();
+        void          setClippingActive(const bool active);
+        bool          isClippingActive() const;
 
     protected:
         //! perform batch management operations prior to adding new geometry.
         void performBatchManagement();
-
         //! update cached matrix
         void updateMatrix() const;
 
@@ -95,7 +95,7 @@ namespace CEGUI
         //! type to track info for per-texture sub batches of geometry
         struct BatchInfo
         {
-            IDirect3DTexture9* texture;
+            LPDIRECT3DTEXTURE9 texture;
             unsigned int       vertexCount;
             bool               clip;
         };
@@ -124,12 +124,12 @@ namespace CEGUI
         glm::vec3 d_pivot;
         //! RenderEffect that will be used by the GeometryBuffer
         RenderEffect* d_effect;
+        //! The D3D Device
+        LPDIRECT3DDEVICE9 d_device;
         //! model matrix cache
         mutable D3DXMATRIX d_matrix;
         //! true when d_matrix is valid and up to date
         mutable bool d_matrixValid;
-        //! The D3D Device
-        LPDIRECT3DDEVICE9 d_device;
     };
 
 }            // namespace CEGUI

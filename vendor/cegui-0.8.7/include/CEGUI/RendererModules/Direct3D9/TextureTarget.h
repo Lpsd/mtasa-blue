@@ -28,7 +28,7 @@
 #define _CEGUIDirect3D9TextureTarget_h_
 
 #include "CEGUI/RendererModules/Direct3D9/RenderTarget.h"
-#include "CEGUI/TextureTarget.h"
+#include "../../TextureTarget.h"
 #include <d3d9.h>
 
 #if defined(_MSC_VER)
@@ -43,10 +43,10 @@ namespace CEGUI
 class Direct3D9Texture;
 
 //! Direct3D9TextureTarget - allows rendering to an Direct3D9 texture via .
-class DIRECT3D9_GUIRENDERER_API Direct3D9TextureTarget : public Direct3D9RenderTarget, public TextureTarget
+class DIRECT3D9_GUIRENDERER_API Direct3D9TextureTarget : public Direct3D9RenderTarget<TextureTarget>
 {
 public:
-    Direct3D9TextureTarget(Direct3D9Renderer& owner);
+    Direct3D9TextureTarget(Direct3D9Renderer& owner, bool addStencilBuffer);
     virtual ~Direct3D9TextureTarget();
 
     //! auto called via the Renderer prior to Reset on the Direct3DDevice9.
@@ -56,14 +56,17 @@ public:
     void postD3DReset();
 
     // overrides from Direct3D9RenderTarget
-    void activate();
-    void deactivate();
+    void activate() override;
+    void deactivate() override;
+
     // implementation of RenderTarget interface
-    bool isImageryCache() const;
-    // implementation of TextureTarget interface
-    void clear();
-    Texture& getTexture() const;
-    void declareRenderSize(const Sizef& sz);
+    bool isImageryCache() const override;
+
+    // implementation of CEGUI::TextureTarget interface
+    void     clear() override;
+    Texture& getTexture() const override;
+    void     declareRenderSize(const Sizef& sz) override;
+
     bool isRenderingInverted() const;
 
 protected:

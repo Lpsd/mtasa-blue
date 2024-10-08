@@ -56,8 +56,8 @@ CGUI_Impl::CGUI_Impl(IDirect3DDevice9* pDevice)
     m_pWindowManager = CEGUI::WindowManager::getSingletonPtr();
     m_pWindowFactoryManager = CEGUI::WindowFactoryManager::getSingletonPtr();
 
-    auto renderMaterial = &m_pRenderer->createRenderMaterial(CEGUI::DefaultShaderType::Solid);
-    m_pGeometryBuffer = &m_pRenderer->createGeometryBufferColoured(*renderMaterial);
+    auto& renderMaterial = m_pRenderer->createRenderMaterial(CEGUI::DefaultShaderType::Textured);
+    m_pGeometryBuffer = &m_pRenderer->createGeometryBufferTextured(renderMaterial);
 
     m_pResourceProvider = m_pSystem->getResourceProvider();
     m_pDefaultResourceProvider = static_cast<CEGUI::DefaultResourceProvider*>(m_pSystem->getResourceProvider());
@@ -86,7 +86,7 @@ CGUI_Impl::CGUI_Impl(IDirect3DDevice9* pDevice)
     // Set XML parser defaults
     m_pXMLParser = m_pSystem->getXMLParser();
 
-    auto resolution = GetResolution();
+    auto& resolution = GetResolution();
     CEGUI::TextureTarget* renderTextureTarget = m_pSystem->getRenderer()->createTextureTarget(false);
     renderTextureTarget->declareRenderSize(CEGUI::Sizef(resolution.fX, resolution.fY));
     m_pDefaultGUIContext = &m_pSystem->createGUIContext(static_cast<CEGUI::RenderTarget&>(*renderTextureTarget));
