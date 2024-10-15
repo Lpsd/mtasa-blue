@@ -140,8 +140,6 @@ public:
     void                      GetUniqueName(char* pBuf);
     CEGUI::Window*            GetMasterWindow(CEGUI::Window* Window);
 
-    CEGUI::GeometryBuffer* GetGeometryBuffer();
-
     CEGUI::USize CreateAbsoluteSize(float width, float height);
     CEGUI::USize CreateRelativeSize(float width, float height);
 
@@ -259,12 +257,8 @@ public:
     bool Event_MouseLeave(const CEGUI::EventArgs& e);
     bool Event_Moved(const CEGUI::EventArgs& e);
     bool Event_Sized(const CEGUI::EventArgs& e);
-    bool Event_RedrawRequested(const CEGUI::EventArgs& e);
     bool Event_FocusGained(const CEGUI::EventArgs& e);
     bool Event_FocusLost(const CEGUI::EventArgs& e);
-
-    void AddToRedrawQueue(CGUIElement* pWindow);
-    void RemoveFromRedrawQueue(CGUIElement* pWindow);
 
     void        CleanDeadPool();
     CGUIWindow* LoadLayout(CGUIElement* pParent, const SString& strFilename);
@@ -306,7 +300,6 @@ private:
     CEGUI::ResourceProvider*        m_pResourceProvider;
     CEGUI::DefaultResourceProvider* m_pDefaultResourceProvider;
 
-    CEGUI::GeometryBuffer* m_pGeometryBuffer;
     CEGUI::GUIContext*     m_pDefaultGUIContext;
 
     CEGUI::Window*      m_pTop;
@@ -321,8 +314,6 @@ private:
     CGUIFont_Impl* m_pSAGothicFont;
     CGUIFont_Impl* m_pSansFont;
     CGUIFont_Impl* m_pUniFont;
-
-    std::list<CGUIElement*> m_RedrawQueue;
 
     unsigned long m_ulPreviousUnique;
 

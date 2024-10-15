@@ -56,9 +56,6 @@ CGUI_Impl::CGUI_Impl(IDirect3DDevice9* pDevice)
     m_pWindowManager = CEGUI::WindowManager::getSingletonPtr();
     m_pWindowFactoryManager = CEGUI::WindowFactoryManager::getSingletonPtr();
 
-    auto& renderMaterial = m_pRenderer->createRenderMaterial(CEGUI::DefaultShaderType::Textured);
-    m_pGeometryBuffer = &m_pRenderer->createGeometryBufferTextured(renderMaterial);
-
     m_pResourceProvider = m_pSystem->getResourceProvider();
     m_pDefaultResourceProvider = static_cast<CEGUI::DefaultResourceProvider*>(m_pSystem->getResourceProvider());
 
@@ -223,7 +220,7 @@ void CGUI_Impl::SubscribeToMouseEvents()
     pEvents->subscribeEvent("Window/" + CEGUI::Window::EventCursorLeavesArea, CEGUI::Event::Subscriber(&CGUI_Impl::Event_MouseLeave, this));
     pEvents->subscribeEvent("Window/" + CEGUI::Window::EventMoved, CEGUI::Event::Subscriber(&CGUI_Impl::Event_Moved, this));
     pEvents->subscribeEvent("Window/" + CEGUI::Window::EventSized, CEGUI::Event::Subscriber(&CGUI_Impl::Event_Sized, this));
-    // pEvents->subscribeEvent("Window/" + CEGUI::Window::EventRedrawRequested, CEGUI::Event::Subscriber(&CGUI_Impl::Event_RedrawRequested, this));
+    //pEvents->subscribeEvent("Window/" + CEGUI::Window::EventUpdated, CEGUI::Event::Subscriber(&CGUI_Impl::Event_Invalidated, this));
     pEvents->subscribeEvent("Window/" + CEGUI::Window::EventActivated, CEGUI::Event::Subscriber(&CGUI_Impl::Event_FocusGained, this));
     pEvents->subscribeEvent("Window/" + CEGUI::Window::EventDeactivated, CEGUI::Event::Subscriber(&CGUI_Impl::Event_FocusLost, this));
 }
@@ -241,30 +238,8 @@ void CGUI_Impl::SetResolution(float fWidth, float fHeight)
 
 void CGUI_Impl::Draw()
 {
-    // Redraw the changed elements
-    if (!m_RedrawQueue.empty())
-    {
-        list<CGUIElement*>::const_iterator iter = m_RedrawQueue.begin();
-        for (; iter != m_RedrawQueue.end(); iter++)
-        {
-            (*iter)->ForceRedraw();
-        }
-        m_RedrawQueue.clear();
-    }
 
     m_pSystem->renderAllGUIContexts();
-
-    // I don't think this is required anymore? There's most likely a better way to catch rendering issues now
-    // if (!m_pSystem->renderAllGUIContexts())
-    //{
-    //    if (m_RenderOkTimer.Get() > 4000)
-    //    {
-    //        // 4 seconds and over 40 failed calls means we have a problem
-    //        BrowseToSolution("gui-render", EXIT_GAME_FIRST, "Some sort of DirectX problem has occurred");
-    //    }
-    //}
-    // else
-    //    m_RenderOkTimer.Reset();
 }
 
 void CGUI_Impl::Invalidate()
@@ -1379,19 +1354,6 @@ bool CGUI_Impl::Event_Sized(const CEGUI::EventArgs& Args)
     return true;
 }
 
-bool CGUI_Impl::Event_RedrawRequested(const CEGUI::EventArgs& Args)
-{
-    const CEGUI::WindowEventArgs& e = reinterpret_cast<const CEGUI::WindowEventArgs&>(Args);
-
-    CGUIElement* pElement = reinterpret_cast<CGUIElement*>((e.window)->getUserData());
-    if (pElement)
-        AddToRedrawQueue(pElement);
-    else
-        e.window->invalidate(true);
-
-    return true;
-}
-
 bool CGUI_Impl::Event_FocusGained(const CEGUI::EventArgs& Args)
 {
     if (m_FocusGainedHandlers[m_Channel])
@@ -1436,38 +1398,6 @@ bool CGUI_Impl::Event_FocusLost(const CEGUI::EventArgs& Args)
         m_FocusLostHandlers[m_Channel](NewArgs);
     }
     return true;
-}
-
-void CGUI_Impl::AddToRedrawQueue(CGUIElement* pWindow)
-{
-    // Manage the redraw queue, if we redraw the parent of the window passed,
-    // we should not add it to the redraw queue, and if the children are queued,
-    // remove them.
-    list<CGUIElement*>::const_iterator iter = m_RedrawQueue.begin();
-    for (; iter != m_RedrawQueue.end(); iter++)
-    {
-        if (pWindow->GetParent() == *iter)
-        {
-        return;
-        }
-        else if ((*iter)->GetParent() == pWindow)
-        {
-        m_RedrawQueue.remove(*iter);
-        if (m_RedrawQueue.empty())
-            return;
-        iter = m_RedrawQueue.begin();
-        }
-        else if (*iter == pWindow)
-        {
-        return;
-        }
-    }
-    m_RedrawQueue.push_back(pWindow);
-}
-
-void CGUI_Impl::RemoveFromRedrawQueue(CGUIElement* pWindow)
-{
-    m_RedrawQueue.remove(pWindow);
 }
 
 CGUIButton* CGUI_Impl::CreateButton(CGUIElement* pParent, const char* szCaption)
@@ -1574,7 +1504,9 @@ CGUIMemo* CGUI_Impl::CreateMemo(CGUITab* pParent, const char* szText)
 CGUIStaticImage* CGUI_Impl::CreateStaticImage(CGUIElement* pParent)
 {
     CGUIWindow_Impl* wnd = reinterpret_cast<CGUIWindow_Impl*>(pParent);
-    return _CreateStaticImage(wnd);
+    auto image = _CreateStaticImage(wnd);
+    m_images.push_back(image);
+    return image;
 }
 
 CGUIStaticImage* CGUI_Impl::CreateStaticImage(CGUITab* pParent)
@@ -1723,11 +1655,6 @@ CEGUI::USize CGUI_Impl::CreateAbsoluteSize(float width, float height)
 CEGUI::USize CGUI_Impl::CreateRelativeSize(float width, float height)
 {
     return CEGUI::USize(CEGUI::UDim(width, 0), CEGUI::UDim(height, 0));
-}
-
-CEGUI::GeometryBuffer* CGUI_Impl::GetGeometryBuffer()
-{
-    return m_pGeometryBuffer;
 }
 
 void CGUI_Impl::ClearSystemKeys()

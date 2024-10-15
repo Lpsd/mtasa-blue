@@ -87,10 +87,18 @@ bool CGUIStaticImage_Impl::LoadFromFile(const char* szFilename, const char* szRe
 
         // Get the image from the image manager and cast to BasicImage
         m_pImage = static_cast<CEGUI::BitmapImage*>(&m_pImagesetManager->get(szFilename));
-    }
 
-    // Set image to window
-    m_pWindow->setProperty("Image", szFilename);
+        // Store size
+        auto texture = m_pImage->getTexture();
+        auto& size = texture->getSize();
+        m_size = glm::vec2{size.d_width, size.d_height};
+
+        // Set size and create geometry
+        m_pImage->setImageArea(CEGUI::Rectf(0.0f, m_size.x, m_size.y, 0.0f));
+
+        // Set image to window
+        m_pWindow->setProperty("Image", szFilename);
+    }
 
     return true;
 }
@@ -123,7 +131,8 @@ bool CGUIStaticImage_Impl::LoadFromTexture(CGUITexture* pTexture)
 
     // Set the image size based on texture
     auto& size = pCEGUITexture->getSize();
-    m_pImage->setImageArea(CEGUI::Rectf(0.0f, size.d_width, size.d_height, 0.0f));
+    m_size = glm::vec2{size.d_width, size.d_height};
+    m_pImage->setImageArea(CEGUI::Rectf(0.0f, m_size.x, m_size.y, 0.0f));
 
     // Set image to window
     m_pWindow->setProperty("Image", szUnique);
@@ -137,7 +146,7 @@ void CGUIStaticImage_Impl::Clear()
     if (!m_pImage)
         return;
 
-    //m_pImagesetManager->destroy(m_pImage->getName());
+    m_pImagesetManager->destroy(m_pImage->getName());
 }
 
 bool CGUIStaticImage_Impl::GetNativeSize(CVector2D& vecSize)
@@ -168,8 +177,6 @@ CEGUI::Image* CGUIStaticImage_Impl::GetDirectImage()
     return m_pImage;
 }
 
-/* Unused? */
 void CGUIStaticImage_Impl::Render()
 {
-    return m_pWindow->draw();
 }
