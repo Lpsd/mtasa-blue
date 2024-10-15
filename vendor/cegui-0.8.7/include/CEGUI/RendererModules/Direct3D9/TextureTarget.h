@@ -43,7 +43,7 @@ namespace CEGUI
 class Direct3D9Texture;
 
 //! Direct3D9TextureTarget - allows rendering to an Direct3D9 texture via .
-class DIRECT3D9_GUIRENDERER_API Direct3D9TextureTarget : public Direct3D9RenderTarget<TextureTarget>
+class DIRECT3D9_GUIRENDERER_API Direct3D9TextureTarget : public Direct3D9RenderTarget, public TextureTarget
 {
 public:
     Direct3D9TextureTarget(Direct3D9Renderer& owner);
@@ -56,16 +56,16 @@ public:
     void postD3DReset();
 
     // overrides from Direct3D9RenderTarget
-    void activate() override;
-    void deactivate() override;
+    void activate();
+    void deactivate();
 
     // implementation of RenderTarget interface
-    bool isImageryCache() const override;
+    bool isImageryCache() const;
 
     // implementation of CEGUI::TextureTarget interface
-    void     clear() override;
-    Texture& getTexture() const override;
-    void     declareRenderSize(const Sizef& sz) override;
+    void     clear();
+    Texture& getTexture() const;
+    void     declareRenderSize(const Sizef& sz);
 
     bool isRenderingInverted() const;
 
@@ -96,7 +96,7 @@ protected:
     //! we use this to wrap d_texture so it can be used by the core CEGUI lib.
     Direct3D9Texture* d_CEGUITexture;
     //! colour surface that was in use before this target was activated.
-    LPDIRECT3DSURFACE9 d_prevColourSurface;
+    LPDIRECT3DSURFACE9 d_prevSurface;
 };
 
 } // End of  CEGUI namespace section

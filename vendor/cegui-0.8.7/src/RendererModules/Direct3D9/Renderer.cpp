@@ -152,25 +152,6 @@ namespace CEGUI
     }
 
     //----------------------------------------------------------------------------//
-    void Direct3D9Renderer::destroyGeometryBuffer(const GeometryBuffer& buffer)
-    {
-        GeometryBufferList::iterator i = std::find(d_geometryBuffers.begin(), d_geometryBuffers.end(), &buffer);
-
-        if (d_geometryBuffers.end() != i)
-        {
-            d_geometryBuffers.erase(i);
-            delete &buffer;
-        }
-    }
-
-    //----------------------------------------------------------------------------//
-    void Direct3D9Renderer::destroyAllGeometryBuffers()
-    {
-        while (!d_geometryBuffers.empty())
-            destroyGeometryBuffer(**d_geometryBuffers.begin());
-    }
-
-    //----------------------------------------------------------------------------//
     TextureTarget* Direct3D9Renderer::createTextureTarget(bool addStencilBuffer = false)
     {
         TextureTarget* t = new Direct3D9TextureTarget(*this);

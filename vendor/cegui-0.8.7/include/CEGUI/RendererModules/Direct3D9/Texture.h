@@ -136,7 +136,7 @@ protected:
     //! cached pixel to texel mapping scale values.
     glm::vec2 d_texelScaling;
     //! holds info about the texture surface before we released it for reset.
-    D3DSURFACE_DESC d_savedSurfaceDesc;
+    D3DSURFACE_DESC d_savedSurfaceDesc{};
     //! true when d_savedSurfaceDesc is valid and texture can be restored.
     bool d_savedSurfaceDescValid;
     //! Name the texture was created with.

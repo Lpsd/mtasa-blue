@@ -61,25 +61,31 @@ namespace CEGUI
         const D3DXMATRIX* getMatrix() const;
 
         // implementation of abstract members from GeometryBuffer
-        void          draw(uint32_t drawModeMask = DrawModeMaskAll) const override;
-        void          setTranslation(const glm::vec3& t);
-        void          setRotation(const glm::quat& r);
-        void          setPivot(const glm::vec3& p);
-        void          setClippingRegion(const Rectf& region);
-        void          setActiveTexture(Texture* texture);
-        Texture*      getActiveTexture() const;
-        unsigned int  getVertexCount() const;
-        unsigned int  getBatchCount() const;
-        void          setRenderEffect(RenderEffect* effect);
-        RenderEffect* getRenderEffect();
-        void          setClippingActive(const bool active);
-        bool          isClippingActive() const;
+        void                    draw(uint32_t drawModeMask = DrawModeMaskAll) const override;
 
     protected:
+        void                    updateVertexBuffer();
+        void                    onGeometryChanged() override;
+        void                    setTranslation(const glm::vec3& t);
+        void                    setRotation(const glm::quat& r);
+        void                    setPivot(const glm::vec3& p);
+        void                    setClippingRegion(const Rectf& region);
+        const Direct3D9Texture* getActiveTexture() const;
+        unsigned int            getVertexCount() const;
+        unsigned int            getBatchCount() const;
+        void                    setRenderEffect(RenderEffect* effect);
+        RenderEffect*           getRenderEffect();
+        void                    setClippingActive(const bool active);
+        bool                    isClippingActive() const;
+
         //! perform batch management operations prior to adding new geometry.
-        void performBatchManagement();
+        void performBatchManagement() const;
         //! update cached matrix
         void updateMatrix() const;
+        //! Allocates a hardware vertex buffer of size 'vertexSize' (size in bytes).
+        void allocateVertexBuffer(const unsigned int vertexSize) const;
+        //! cleanup the hardware vertex buffer.
+        void cleanupVertexBuffer() const;
 
         //! internal Vertex structure used for Direct3D based geometry.
         struct D3DVertex
@@ -103,15 +109,15 @@ namespace CEGUI
         //! Owning Direct3D9Renderer object
         Direct3D9Renderer& d_owner;
         //! last texture that was set as active
-        Direct3D9Texture* d_activeTexture;
+        const Direct3D9Texture* d_activeTexture;
         //! type of container that tracks BatchInfos.
         typedef std::vector<BatchInfo> BatchList;
         //! list of texture batches added to the geometry buffer
-        BatchList d_batches;
+        mutable BatchList d_batches;
         //! type of container used to queue the geometry
         typedef std::vector<D3DVertex> VertexList;
         //! container where added geometry is stored.
-        VertexList d_vertices;
+        mutable VertexList d_vertices;
         //! rectangular clip region
         Rectf d_clipRect;
         //! whether clipping will be active for the current batch
@@ -125,11 +131,13 @@ namespace CEGUI
         //! RenderEffect that will be used by the GeometryBuffer
         RenderEffect* d_effect;
         //! The D3D Device
-        LPDIRECT3DDEVICE9 d_device;
+        IDirect3DDevice9* d_device;
         //! model matrix cache
         mutable D3DXMATRIX d_matrix;
         //! true when d_matrix is valid and up to date
         mutable bool d_matrixValid;
+        mutable IDirect3DVertexBuffer9* d_vertexBuffer = nullptr;
+        mutable unsigned int            d_vertexBufferSize = 0;
     };
 
 }            // namespace CEGUI

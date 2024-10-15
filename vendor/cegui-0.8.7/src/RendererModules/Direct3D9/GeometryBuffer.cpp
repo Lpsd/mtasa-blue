@@ -27,8 +27,16 @@
 #include "CEGUI/RendererModules/Direct3D9/GeometryBuffer.h"
 #include "CEGUI/RendererModules/Direct3D9/Texture.h"
 #include "CEGUI/RenderEffect.h"
+#include "CEGUI/RenderMaterial.h"
 #include "CEGUI/Vertex.h"
+#include "CEGUI/Colour.h"
 #include <d3d9.h>
+
+static std::uint32_t calculateArgb(std::uint8_t alpha, std::uint8_t red, std::uint8_t green, std::uint8_t blue)
+{
+    return (static_cast<std::uint32_t>(alpha) << 24 | static_cast<std::uint32_t>(red) << 16 | static_cast<std::uint32_t>(green) << 8 |
+            static_cast<std::uint32_t>(blue));
+}
 
 // Start of CEGUI namespace section
 namespace CEGUI
@@ -45,7 +53,8 @@ namespace CEGUI
           d_pivot(0, 0, 0),
           d_effect(0),
           d_device(device),
-          d_matrixValid(false)
+          d_matrixValid(false),
+          d_vertexBufferSize(0)
     {
     }
 
@@ -67,15 +76,19 @@ namespace CEGUI
             updateMatrix();
 
         d_device->SetTransform(D3DTS_WORLD, &d_matrix);
+        d_device->BeginScene();
 
         d_owner.setupRenderingBlendMode(d_blendMode);
 
         const int pass_count = d_effect ? d_effect->getPassCount() : 1;
+
         for (int pass = 0; pass < pass_count; ++pass)
         {
             // set up RenderEffect
             if (d_effect)
                 d_effect->performPreRenderFunctions(pass);
+
+            d_renderMaterial->prepareForRendering();
 
             // draw the batches
             size_t                    pos = 0;
@@ -86,7 +99,8 @@ namespace CEGUI
                     d_device->SetScissorRect(&clip);
 
                 d_device->SetTexture(0, i->texture);
-                d_device->DrawPrimitiveUP(D3DPT_TRIANGLELIST, i->vertexCount / 3, &d_vertices[pos], sizeof(D3DVertex));
+                d_device->DrawPrimitiveUP(D3DPT_TRIANGLELIST, i->vertexCount / 3, (void*)&d_vertices[pos], sizeof(D3DVertex));
+
                 pos += i->vertexCount;
 
                 if (i->clip)
@@ -97,7 +111,73 @@ namespace CEGUI
         // clean up RenderEffect
         if (d_effect)
             d_effect->performPostRenderFunctions();
+
+        d_device->EndScene();
+
+        updateRenderTargetData(d_owner.getActiveRenderTarget());
     }
+
+    //----------------------------------------------------------------------------//
+    void Direct3D9GeometryBuffer::onGeometryChanged()
+    {
+        updateVertexBuffer();
+    }
+
+    //----------------------------------------------------------------------------//
+    void Direct3D9GeometryBuffer::updateVertexBuffer()
+    {
+        if (d_vertexData.empty())
+            return;
+
+        performBatchManagement();
+
+        const unsigned int vertexItemCount = d_vertexData.size();
+
+        if (d_vertexBufferSize < d_vertexCount)
+        {
+            cleanupVertexBuffer();
+            allocateVertexBuffer(d_vertexCount);
+            d_vertexBufferSize = d_vertexCount;
+        }
+
+        // update size of current batch
+        d_batches.back().vertexCount += d_vertexCount;
+
+        // buffer these vertices
+        D3DVertex vertex;
+        for (const float& data : d_vertexData)
+        {
+            auto& cv = reinterpret_cast<const TexturedColouredVertex&>(data);
+            // copy vertex info the buffer, converting from CEGUI::Vertex to
+            // something directly usable by D3D as needed.
+            vertex.x = cv.d_position.x - 0.5f;
+            vertex.y = cv.d_position.y - 0.5f;
+            vertex.z = cv.d_position.z;
+            vertex.diffuse = calculateArgb(cv.d_colour.a, cv.d_colour.r, cv.d_colour.g, cv.d_colour.b);
+            vertex.tu = cv.d_texCoords.x;
+            vertex.tv = cv.d_texCoords.y;
+            d_vertices.push_back(vertex);
+        }
+    }
+
+    //----------------------------------------------------------------------------//
+    void Direct3D9GeometryBuffer::cleanupVertexBuffer() const
+    {
+        if (d_vertexBuffer)
+        {
+            d_vertexBuffer->Release();
+            d_vertexBuffer = 0;
+            d_vertexBufferSize = 0;
+        }
+    }
+
+    void Direct3D9GeometryBuffer::allocateVertexBuffer(unsigned int vertexSize) const
+    {
+        d_device->CreateVertexBuffer(vertexSize, 0, 0,
+                                     D3DPOOL_MANAGED, &d_vertexBuffer, NULL);
+        d_device->SetStreamSource(0, d_vertexBuffer, 0, sizeof(D3DVertex));
+    }
+
 
     //----------------------------------------------------------------------------//
     void Direct3D9GeometryBuffer::setTranslation(const glm::vec3& t)
@@ -130,15 +210,9 @@ namespace CEGUI
     }
 
     //----------------------------------------------------------------------------//
-    void Direct3D9GeometryBuffer::setActiveTexture(Texture* texture)
+    const Direct3D9Texture* Direct3D9GeometryBuffer::getActiveTexture() const
     {
-        d_activeTexture = static_cast<Direct3D9Texture*>(texture);
-    }
-
-    //----------------------------------------------------------------------------//
-    Texture* Direct3D9GeometryBuffer::getActiveTexture() const
-    {
-        return d_activeTexture;
+        return static_cast<const Direct3D9Texture*>(d_renderMaterial->getMainTexture());
     }
 
     //----------------------------------------------------------------------------//
@@ -166,9 +240,11 @@ namespace CEGUI
     }
 
     //----------------------------------------------------------------------------//
-    void Direct3D9GeometryBuffer::performBatchManagement()
+    void Direct3D9GeometryBuffer::performBatchManagement() const
     {
-        const LPDIRECT3DTEXTURE9 t = d_activeTexture ? d_activeTexture->getDirect3D9Texture() : 0;
+        auto texture = getActiveTexture();
+
+        const LPDIRECT3DTEXTURE9 t = texture ? texture->getDirect3D9Texture() : 0;
 
         // create a new batch if there are no batches yet, or if the active texture
         // differs from that used by the current batch.

@@ -34,51 +34,14 @@
 namespace CEGUI
 {
 //----------------------------------------------------------------------------//
-template <typename T>
-Direct3D9RenderTarget<T>::Direct3D9RenderTarget(Direct3D9Renderer& owner) :
+Direct3D9RenderTarget::Direct3D9RenderTarget(Direct3D9Renderer& owner) :
     d_owner(owner),
-    d_device(owner.getDevice()),
-    d_area(0, 0, 0, 0),
-    d_matrixValid(false),
-    d_viewDistance(0)
+    d_device(owner.getDevice())
 {
 }
 
 //----------------------------------------------------------------------------//
-template <typename T>
-void Direct3D9RenderTarget<T>::draw(const GeometryBuffer& buffer)
-{
-    buffer.draw();
-}
-
-//----------------------------------------------------------------------------//
-template <typename T>
-void Direct3D9RenderTarget<T>::draw(const RenderQueue& queue)
-{
-    queue.draw();
-}
-
-//----------------------------------------------------------------------------//
-template <typename T>
-void Direct3D9RenderTarget<T>::setArea(const Rectf& area)
-{
-    d_area = area;
-    d_matrixValid = false;
-
-    RenderTargetEventArgs args(this);
-    T::fireEvent(RenderTarget::EventAreaChanged, args);
-}
-
-//----------------------------------------------------------------------------//
-template <typename T>
-const Rectf& Direct3D9RenderTarget<T>::getArea() const
-{
-    return d_area;
-}
-
-//----------------------------------------------------------------------------//
-template <typename T>
-void Direct3D9RenderTarget<T>::activate()
+void Direct3D9RenderTarget::activate()
 {
     if (!d_matrixValid)
         updateMatrix();
@@ -86,45 +49,22 @@ void Direct3D9RenderTarget<T>::activate()
     D3DVIEWPORT9 vp;
     setupViewport(vp);
     d_device->SetViewport(&vp);
+    d_owner.setViewProjectionMatrix(d_matrix);
+    
+    const D3DMATRIX* matrix = new D3DXMATRIX(&d_matrix[0][0]);
+    d_device->SetTransform(D3DTS_PROJECTION, matrix);
 
-    d_owner.getDevice()->SetTransform(D3DTS_PROJECTION, &d_matrix);
+    RenderTarget::activate();
 }
 
 //----------------------------------------------------------------------------//
-template <typename T>
-void Direct3D9RenderTarget<T>::deactivate()
+void Direct3D9RenderTarget::updateMatrix() const
 {
+    RenderTarget::updateMatrix(RenderTarget::createViewProjMatrixForDirect3D());
 }
 
 //----------------------------------------------------------------------------//
-template <typename T>
-void Direct3D9RenderTarget<T>::updateMatrix() const
-{
-    const float fov = 0.523598776f;
-    const float w = d_area.getWidth();
-    const float h = d_area.getHeight();
-    const float aspect = w / h;
-    const float midx = w * 0.5f;
-    const float midy = h * 0.5f;
-    d_viewDistance = midx / (aspect * 0.267949192431123f);
-
-    D3DXVECTOR3 eye(midx, midy, -d_viewDistance);
-    D3DXVECTOR3 at(midx, midy, 1);
-    D3DXVECTOR3 up(0, -1, 0);
-
-    D3DXMATRIX tmp;
-    D3DXMatrixMultiply(&d_matrix,
-        D3DXMatrixLookAtRH(&d_matrix, &eye, &at, &up),
-        D3DXMatrixPerspectiveFovRH(&tmp, fov, aspect,
-                                   d_viewDistance * 0.5f,
-                                   d_viewDistance * 2.0f));
-
-    d_matrixValid = true;
-}
-
-//----------------------------------------------------------------------------//
-template <typename T>
-void Direct3D9RenderTarget<T>::setupViewport(D3DVIEWPORT9& vp) const
+void Direct3D9RenderTarget::setupViewport(D3DVIEWPORT9& vp) const
 {
     vp.X = static_cast<DWORD>(d_area.left());
     vp.Y = static_cast<DWORD>(d_area.top());
@@ -135,8 +75,7 @@ void Direct3D9RenderTarget<T>::setupViewport(D3DVIEWPORT9& vp) const
 }
 
 //----------------------------------------------------------------------------//
-template <typename T>
-Direct3D9Renderer& Direct3D9RenderTarget<T>::getOwner()
+Direct3D9Renderer& Direct3D9RenderTarget::getOwner()
 {
     return d_owner;
 }
