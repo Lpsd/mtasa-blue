@@ -23,7 +23,7 @@ CGUIGridLayout_Impl::CGUIGridLayout_Impl(CGUI_Impl* pGUI, CGUIElement* pParent)
     pGUI->GetUniqueName(szUnique);
 
     // Create the window and set default settings
-    m_pWindow = pGUI->GetWindowManager()->createWindow(pGUI->ResolveModernName(CGUIGRIDLAYOUT_NAME), szUnique);
+    m_pWindow = pGUI->GetWindowManager()->createWindow(CGUIGRIDLAYOUT_NAME, szUnique);
 
     m_pWindow->setDestroyedByParent(false);
     m_pWindow->setRect(CEGUI::Relative, CEGUI::Rect(0.00f, 0.00f, 1.0f, 1.0f));
