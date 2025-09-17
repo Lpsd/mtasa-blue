@@ -151,6 +151,7 @@ workspace "MTASA"
 		include "Client/loader-proxy"
 		include "Client/multiplayer_sa"
 		include "Client/mods/deathmatch"
+		include "Client/webview2"
 
 		group "Client/CEGUI"
 		include "vendor/cegui-0.4.0-custom/src/renderers/directx9GUIRenderer"

@@ -67,3 +67,4 @@
 #include "CNickGen.h"
 #include <core/CWebViewInterface.h>
 #include "CTrayIcon.h"
+#include <webview2/CWebView2Interface.h>

@@ -41,6 +41,7 @@ class CDiscordInterface;
 #include <ijsify.h>
 #include <core/CWebCoreInterface.h>
 #include "CTrayIcon.h"
+#include <webview2/CWebView2Interface.h>
 
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
@@ -107,6 +108,7 @@ public:
     CTrayIconInterface*                GetTrayIcon() { return m_pTrayIcon; };
     std::shared_ptr<CDiscordInterface> GetDiscord();
     CSteamClient*                      GetSteamClient() { return m_steamClient.get(); }
+    CWebView2Interface*                GetWebView2() { return m_pWebView2; }
 
     void SaveConfig(bool bWaitUntilFinished = false);
 
@@ -185,6 +187,11 @@ public:
     void DestroyXML();
     void DeinitGUI();
     void DestroyGUI();
+
+    // WebView2
+    void CreateWebView2Interface();
+    void InitWebView2Interface(IDirect3DDevice9* pDevice);
+    void DestroyWebView2Interface();
 
     // Web
     bool IsWebCoreLoaded() { return m_pWebCore != nullptr; }
@@ -335,6 +342,7 @@ private:
     CModuleLoader m_XMLModule;
     CModuleLoader m_GUIModule;
     CModuleLoader m_WebCoreModule;
+    CModuleLoader m_WebView2Module;
 
     // Mod manager
     CModManager* m_pModManager;
@@ -344,6 +352,8 @@ private:
     CNet*         m_pNet;
     CMultiplayer* m_pMultiplayer;
     CGUI*         m_pGUI;
+
+    CWebView2Interface* m_pWebView2;
 
     // Logger utility interface.
     CConsoleLogger* m_pConsoleLogger;

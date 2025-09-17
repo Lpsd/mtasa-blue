@@ -26,6 +26,7 @@
 #include "CDiscordInterface.h"
 #include "xml/CXML.h"
 #include <gui/CGUI.h>
+#include <webview2/CWebView2Interface.h>
 
 typedef bool (*pfnProcessMessage)(HWND, UINT, WPARAM, LPARAM);
 
@@ -81,6 +82,7 @@ public:
     virtual CWebCoreInterface*                 GetWebCore() = 0;
     virtual CTrayIconInterface*                GetTrayIcon() = 0;
     virtual std::shared_ptr<CDiscordInterface> GetDiscord() = 0;
+    virtual CWebView2Interface*                GetWebView2() = 0;
 
     // Temporary functions for r1
     virtual void DebugEcho(const char* szText) = 0;

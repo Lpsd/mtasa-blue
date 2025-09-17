@@ -37,6 +37,9 @@ void CDirect3DEvents9::OnDirect3DDeviceCreate(IDirect3DDevice9* pDevice)
     // Create the GUI manager
     CCore::GetSingleton().InitGUI(pDevice);
 
+    // Initialize WebView2
+    CCore::GetSingleton().InitWebView2Interface(pDevice);
+
     CAdditionalVertexStreamManager::GetSingleton()->OnDeviceCreate(pDevice);
     CVertexStreamBoundingBoxManager::GetSingleton()->OnDeviceCreate(pDevice);
 
@@ -180,6 +183,12 @@ void CDirect3DEvents9::OnPresent(IDirect3DDevice9* pDevice)
 
     // Draw post-GUI primitives
     CGraphics::GetSingleton().DrawPostGUIQueue();
+
+    // Render WebView2
+    CWebView2Interface* pWebView2 = g_pCore->GetWebView2();
+
+    if (pWebView2)
+        pWebView2->Render();
 
     // Redraw the mouse cursor so it will always be over other elements
     CLocalGUI::GetSingleton().DrawMouseCursor();

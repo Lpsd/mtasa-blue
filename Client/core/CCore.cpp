@@ -869,6 +869,7 @@ void CCore::ApplyHooks2()
             CCore::GetSingleton().CreateGame();
             CCore::GetSingleton().CreateMultiplayer();
             CCore::GetSingleton().CreateXML();
+            CCore::GetSingleton().CreateWebView2Interface();
             CCore::GetSingleton().CreateGUI();
         }
     }
@@ -1031,6 +1032,27 @@ void CCore::DestroyGUI()
         m_pGUI = NULL;
     }
     m_GUIModule.UnloadModule();
+}
+
+void CCore::CreateWebView2Interface()
+{
+    LoadModule(m_WebView2Module, "WebView2", "cwebview2");
+}
+
+void CCore::InitWebView2Interface(IDirect3DDevice9* pDevice)
+{
+    if (!m_pWebView2)
+        m_pWebView2 = InitModule<CWebView2Interface>(m_WebView2Module, "WebView2", "InitWebView2Interface", pDevice);
+}
+
+void CCore::DestroyWebView2Interface()
+{
+    WriteDebugEvent("CCore::DestroyWebView2Interface");
+    if (m_pWebView2)
+    {
+        m_pWebView2 = NULL;
+    }
+    m_WebView2Module.UnloadModule();
 }
 
 void CCore::CreateNetwork()
