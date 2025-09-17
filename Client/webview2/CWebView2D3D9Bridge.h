@@ -9,12 +9,22 @@
 
 #pragma once
 
-#include <d3d9.h>
-#include <d3d11.h>
-#include <dxgi.h>
+#include <WebView2EnvironmentOptions.h>
+
+#include <wrl.h>
 #include <wrl/client.h>
 
+#include <d3dx9.h>
+#include <d3d11.h>
+
 using Microsoft::WRL::ComPtr;
+
+struct PNGReader
+{
+    BYTE*  data;
+    size_t size;
+    size_t offset;
+};
 
 class CWebView2D3D9Bridge
 {
@@ -63,6 +73,11 @@ private:
     bool CreateSharedTexture();
     void CopyD3D11ToD3D9();
     void CaptureWebView2();
+    void ProcessPNGStream();
+
+    ComPtr<IStream> m_imageDataStream;
+
+    bool     m_isCapturePending = false;
 
     HRESULT OnCreateEnvironmentCompleted(HRESULT result, ICoreWebView2Environment* environment);
     HRESULT OnCreateCoreWebView2ControllerCompleted(HRESULT result, ICoreWebView2Controller* controller);

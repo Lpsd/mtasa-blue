@@ -8,11 +8,12 @@
  *****************************************************************************/
 
 #include "StdInc.h"
-#include <wrl.h>
+#include "png.h"
+
+using Microsoft::WRL::Callback;
 
 CWebView2D3D9Bridge::CWebView2D3D9Bridge() : m_width(0), m_height(0), m_hwnd(nullptr)
 {
-
 }
 
 CWebView2D3D9Bridge::~CWebView2D3D9Bridge()
@@ -27,7 +28,7 @@ bool CWebView2D3D9Bridge::Initialize(IDirect3DDevice9* d3d9Device, int width, in
     m_height = height;
 
     // Create a off-screen window for WebView2
-    m_hwnd = CreateWindow("STATIC", "WebView2Host", WS_OVERLAPPEDWINDOW, 0, 0, width, height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+    m_hwnd = CreateWindow("STATIC", "MTAWebView2Host", WS_OVERLAPPEDWINDOW, 0, 0, width, height, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
 
     if (!m_hwnd)
         return false;
@@ -110,11 +111,10 @@ HRESULT CWebView2D3D9Bridge::OnCreateEnvironmentCompleted(HRESULT result, ICoreW
         return E_FAIL;
 
     // Create regular controller
-    
+
     HRESULT hr = environment->CreateCoreWebView2Controller(m_hwnd, Microsoft::WRL::Callback<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler>(
                                                                        this, &CWebView2D3D9Bridge::OnCreateCoreWebView2ControllerCompleted)
-                                                                       .Get()
-    );
+                                                                       .Get());
 
     if (FAILED(hr))
     {
@@ -149,13 +149,12 @@ HRESULT CWebView2D3D9Bridge::OnCreateCoreWebView2ControllerCompleted(HRESULT res
 bool CWebView2D3D9Bridge::CreateWebView2()
 {
     // Create WebView2 environment synchronously
-    auto    browserExecutableFolder = CalcMTASAPath(PathJoin("MTA", "webview2"));
-    auto    userDataFolder = CalcMTASAPath(PathJoin("MTA", "webview2", "userdata"));
+    auto browserExecutableFolder = CalcMTASAPath(PathJoin("MTA", "webview2"));
+    auto userDataFolder = CalcMTASAPath(PathJoin("MTA", "webview2", "userdata"));
 
     HRESULT hr = CreateCoreWebView2Environment(
-        Microsoft::WRL::Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(this, &CWebView2D3D9Bridge::OnCreateEnvironmentCompleted).Get()
-    );
-    
+        Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(this, &CWebView2D3D9Bridge::OnCreateEnvironmentCompleted).Get());
+
     if (FAILED(hr))
         return false;
 
@@ -218,102 +217,284 @@ bool CWebView2D3D9Bridge::UpdateTexture()
     CaptureWebView2();
 
     // Copy from D3D11 to D3D9
-    //CopyD3D11ToD3D9();
+    // CopyD3D11ToD3D9();
     return true;
+}
+
+void CWebView2D3D9Bridge::ProcessPNGStream()
+{
+    if (!m_imageDataStream || !m_d3d9Texture)
+    {
+        OutputDebugStringA("CWebView2D3D9Bridge::ProcessPNGStream - Invalid parameters\n");
+        return;
+    }
+
+    // Reset stream position to beginning
+    LARGE_INTEGER zero = {0};
+    if (FAILED(m_imageDataStream->Seek(zero, STREAM_SEEK_SET, nullptr)))
+    {
+        OutputDebugStringA("CWebView2D3D9Bridge::ProcessPNGStream - Failed to seek to beginning\n");
+        return;
+    }
+
+    // Get stream size
+    STATSTG stat;
+    if (FAILED(m_imageDataStream->Stat(&stat, STATFLAG_NONAME)))
+    {
+        OutputDebugStringA("CWebView2D3D9Bridge::ProcessPNGStream - Failed to get stream size\n");
+        return;
+    }
+
+    ULARGE_INTEGER streamSize = stat.cbSize;
+    if (streamSize.QuadPart == 0)
+    {
+        OutputDebugStringA("CWebView2D3D9Bridge::ProcessPNGStream - Stream is empty\n");
+        return;
+    }
+
+    // Read the entire stream into memory
+    std::vector<BYTE> pngData(static_cast<size_t>(streamSize.QuadPart));
+    ULONG             bytesRead;
+    if (FAILED(m_imageDataStream->Read(pngData.data(), static_cast<ULONG>(pngData.size()), &bytesRead)))
+    {
+        OutputDebugStringA("CWebView2D3D9Bridge::ProcessPNGStream - Failed to read stream\n");
+        return;
+    }
+
+    // Check PNG signature
+    if (pngData.size() < 8)
+    {
+        OutputDebugStringA("CWebView2D3D9Bridge::ProcessPNGStream - Data too small for PNG\n");
+        return;
+    }
+
+    // Check PNG signature (first 8 bytes)
+    const BYTE pngSignature[8] = {137, 80, 78, 71, 13, 10, 26, 10};
+    bool       isPNG = true;
+    for (int i = 0; i < 8; i++)
+    {
+        if (pngData[i] != pngSignature[i])
+        {
+            isPNG = false;
+            break;
+        }
+    }
+
+    if (!isPNG)
+    {
+        OutputDebugStringA("CWebView2D3D9Bridge::ProcessPNGStream - Invalid PNG signature\n");
+        return;
+    }
+
+    // Use libpng to decode
+    png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    if (!png_ptr)
+    {
+        OutputDebugStringA("CWebView2D3D9Bridge::ProcessPNGStream - Failed to create PNG read struct\n");
+        return;
+    }
+
+    png_infop info_ptr = png_create_info_struct(png_ptr);
+    if (!info_ptr)
+    {
+        png_destroy_read_struct(&png_ptr, nullptr, nullptr);
+        OutputDebugStringA("CWebView2D3D9Bridge::ProcessPNGStream - Failed to create PNG info struct\n");
+        return;
+    }
+
+    // Set up error handling
+    if (setjmp(png_jmpbuf(png_ptr)))
+    {
+        png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
+        OutputDebugStringA("CWebView2D3D9Bridge::ProcessPNGStream - PNG decode error\n");
+        return;
+    }
+
+    // Create a simple memory reader
+    struct PNGReader
+    {
+        BYTE*  data;
+        size_t size;
+        size_t offset;
+    };
+
+    PNGReader reader = {pngData.data(), pngData.size(), 0};
+
+    // Set up custom read function
+    png_set_read_fn(png_ptr, &reader,
+                    [](png_structp png_ptr, png_bytep data, png_size_t length)
+                    {
+                        PNGReader* reader = (PNGReader*)png_get_io_ptr(png_ptr);
+
+                        if (reader->offset + length > reader->size)
+                        {
+                            png_error(png_ptr, "Read beyond end of data");
+                            return;
+                        }
+
+                        memcpy(data, reader->data + reader->offset, length);
+                        reader->offset += length;
+                    });
+
+    // Read PNG info
+    png_read_info(png_ptr, info_ptr);
+
+    int width = png_get_image_width(png_ptr, info_ptr);
+    int height = png_get_image_height(png_ptr, info_ptr);
+    int color_type = png_get_color_type(png_ptr, info_ptr);
+    int bit_depth = png_get_bit_depth(png_ptr, info_ptr);
+
+    char debugMsg[256];
+    sprintf_s(debugMsg, "PNG: %dx%d, color_type=%d, bit_depth=%d\n", width, height, color_type, bit_depth);
+    OutputDebugStringA(debugMsg);
+
+    // Convert to RGBA if needed
+    if (color_type == PNG_COLOR_TYPE_PALETTE)
+        png_set_palette_to_rgb(png_ptr);
+    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+        png_set_expand_gray_1_2_4_to_8(png_ptr);
+    if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+        png_set_tRNS_to_alpha(png_ptr);
+    if (bit_depth == 16)
+        png_set_strip_16(png_ptr);
+    if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+        png_set_gray_to_rgb(png_ptr);
+
+    // Update info after transformations
+    png_read_update_info(png_ptr, info_ptr);
+
+    // Get the actual row bytes after transformations
+    int rowBytes = png_get_rowbytes(png_ptr, info_ptr);
+    sprintf_s(debugMsg, "Row bytes: %d\n", rowBytes);
+    OutputDebugStringA(debugMsg);
+
+    // Allocate row pointers
+    png_bytep* row_pointers = (png_bytep*)malloc(height * sizeof(png_bytep));
+    if (!row_pointers)
+    {
+        png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
+        OutputDebugStringA("CWebView2D3D9Bridge::ProcessPNGStream - Failed to allocate row pointers\n");
+        return;
+    }
+
+    for (int y = 0; y < height; y++)
+    {
+        row_pointers[y] = (png_bytep)malloc(rowBytes);
+        if (!row_pointers[y])
+        {
+            // Cleanup already allocated rows
+            for (int i = 0; i < y; i++)
+                free(row_pointers[i]);
+            free(row_pointers);
+            png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
+            OutputDebugStringA("CWebView2D3D9Bridge::ProcessPNGStream - Failed to allocate row data\n");
+            return;
+        }
+    }
+
+    // Read the image
+    png_read_image(png_ptr, row_pointers);
+
+    // Copy to D3D9 texture
+    D3DLOCKED_RECT lockedRect;
+    if (SUCCEEDED(m_d3d9Texture->LockRect(0, &lockedRect, nullptr, D3DLOCK_DISCARD)))
+    {
+        BYTE* textureData = static_cast<BYTE*>(lockedRect.pBits);
+
+        // Clear the texture first
+        memset(textureData, 0, m_width * m_height * 4);
+
+        // Copy PNG data to texture with proper bounds checking
+        for (int y = 0; y < height && y < m_height; y++)
+        {
+            for (int x = 0; x < width && x < m_width; x++)
+            {
+                // Calculate texture index with bounds checking
+                int textureIndex = (y * m_width + x) * 4;
+                if (textureIndex + 3 >= m_width * m_height * 4)
+                {
+                    sprintf_s(debugMsg, "Texture bounds exceeded at y=%d, x=%d\n", y, x);
+                    OutputDebugStringA(debugMsg);
+                    break;
+                }
+
+                // Calculate image index with bounds checking
+                int imageIndex = x * 4;            // RGBA format
+                if (imageIndex + 3 >= rowBytes)
+                {
+                    sprintf_s(debugMsg, "Image bounds exceeded at y=%d, x=%d\n", y, x);
+                    OutputDebugStringA(debugMsg);
+                    break;
+                }
+
+                // Copy RGBA data with bounds checking
+                textureData[textureIndex + 0] = row_pointers[y][imageIndex + 0];            // R
+                textureData[textureIndex + 1] = row_pointers[y][imageIndex + 1];            // G
+                textureData[textureIndex + 2] = row_pointers[y][imageIndex + 2];            // B
+                textureData[textureIndex + 3] = row_pointers[y][imageIndex + 3];            // A
+            }
+        }
+
+        m_d3d9Texture->UnlockRect(0);
+        OutputDebugStringA("CWebView2D3D9Bridge::ProcessPNGStream - Successfully processed PNG\n");
+    }
+
+    // Cleanup
+    for (int y = 0; y < height; y++)
+    {
+        free(row_pointers[y]);
+    }
+    free(row_pointers);
+    png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
 }
 
 void CWebView2D3D9Bridge::CaptureWebView2()
 {
-    if (!m_webviewController)
+    if (!m_webview || m_isCapturePending)
         return;
 
-    // Use the window handle we created for WebView2
-    HWND webViewHwnd = m_hwnd;
-
-    if (!webViewHwnd)
+    // Create a new memory stream for each capture
+    if (m_imageDataStream)
     {
-        OutputDebugStringA("CWebView2D3D9Bridge::CaptureWebView2 - No WebView2 window handle\n");
-        return;
+        m_imageDataStream.Reset();
     }
 
-    // Force the window to be visible and updated
-    ShowWindow(webViewHwnd, SW_SHOW);
-    UpdateWindow(webViewHwnd);
+    m_isCapturePending = true;
 
-    // Get window DC
-    HDC windowDC = GetDC(webViewHwnd);
-    if (!windowDC)
+    // Create a memory stream for the PNG data
+    if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &m_imageDataStream)))
     {
-        OutputDebugStringA("CWebView2D3D9Bridge::CaptureWebView2 - Failed to get window DC\n");
+        OutputDebugStringA("CWebView2D3D9Bridge::CaptureWebView2 - Failed to create stream\n");
         return;
     }
 
-    // Create compatible DC and bitmap
-    HDC     memDC = CreateCompatibleDC(windowDC);
-    HBITMAP memBitmap = CreateCompatibleBitmap(windowDC, m_width, m_height);
-    HBITMAP oldBitmap = (HBITMAP)SelectObject(memDC, memBitmap);
+    // Use WebView2's built-in capture method
+    HRESULT hr = m_webview->CapturePreview(COREWEBVIEW2_CAPTURE_PREVIEW_IMAGE_FORMAT_PNG, m_imageDataStream.Get(),
+                                           Callback<ICoreWebView2CapturePreviewCompletedHandler>(
+                                               [this](HRESULT result) -> HRESULT
+                                               {
+                                                   m_isCapturePending = false;
 
-    // Use PrintWindow instead of BitBlt for better WebView2 support
-    BOOL result = PrintWindow(webViewHwnd, memDC, PW_CLIENTONLY);
-    if (!result)
+                                                   if (SUCCEEDED(result))
+                                                   {
+                                                       OutputDebugStringA("CWebView2D3D9Bridge::CaptureWebView2 - Capture succeeded\n");
+                                                       ProcessPNGStream();
+                                                   }
+                                                   else
+                                                   {
+                                                       char errorMsg[256];
+                                                       sprintf_s(errorMsg, "CWebView2D3D9Bridge::CaptureWebView2 - Capture failed: 0x%08X\n", result);
+                                                       OutputDebugStringA(errorMsg);
+                                                   }
+                                                   return S_OK;
+                                               })
+                                               .Get());
+
+    if (FAILED(hr))
     {
-        // Fall back to BitBlt if PrintWindow fails
-        result = BitBlt(memDC, 0, 0, m_width, m_height, windowDC, 0, 0, SRCCOPY);
+        OutputDebugStringA("CWebView2D3D9Bridge::CaptureWebView2 - CapturePreview call failed\n");
+        m_isCapturePending = false;
     }
-
-    if (!result)
-    {
-        OutputDebugStringA("CWebView2D3D9Bridge::CaptureWebView2 - Both PrintWindow and BitBlt failed\n");
-    }
-    else
-    {
-        // Rest of the bitmap processing code...
-        // Get bitmap data
-        BITMAPINFO bmpInfo = {};
-        bmpInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-        bmpInfo.bmiHeader.biWidth = m_width;
-        bmpInfo.bmiHeader.biHeight = -m_height;
-        bmpInfo.bmiHeader.biPlanes = 1;
-        bmpInfo.bmiHeader.biBitCount = 32;
-        bmpInfo.bmiHeader.biCompression = BI_RGB;
-
-        std::vector<BYTE> bitmapData(m_width * m_height * 4);
-
-        if (GetDIBits(windowDC, memBitmap, 0, m_height, bitmapData.data(), &bmpInfo, DIB_RGB_COLORS))
-        {
-            // Copy to D3D9 texture
-            D3DLOCKED_RECT lockedRect;
-            if (SUCCEEDED(m_d3d9Texture->LockRect(0, &lockedRect, nullptr, D3DLOCK_DISCARD)))
-            {
-                BYTE* textureData = static_cast<BYTE*>(lockedRect.pBits);
-                BYTE* bitmapDataPtr = bitmapData.data();
-
-                for (int y = 0; y < m_height; y++)
-                {
-                    for (int x = 0; x < m_width; x++)
-                    {
-                        int textureIndex = (y * m_width + x) * 4;
-                        int bitmapIndex = (y * m_width + x) * 4;
-
-                        // Convert BGRA to RGBA
-                        textureData[textureIndex + 0] = bitmapDataPtr[bitmapIndex + 2];            // R
-                        textureData[textureIndex + 1] = bitmapDataPtr[bitmapIndex + 1];            // G
-                        textureData[textureIndex + 2] = bitmapDataPtr[bitmapIndex + 0];            // B
-                        textureData[textureIndex + 3] = 255;            // A
-                    }
-                }
-
-                m_d3d9Texture->UnlockRect(0);
-                OutputDebugStringA("CWebView2D3D9Bridge::CaptureWebView2 - Successfully captured WebView2\n");
-            }
-        }
-    }
-
-    // Cleanup
-    SelectObject(memDC, oldBitmap);
-    DeleteObject(memBitmap);
-    DeleteDC(memDC);
-    ReleaseDC(webViewHwnd, windowDC);
 }
 
 void CWebView2D3D9Bridge::CopyD3D11ToD3D9()
@@ -368,8 +549,8 @@ void CWebView2D3D9Bridge::SendMouseInput(int x, int y, bool leftButton, bool rig
     if (m_webviewController)
     {
         POINT point = {x, y};
-        //m_webviewController->SendMouseInput(COREWEBVIEW2_MOUSE_EVENT_KIND_LEFT_BUTTON_DOWN,
-        //                                    leftButton ? COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_NONE : COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_NONE, 0, point);
+        // m_webviewController->SendMouseInput(COREWEBVIEW2_MOUSE_EVENT_KIND_LEFT_BUTTON_DOWN,
+        //                                     leftButton ? COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_NONE : COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_NONE, 0, point);
     }
 }
 

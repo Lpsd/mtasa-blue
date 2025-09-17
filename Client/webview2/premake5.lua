@@ -8,7 +8,8 @@ project "WebView2"
 		".",
 		"../../Shared/sdk",
 		"../sdk",
-		"../../vendor/sparsehash/src/windows"
+		"../../vendor/sparsehash/src/windows",
+		"../../vendor/libpng",
 	}
 
 	pchheader "StdInc.h"
@@ -19,7 +20,9 @@ project "WebView2"
 		"dxerr.lib",
 		"d3d11.lib",
 		"dcomp.lib",
-		"dxgi.lib"
+		"dxgi.lib",
+		"libpng",
+		"zlib"
 	}
 
 	vpaths {

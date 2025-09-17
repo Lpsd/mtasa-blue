@@ -34,7 +34,6 @@ void CWebView2::Render()
     m_bridge->UpdateTexture();
     auto texture = m_bridge->GetD3D9Texture();
     m_renderer->Render(texture, 0.0f, 0.0f, 800.0f, 600.0f);
-    //m_renderer->RenderQuad(0.0f, 0.0f, 800.0f, 600.0f);
 }
 
 
