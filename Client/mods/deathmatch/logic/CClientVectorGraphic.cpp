@@ -80,7 +80,7 @@ bool CClientVectorGraphic::RemoveUpdateCallback()
     m_updateCallbackRef = false;
     return true;
 }
-
+really cool test
 void CClientVectorGraphic::OnUpdate()
 {
     m_pVectorGraphicDisplay->UpdateTexture();
