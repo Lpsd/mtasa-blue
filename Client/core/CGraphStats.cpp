@@ -45,6 +45,7 @@ protected:
     bool                              m_bEnabled;
     std::map<SString, SGraphStatLine> m_LineList;
     TIMEUS                            m_StartTime;
+    std::vector<PrimitiveVertice>     m_VertexBuffer;            // Pre-allocated buffer for batched line drawing
 };
 
 ///////////////////////////////////////////////////////////////
@@ -163,15 +164,18 @@ void CGraphStats::AddTimingPoint(const char* szName)
         pLine->prevData = 0;
         pLine->strName = szName;
 
-        // Random color based on line name
+        // Deterministic color based on line name hash
         MD5 md5;
         CMD5Hasher().Calculate(szName, strlen(szName), md5);
         uchar* p = md5.data;
+        // Use hash bytes to deterministically brighten colors if too dark
+        int brightenIndex = 0;
         while (p[0] + p[1] + p[2] < 128)
         {
-            int f = rand() % NUMELMS(md5.data);
-            int t = rand() % 3;
-            p[t] = std::min<unsigned char>(255, p[t] + p[f] + 1);
+            int f = md5.data[brightenIndex % NUMELMS(md5.data)];
+            int t = (brightenIndex / NUMELMS(md5.data)) % 3;
+            p[t] = std::min<unsigned char>(255, p[t] + (f & 0x3F) + 32);
+            brightenIndex++;
         }
         pLine->color = SColorRGBA(p[0], p[1], p[2], 255);
     }
@@ -233,37 +237,72 @@ void CGraphStats::Draw()
     float fLineScale = 1 / 1000.f / rangeY * sizeY;
     float fLineHeight = pGraphics->GetDXFontHeight();
 
-    // Backgroung box
+    // Background box
     pGraphics->DrawRectQueued(originX, originY - sizeY, sizeX, sizeY, SColorRGBA(0, 0, 0, 128), true);
 
-    // Draw data lines
-    float fLabelX = originX + sizeX + 22;
+    // Pre-calculate total vertices needed: (sizeX-1)*2 vertices per line + 2 for connector line
+    std::size_t verticesPerLine = (sizeX - 1) * 2 + 2;
+    std::size_t totalVertices = m_LineList.size() * verticesPerLine;
+
+    // Reuse pre-allocated vertex buffer
+    m_VertexBuffer.clear();
+    m_VertexBuffer.reserve(totalVertices);
+
+    // Build vertex data for all lines
     float fLabelY = originY - m_LineList.size() * fLineHeight;
     for (const auto& dataLine : m_LineList)
     {
         const SGraphStatLine& line = dataLine.second;
         int                   iDataPos = line.iDataPos;
         int                   iDataPosPrev = iDataPos;
+        D3DCOLOR              d3dColor = D3DCOLOR_ARGB(line.color.A, line.color.R, line.color.G, line.color.B);
+        float                 fLabelX = originX + sizeX + 22;
+        float                 fFirstY0 = 0;
 
+        // Add graph line segments as line list (2 vertices per segment)
         for (int i = sizeX - 1; i > 0; i--)
         {
             float fY0 = line.dataHistory[iDataPos] * fLineScale;
             float fY1 = line.dataHistory[iDataPosPrev] * fLineScale;
+
+            // Store first point Y for connector line
+            if (i == sizeX - 1)
+                fFirstY0 = fY0;
 
             iDataPosPrev = iDataPos;
             iDataPos--;
             if (iDataPos == -1)
                 iDataPos = sizeX - 1;
 
-            pGraphics->DrawLineQueued(originX + i - 1, originY - fY0, originX + i, originY - fY1, 1, line.color, true);
-
-            if (i == sizeX - 1)
-            {
-                // Line from graph to label
-                pGraphics->DrawLineQueued(originX + i - 1, originY - fY0, fLabelX - 2, fLabelY + fLineHeight / 2, 1, line.color, true);
-            }
+            // Add line segment vertices
+            PrimitiveVertice v1 = {static_cast<float>(originX + i - 1), static_cast<float>(originY) - fY0, 0.0f, d3dColor};
+            PrimitiveVertice v2 = {static_cast<float>(originX + i), static_cast<float>(originY) - fY1, 0.0f, d3dColor};
+            m_VertexBuffer.push_back(v1);
+            m_VertexBuffer.push_back(v2);
         }
 
+        // Add connector line from graph to label
+        PrimitiveVertice connStart = {static_cast<float>(originX + sizeX - 2), static_cast<float>(originY) - fFirstY0, 0.0f, d3dColor};
+        PrimitiveVertice connEnd = {fLabelX - 2, fLabelY + fLineHeight / 2, 0.0f, d3dColor};
+        m_VertexBuffer.push_back(connStart);
+        m_VertexBuffer.push_back(connEnd);
+
+        fLabelY += fLineHeight;
+    }
+
+    // Draw all lines in a single batched call
+    if (!m_VertexBuffer.empty())
+    {
+        auto* pVecVertices = new std::vector<PrimitiveVertice>(std::move(m_VertexBuffer));
+        pGraphics->DrawPrimitiveQueued(pVecVertices, D3DPT_LINELIST, true);
+    }
+
+    // Draw labels (text rendering is already efficient)
+    float fLabelX = originX + sizeX + 22;
+    fLabelY = originY - m_LineList.size() * fLineHeight;
+    for (const auto& dataLine : m_LineList)
+    {
+        const SGraphStatLine& line = dataLine.second;
         pGraphics->DrawStringQueued(fLabelX, fLabelY, fLabelX, fLabelY, line.color, line.strName.c_str(), 1.0f, 1.0f, DT_NOCLIP, nullptr, true);
         fLabelY += fLineHeight;
     }
