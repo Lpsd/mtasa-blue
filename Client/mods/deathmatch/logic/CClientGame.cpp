@@ -5700,26 +5700,22 @@ bool CClientGame::OnKeyDown(CGUIKeyEventArgs Args)
     return true;
 }
 
-bool CClientGame::OnMouseClick(CGUIMouseEventArgs Args)
+void CClientGame::TriggerGUIClickEvent(CGUIMouseEventArgs Args, const char* szState)
 {
     if (!Args.pWindow)
-        return false;
+        return;
 
     const char* szButton = NULL;
-    const char* szState = NULL;
     switch (Args.button)
     {
         case CGUIMouse::LeftButton:
             szButton = "left";
-            szState = "up";
             break;
         case CGUIMouse::MiddleButton:
             szButton = "middle";
-            szState = "up";
             break;
         case CGUIMouse::RightButton:
             szButton = "right";
-            szState = "up";
             break;
     }
 
@@ -5737,7 +5733,11 @@ bool CClientGame::OnMouseClick(CGUIMouseEventArgs Args)
             pGUIElement->CallEvent("onClientGUIClick", Arguments, true);
         }
     }
+}
 
+bool CClientGame::OnMouseClick(CGUIMouseEventArgs Args)
+{
+    TriggerGUIClickEvent(Args, "up");
     return true;
 }
 
@@ -5803,17 +5803,20 @@ bool CClientGame::OnMouseButtonDown(CGUIMouseEventArgs Args)
 
     if (szButton)
     {
-        CLuaArguments Arguments;
-        Arguments.PushString(szButton);
-        Arguments.PushNumber(Args.position.fX);
-        Arguments.PushNumber(Args.position.fY);
-
         CClientGUIElement* pGUIElement = CGUI_GET_CCLIENTGUIELEMENT(Args.pWindow);
         if (GetGUIManager()->Exists(pGUIElement))
         {
+            // Fire onClientGUIMouseDown for backward compatibility
+            CLuaArguments Arguments;
+            Arguments.PushString(szButton);
+            Arguments.PushNumber(Args.position.fX);
+            Arguments.PushNumber(Args.position.fY);
             pGUIElement->CallEvent("onClientGUIMouseDown", Arguments, true);
         }
     }
+
+    // Fire onClientGUIClick with state="down"
+    TriggerGUIClickEvent(Args, "down");
 
     return true;
 }
