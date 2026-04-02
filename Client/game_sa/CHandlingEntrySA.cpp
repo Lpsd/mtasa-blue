@@ -59,18 +59,24 @@ void CHandlingEntrySA::Recalculate() noexcept
 
 void CHandlingEntrySA::SetSuspensionForceLevel(float fForce) noexcept
 {
+    if (!std::isfinite(fForce)) [[unlikely]]
+        return;
     CheckSuspensionChanges();
     m_Handling.fSuspensionForceLevel = fForce;
 }
 
 void CHandlingEntrySA::SetSuspensionDamping(float fDamping) noexcept
 {
+    if (!std::isfinite(fDamping)) [[unlikely]]
+        return;
     CheckSuspensionChanges();
     m_Handling.fSuspensionDamping = fDamping;
 }
 
 void CHandlingEntrySA::SetSuspensionHighSpeedDamping(float fDamping) noexcept
 {
+    if (!std::isfinite(fDamping)) [[unlikely]]
+        return;
     CheckSuspensionChanges();
     m_Handling.fSuspensionHighSpdDamping = fDamping;
 }
