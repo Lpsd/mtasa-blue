@@ -747,7 +747,7 @@ bool CModelInfoSA::IsValid()
 {
     if (m_dwModelID >= MODELINFO_DFF_MAX && m_dwModelID < MODELINFO_TXD_MAX)
         return !pGame->GetPools()->GetTxdPool().IsFreeTextureDictonarySlot(m_dwModelID - MODELINFO_DFF_MAX);
-        
+
     if (m_dwModelID >= pGame->GetBaseIDforTXD() && m_dwModelID < pGame->GetCountOfAllFileIDs())
         return true;
 
@@ -1788,7 +1788,7 @@ void CModelInfoSA::MakeTimedObjectModel(ushort usBaseID)
     m_pInterface->pRwObject = nullptr;
     m_pInterface->usUnknown = 65535;
     m_pInterface->usDynamicIndex = 65535;
-    m_pInterface->timeInfo.m_wOtherTimeModel = 0;
+    m_pInterface->timeInfo.m_wOtherTimeModel = -1;
 
     ppModelInfo[m_dwModelID] = m_pInterface;
 
