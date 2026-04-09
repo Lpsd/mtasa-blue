@@ -28,7 +28,7 @@ jobs:
 
       - name: Build Tests_Client
         shell: cmd
-        run: msbuild Build\Tests_Client.vcxproj /p:Configuration=Debug /p:Platform=Win32 /nologo /v:minimal
+        run: msbuild Build\Tests_Client.vcxproj /p:Configuration=Debug /p:Platform=Win32 /p:PlatformToolset=v143 /nologo /v:minimal
 
       - name: Run tests
         run: Bin\tests\Tests_Client_d.exe --gtest_output=xml:Bin\tests\test_results.xml
