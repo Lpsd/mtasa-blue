@@ -19,6 +19,7 @@ static constexpr float kEpsilon = 0.001f;
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify default constructor produces the identity matrix (diagonal 1s, rest 0s)
 TEST(CMatrix, DefaultConstructorIsIdentity)
 {
     CMatrix m;
@@ -36,6 +37,7 @@ TEST(CMatrix, DefaultConstructorIsIdentity)
     EXPECT_FLOAT_EQ(m.vPos.fZ, 0.0f);
 }
 
+// Verify position-only constructor sets vPos and leaves rotation as identity
 TEST(CMatrix, ConstructWithPosition)
 {
     CVector pos(10.0f, 20.0f, 30.0f);
@@ -49,6 +51,7 @@ TEST(CMatrix, ConstructWithPosition)
     EXPECT_FLOAT_EQ(m.vUp.fZ, 1.0f);
 }
 
+// Verify position+rotation constructor applies zero rotation without breaking identity
 TEST(CMatrix, ConstructWithPositionAndRotation)
 {
     CVector pos(5.0f, 0.0f, 0.0f);
@@ -61,6 +64,7 @@ TEST(CMatrix, ConstructWithPositionAndRotation)
     EXPECT_FLOAT_EQ(m.vPos.fX, 5.0f);
 }
 
+// Verify position+rotation+scale constructor sets the correct scale on each axis
 TEST(CMatrix, ConstructWithPositionRotationScale)
 {
     CVector pos(0.0f, 0.0f, 0.0f);
@@ -79,6 +83,7 @@ TEST(CMatrix, ConstructWithPositionRotationScale)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify operator+ adds all four row vectors component-wise
 TEST(CMatrix, Addition)
 {
     CMatrix a(CVector(1.0f, 2.0f, 3.0f));
@@ -91,6 +96,7 @@ TEST(CMatrix, Addition)
     EXPECT_FLOAT_EQ(c.vRight.fX, 2.0f);
 }
 
+// Verify operator- subtracts all four row vectors component-wise
 TEST(CMatrix, Subtraction)
 {
     CMatrix a(CVector(10.0f, 20.0f, 30.0f));
@@ -101,6 +107,7 @@ TEST(CMatrix, Subtraction)
     EXPECT_FLOAT_EQ(c.vPos.fZ, 23.0f);
 }
 
+// Verify multiplying a matrix by identity preserves position and rotation
 TEST(CMatrix, MultiplyIdentity)
 {
     // Multiplying by identity should return the original matrix
@@ -115,6 +122,7 @@ TEST(CMatrix, MultiplyIdentity)
     EXPECT_NEAR(c.vUp.fZ, 1.0f, kEpsilon);
 }
 
+// Verify matrix*vector applies rotation only (no translation) as per operator* semantics
 TEST(CMatrix, MultiplyVector)
 {
     // Identity * vector = same direction (no translation applied)
@@ -126,6 +134,7 @@ TEST(CMatrix, MultiplyVector)
     EXPECT_NEAR(result.fZ, 3.0f, kEpsilon);
 }
 
+// Verify operator/ by identity preserves the original matrix (uses Invert, not Inverse)
 TEST(CMatrix, DivideByIdentityPreservesMatrix)
 {
     // operator/ uses Invert() (transpose + negate position), which is only
@@ -150,6 +159,7 @@ TEST(CMatrix, DivideByIdentityPreservesMatrix)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify Inverse() of identity is still identity
 TEST(CMatrix, InverseOfIdentityIsIdentity)
 {
     CMatrix identity;
@@ -162,6 +172,7 @@ TEST(CMatrix, InverseOfIdentityIsIdentity)
     EXPECT_NEAR(inv.vPos.fZ, 0.0f, kEpsilon);
 }
 
+// Verify M * M^-1 produces the identity matrix (inverse roundtrip)
 TEST(CMatrix, InverseRoundtrip)
 {
     // M * M^-1 should produce identity
@@ -190,6 +201,7 @@ TEST(CMatrix, InverseRoundtrip)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify SetRotation then GetRotation returns the same Euler angles
 TEST(CMatrix, SetRotationGetRotationRoundtrip)
 {
     // A key property: SetRotation followed by GetRotation should return the same angles
@@ -202,6 +214,7 @@ TEST(CMatrix, SetRotationGetRotationRoundtrip)
     EXPECT_NEAR(result.fZ, rot.fZ, kEpsilon);
 }
 
+// Verify SetRotation does not alter the matrix scale
 TEST(CMatrix, SetRotationPreservesScale)
 {
     CVector scale(2.0f, 3.0f, 4.0f);
@@ -214,6 +227,7 @@ TEST(CMatrix, SetRotationPreservesScale)
     EXPECT_NEAR(scaleBeforeRot.fZ, scaleAfterRot.fZ, kEpsilon);
 }
 
+// Verify SetRotation(0,0,0) restores the identity rotation part
 TEST(CMatrix, ZeroRotationProducesIdentityRotation)
 {
     CMatrix m;
@@ -229,6 +243,7 @@ TEST(CMatrix, ZeroRotationProducesIdentityRotation)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify SetPosition/GetPosition roundtrip stores and retrieves the position
 TEST(CMatrix, SetPositionGetPosition)
 {
     CMatrix m;
@@ -246,6 +261,7 @@ TEST(CMatrix, SetPositionGetPosition)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify default identity matrix has unit scale on all axes
 TEST(CMatrix, DefaultScaleIsOne)
 {
     CMatrix m;
@@ -255,6 +271,7 @@ TEST(CMatrix, DefaultScaleIsOne)
     EXPECT_NEAR(s.fZ, 1.0f, kEpsilon);
 }
 
+// Verify SetScale/GetScale roundtrip stores and retrieves the scale
 TEST(CMatrix, SetScaleGetScale)
 {
     CMatrix m;
@@ -265,6 +282,7 @@ TEST(CMatrix, SetScaleGetScale)
     EXPECT_NEAR(s.fZ, 7.0f, kEpsilon);
 }
 
+// Verify SetScale does not alter the rotation angles
 TEST(CMatrix, SetScalePreservesRotation)
 {
     CVector rot(0.3f, 0.5f, 0.7f);
@@ -283,6 +301,7 @@ TEST(CMatrix, SetScalePreservesRotation)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify TransformVector applies both rotation and translation to the input vector
 TEST(CMatrix, TransformVectorIncludesPosition)
 {
     CMatrix m(CVector(10.0f, 20.0f, 30.0f));
@@ -294,6 +313,7 @@ TEST(CMatrix, TransformVectorIncludesPosition)
     EXPECT_NEAR(result.fZ, 30.0f, kEpsilon);
 }
 
+// Verify TransformVectorByRotation applies rotation but ignores translation
 TEST(CMatrix, TransformVectorByRotationExcludesPosition)
 {
     CMatrix m(CVector(10.0f, 20.0f, 30.0f));
@@ -305,6 +325,7 @@ TEST(CMatrix, TransformVectorByRotationExcludesPosition)
     EXPECT_NEAR(result.fZ, 0.0f, kEpsilon);
 }
 
+// Verify TransformVectorByRotation correctly rotates (1,0,0) by 90 degrees around Z
 TEST(CMatrix, TransformVectorByRotationAppliesRotation)
 {
     // Rotate 90 degrees around Z axis
@@ -324,6 +345,7 @@ TEST(CMatrix, TransformVectorByRotationAppliesRotation)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify OrthoNormalize produces unit-length axes from scaled-up axes
 TEST(CMatrix, OrthoNormalizeProducesUnitAxes)
 {
     CMatrix m;
@@ -337,6 +359,7 @@ TEST(CMatrix, OrthoNormalizeProducesUnitAxes)
     EXPECT_NEAR(m.vUp.Length(), 1.0f, kEpsilon);
 }
 
+// Verify OrthoNormalize keeps the primary axis direction unchanged
 TEST(CMatrix, OrthoNormalizePreservesPrimaryAxisDirection)
 {
     CMatrix m;
@@ -355,6 +378,7 @@ TEST(CMatrix, OrthoNormalizePreservesPrimaryAxisDirection)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify Clone() produces an independent copy with identical values
 TEST(CMatrix, CloneProducesCopy)
 {
     CMatrix m(CVector(1.0f, 2.0f, 3.0f), CVector(0.5f, 0.5f, 0.5f));
@@ -367,6 +391,7 @@ TEST(CMatrix, CloneProducesCopy)
     EXPECT_FLOAT_EQ(m.vUp.fZ, c.vUp.fZ);
 }
 
+// Verify Invert() transposes the 3x3 rotation and negates position
 TEST(CMatrix, InvertTransposesRotationAndNegatesPosition)
 {
     CMatrix m;
@@ -381,6 +406,7 @@ TEST(CMatrix, InvertTransposesRotationAndNegatesPosition)
     EXPECT_FLOAT_EQ(m.vUp.fZ, 1.0f);
 }
 
+// Verify GetBuffer() writes position to elements [12..14] and 1.0 to [15]
 TEST(CMatrix, GetBufferLayout)
 {
     CMatrix m(CVector(10.0f, 20.0f, 30.0f));
@@ -393,6 +419,7 @@ TEST(CMatrix, GetBufferLayout)
     EXPECT_FLOAT_EQ(buf[15], 1.0f);
 }
 
+// Verify To4x4Array() places position in row 3 with w=1.0
 TEST(CMatrix, To4x4ArrayLayout)
 {
     CMatrix m(CVector(10.0f, 20.0f, 30.0f));
@@ -404,6 +431,7 @@ TEST(CMatrix, To4x4ArrayLayout)
     EXPECT_FLOAT_EQ(arr[3][3], 1.0f);
 }
 
+// Verify GetAxis() returns the correct axis vector by enum index
 TEST(CMatrix, GetAxis)
 {
     CMatrix m;
@@ -412,6 +440,7 @@ TEST(CMatrix, GetAxis)
     EXPECT_FLOAT_EQ(m.GetAxis(CMatrix::AXIS_UP).fZ, 1.0f);
 }
 
+// Verify GetRotationMatrix() strips scale to unit and zeros out position
 TEST(CMatrix, GetRotationMatrix)
 {
     CVector scale(2.0f, 3.0f, 4.0f);

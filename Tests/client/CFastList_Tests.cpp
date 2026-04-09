@@ -29,6 +29,7 @@ struct Dummy
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify a newly constructed list is empty with size 0
 TEST(CFastList, EmptyOnConstruction)
 {
     CFastList<Dummy*> list;
@@ -36,6 +37,7 @@ TEST(CFastList, EmptyOnConstruction)
     EXPECT_EQ(list.size(), 0u);
 }
 
+// Verify push_back appends elements and increments size
 TEST(CFastList, PushBack)
 {
     Dummy             a{1}, b{2}, c{3};
@@ -47,6 +49,7 @@ TEST(CFastList, PushBack)
     EXPECT_FALSE(list.empty());
 }
 
+// Verify push_front inserts at the beginning of the list
 TEST(CFastList, PushFront)
 {
     Dummy             a{1}, b{2};
@@ -57,6 +60,7 @@ TEST(CFastList, PushFront)
     EXPECT_EQ(list.front(), &b);
 }
 
+// Verify front() returns the first element and its value
 TEST(CFastList, Front)
 {
     Dummy             a{10};
@@ -66,6 +70,7 @@ TEST(CFastList, Front)
     EXPECT_EQ(list.front()->value, 10);
 }
 
+// Verify pop_front removes the first element and shifts front
 TEST(CFastList, PopFront)
 {
     Dummy             a{1}, b{2};
@@ -77,6 +82,7 @@ TEST(CFastList, PopFront)
     EXPECT_EQ(list.front(), &b);
 }
 
+// Verify contains() detects present elements and rejects absent ones
 TEST(CFastList, Contains)
 {
     Dummy             a{1}, b{2}, c{3};
@@ -88,6 +94,7 @@ TEST(CFastList, Contains)
     EXPECT_FALSE(list.contains(&c));
 }
 
+// Verify remove() deletes a specific element while keeping others
 TEST(CFastList, Remove)
 {
     Dummy             a{1}, b{2}, c{3};
@@ -102,6 +109,7 @@ TEST(CFastList, Remove)
     EXPECT_TRUE(list.contains(&c));
 }
 
+// Verify clear() empties the list and invalidates containment
 TEST(CFastList, Clear)
 {
     Dummy             a{1}, b{2};
@@ -120,6 +128,7 @@ TEST(CFastList, Clear)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify forward iteration follows push_back insertion order
 TEST(CFastList, IterationOrderPushBack)
 {
     Dummy             a{1}, b{2}, c{3};
@@ -138,6 +147,7 @@ TEST(CFastList, IterationOrderPushBack)
     EXPECT_EQ(result[2], &c);
 }
 
+// Verify mixed push_front/push_back produces expected iteration order
 TEST(CFastList, IterationOrderPushFrontThenBack)
 {
     Dummy             a{1}, b{2}, c{3};
@@ -156,6 +166,7 @@ TEST(CFastList, IterationOrderPushFrontThenBack)
     EXPECT_EQ(result[2], &c);
 }
 
+// Verify reverse iteration visits elements in back-to-front order
 TEST(CFastList, ReverseIteration)
 {
     Dummy             a{1}, b{2}, c{3};
@@ -180,6 +191,7 @@ TEST(CFastList, ReverseIteration)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify erase via iterator removes the element and returns the next iterator
 TEST(CFastList, IteratorErase)
 {
     Dummy             a{1}, b{2}, c{3};
@@ -204,6 +216,7 @@ TEST(CFastList, IteratorErase)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify push_back during suspended operations is deferred until resume
 TEST(CFastList, SuspendedPushBackIsDeferred)
 {
     Dummy             a{1}, b{2};
@@ -220,6 +233,7 @@ TEST(CFastList, SuspendedPushBackIsDeferred)
     EXPECT_EQ(list.size(), 2u);
 }
 
+// Verify remove during suspended operations is deferred until resume
 TEST(CFastList, SuspendedRemoveIsDeferred)
 {
     Dummy             a{1}, b{2};
@@ -241,6 +255,7 @@ TEST(CFastList, SuspendedRemoveIsDeferred)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify the revision counter increments on each push_back and remove
 TEST(CFastList, RevisionIncrementsOnModify)
 {
     Dummy             a{1};
@@ -260,6 +275,7 @@ TEST(CFastList, RevisionIncrementsOnModify)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify the ListContains free function works like the member contains()
 TEST(CFastList, ListContainsFreeFunction)
 {
     Dummy             a{1}, b{2};
@@ -269,6 +285,7 @@ TEST(CFastList, ListContainsFreeFunction)
     EXPECT_FALSE(ListContains(list, &b));
 }
 
+// Verify the ListRemove free function works like the member remove()
 TEST(CFastList, ListRemoveFreeFunction)
 {
     Dummy             a{1}, b{2};

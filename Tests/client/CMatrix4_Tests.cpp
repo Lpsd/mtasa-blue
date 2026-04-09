@@ -20,6 +20,7 @@ static constexpr float kPi = 3.14159265f;
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify default constructor produces an identity matrix (1s on diagonal, 0s elsewhere)
 TEST(CMatrix4, DefaultConstructorIsIdentity)
 {
     CMatrix4 m;
@@ -33,6 +34,7 @@ TEST(CMatrix4, DefaultConstructorIsIdentity)
     EXPECT_FLOAT_EQ(m[12], 0.0f);
 }
 
+// Verify Identity() resets a modified matrix back to the identity matrix
 TEST(CMatrix4, IdentityResetsMatrix)
 {
     CMatrix4 m;
@@ -48,6 +50,7 @@ TEST(CMatrix4, IdentityResetsMatrix)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify 90-degree X rotation maps (0,1,0) to (0,0,1)
 TEST(CMatrix4, RotXHalfPi)
 {
     CMatrix4 m;
@@ -60,6 +63,7 @@ TEST(CMatrix4, RotXHalfPi)
     EXPECT_NEAR(result.fZ, 1.0f, kEpsilon);
 }
 
+// Verify 90-degree Y rotation maps (0,0,1) to (1,0,0)
 TEST(CMatrix4, RotYHalfPi)
 {
     CMatrix4 m;
@@ -72,6 +76,7 @@ TEST(CMatrix4, RotYHalfPi)
     EXPECT_NEAR(result.fZ, 0.0f, kEpsilon);
 }
 
+// Verify 90-degree Z rotation maps (1,0,0) to (0,1,0)
 TEST(CMatrix4, RotZHalfPi)
 {
     CMatrix4 m;
@@ -90,6 +95,7 @@ TEST(CMatrix4, RotZHalfPi)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify Translate() transforms the origin to the given offset
 TEST(CMatrix4, TranslateAddsOffset)
 {
     CMatrix4 m;
@@ -103,6 +109,7 @@ TEST(CMatrix4, TranslateAddsOffset)
     EXPECT_NEAR(result.fZ, 30.0f, kEpsilon);
 }
 
+// Verify two successive Translate() calls accumulate the offsets
 TEST(CMatrix4, TranslateAccumulates)
 {
     CMatrix4 m;
@@ -122,6 +129,7 @@ TEST(CMatrix4, TranslateAccumulates)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify identity matrix leaves a vector unchanged after Multiply
 TEST(CMatrix4, MultiplyIdentityPreservesVector)
 {
     CMatrix4 m;
@@ -138,6 +146,7 @@ TEST(CMatrix4, MultiplyIdentityPreservesVector)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify multiplying two identity matrices yields identity
 TEST(CMatrix4, MultiplyTwoIdentitiesIsIdentity)
 {
     CMatrix4 a;
@@ -150,6 +159,7 @@ TEST(CMatrix4, MultiplyTwoIdentitiesIsIdentity)
     EXPECT_FLOAT_EQ(c[1], 0.0f);
 }
 
+// Verify operator* correctly chains a rotation then a translation
 TEST(CMatrix4, MultiplyRotXThenTranslate)
 {
     // Rotate 90 degrees around X, then translate by (0, 0, 5).
@@ -172,6 +182,7 @@ TEST(CMatrix4, MultiplyRotXThenTranslate)
     EXPECT_NEAR(result.fZ, 6.0f, kEpsilon);
 }
 
+// Verify subscript operator allows reading and writing individual elements
 TEST(CMatrix4, SubscriptOperator)
 {
     CMatrix4 m;

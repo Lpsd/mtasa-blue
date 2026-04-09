@@ -17,6 +17,7 @@
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify a single unique line passes through immediately
 TEST(CDuplicateLineFilter, UniqueLinePassesThrough)
 {
     CDuplicateLineFilter<SString> filter;
@@ -26,6 +27,7 @@ TEST(CDuplicateLineFilter, UniqueLinePassesThrough)
     EXPECT_STREQ(output.c_str(), "hello");
 }
 
+// Verify multiple distinct lines all pass through in order
 TEST(CDuplicateLineFilter, MultipleUniqueLinesPassThrough)
 {
     CDuplicateLineFilter<SString> filter;
@@ -49,6 +51,7 @@ TEST(CDuplicateLineFilter, MultipleUniqueLinesPassThrough)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify consecutive duplicates are absorbed until a different line breaks the sequence
 TEST(CDuplicateLineFilter, SingleLineDuplicateDetected)
 {
     CDuplicateLineFilter<SString> filter;
@@ -79,6 +82,7 @@ TEST(CDuplicateLineFilter, SingleLineDuplicateDetected)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify Flush() releases held duplicate lines without requiring a different line
 TEST(CDuplicateLineFilter, FlushReleasesHeldLines)
 {
     CDuplicateLineFilter<SString> filter;
@@ -105,6 +109,7 @@ TEST(CDuplicateLineFilter, FlushReleasesHeldLines)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify multi-line repeating patterns are detected and collapsed
 TEST(CDuplicateLineFilter, MultiLinePatternDetection)
 {
     CDuplicateLineFilter<SString> filter(4);
@@ -141,6 +146,7 @@ TEST(CDuplicateLineFilter, MultiLinePatternDetection)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify an empty filter produces no output even after Flush()
 TEST(CDuplicateLineFilter, EmptyOutputWhenNothingAdded)
 {
     CDuplicateLineFilter<SString> filter;

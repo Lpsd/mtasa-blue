@@ -23,12 +23,14 @@ using namespace SharedUtil;
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify SString printf-style construction with mixed format specifiers
 TEST(SString, vFormat)
 {
     EXPECT_EQ(SString("XX%sAA%dBB", "la", 0), "XXlaAA0BB");
     EXPECT_EQ(SString("XX%sAA%dBB", "laQWE", 2000), "XXlaQWEAA2000BB");
 }
 
+// Verify Split() separates a string at the Nth delimiter occurrence
 TEST(SString, Split)
 {
     struct TestData
@@ -56,6 +58,7 @@ TEST(SString, Split)
     }
 }
 
+// Verify Split() with a vector output produces all delimited parts
 TEST(SString, SplitMultiple)
 {
     struct TestData
@@ -84,6 +87,7 @@ TEST(SString, SplitMultiple)
     }
 }
 
+// Verify case-sensitive Replace() with various needle/replacement patterns
 TEST(SString, Replace)
 {
     struct TestData
@@ -111,6 +115,7 @@ TEST(SString, Replace)
     }
 }
 
+// Verify Replace() bSearchJustReplaced flag controls re-scanning of replaced text
 TEST(SString, ReplaceSearchJustReplaced)
 {
     SString source = "blah////blah";
@@ -120,6 +125,7 @@ TEST(SString, ReplaceSearchJustReplaced)
     EXPECT_EQ(source.Replace("//", "/", true), "blah/blah");
 }
 
+// Verify case-insensitive ReplaceI() matches regardless of letter casing
 TEST(SString, ReplaceI)
 {
     struct TestData
@@ -145,6 +151,7 @@ TEST(SString, ReplaceI)
     }
 }
 
+// Verify SString::Join() reassembles split parts with a delimiter and offset/count
 TEST(SString, Join)
 {
     struct TestData
@@ -198,6 +205,7 @@ TEST(SString, Join)
 
 #ifdef WIN32
 
+// Verify PathJoin normalizes slashes and joins two path segments
 TEST(SharedUtilFile, PathJoin2Parts)
 {
     struct TestData
@@ -219,6 +227,7 @@ TEST(SharedUtilFile, PathJoin2Parts)
     }
 }
 
+// Verify PathJoin normalizes and joins three path segments
 TEST(SharedUtilFile, PathJoin3Parts)
 {
     struct TestData
@@ -241,6 +250,7 @@ TEST(SharedUtilFile, PathJoin3Parts)
     }
 }
 
+// Verify PathJoin preserves UNC, file://, and drive-letter prefixes
 TEST(SharedUtilFile, PathJoinUNC)
 {
     struct TestData
@@ -278,6 +288,7 @@ TEST(SharedUtilFile, PathJoinUNC)
 
 #ifdef WIN32
 
+// Verify MTA's custom DynamicCast works correctly across a class hierarchy
 TEST(SharedUtilClassIdent, DynamicCast)
 {
     enum eTestClassTypes
@@ -408,6 +419,7 @@ TEST(SharedUtilClassIdent, DynamicCast)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify WildcardMatch handles *, ?, and various edge cases
 TEST(SharedUtilWildcard, WildcardMatch)
 {
     struct TestData
@@ -473,6 +485,7 @@ TEST(SharedUtilWildcard, WildcardMatch)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify post-increment erase idiom works correctly with std::map iterators
 TEST(SharedUtilCollection, MapEraseIterator)
 {
     std::map<uint, SString> testMap;
@@ -492,6 +505,7 @@ TEST(SharedUtilCollection, MapEraseIterator)
     EXPECT_EQ(iter, testMap.end());
 }
 
+// Verify post-increment erase idiom works correctly with std::set iterators
 TEST(SharedUtilCollection, SetEraseIterator)
 {
     std::set<uint> testSet;
@@ -511,6 +525,7 @@ TEST(SharedUtilCollection, SetEraseIterator)
     EXPECT_EQ(iter, testSet.end());
 }
 
+// Verify erase returns the next valid iterator for std::list
 TEST(SharedUtilCollection, ListEraseIterator)
 {
     std::list<uint> testList;
@@ -530,6 +545,7 @@ TEST(SharedUtilCollection, ListEraseIterator)
     EXPECT_EQ(iter, testList.end());
 }
 
+// Verify erase returns the next valid iterator for std::vector
 TEST(SharedUtilCollection, VectorEraseIterator)
 {
     std::vector<uint> testList;
@@ -555,6 +571,7 @@ TEST(SharedUtilCollection, VectorEraseIterator)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify PRSinS/PRWinS/PRSinW/PRWinW cross-string-type format specifiers
 TEST(SharedUtilString, SStringFormatting)
 {
     SString strTemp1("name:" PRSinS, "dave");
@@ -568,6 +585,7 @@ TEST(SharedUtilString, SStringFormatting)
     EXPECT_TRUE(wstrTemp4 == L"name:dave");
 }
 
+// Verify WString::ToAnsi() round-trips ASCII text correctly
 TEST(SharedUtilString, WStringToAnsi)
 {
     SString strTemp1 = "abcABC 123";
@@ -583,6 +601,7 @@ TEST(SharedUtilString, WStringToAnsi)
     EXPECT_EQ(strTemp3, "ghiGHI 789");
 }
 
+// Verify EscapeURLArgument percent-encodes reserved chars and UnescapeString reverses it
 TEST(SharedUtilString, EscapeURLArgument)
 {
     struct TestData
@@ -609,6 +628,7 @@ TEST(SharedUtilString, EscapeURLArgument)
     }
 }
 
+// Verify RemoveColorCodes strips valid #RRGGBB color codes from narrow strings
 TEST(SharedUtilString, RemoveColorCodes)
 {
     struct TestData
@@ -636,6 +656,7 @@ TEST(SharedUtilString, RemoveColorCodes)
     }
 }
 
+// Verify RemoveColorCodesInPlaceW strips color codes from wide strings in-place
 TEST(SharedUtilString, RemoveColorCodesInPlaceW)
 {
     struct TestData

@@ -17,6 +17,7 @@
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify default constructor uses large sentinel values for StretchToPoint compatibility
 TEST(CRect, DefaultConstructorHasSentinelValues)
 {
     // CRect uses large sentinel values so StretchToPoint can shrink them
@@ -27,6 +28,7 @@ TEST(CRect, DefaultConstructorHasSentinelValues)
     EXPECT_FLOAT_EQ(r.bottom, -1000000.0f);
 }
 
+// Verify four-argument constructor assigns left, top, right, bottom
 TEST(CRect, ExplicitConstructor)
 {
     CRect r(10.0f, 20.0f, 30.0f, 40.0f);
@@ -42,6 +44,7 @@ TEST(CRect, ExplicitConstructor)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify first StretchToPoint collapses sentinel to a zero-size rect at the point
 TEST(CRect, StretchToPointFromDefault)
 {
     // First point sets both left/right and top/bottom
@@ -53,6 +56,7 @@ TEST(CRect, StretchToPointFromDefault)
     EXPECT_FLOAT_EQ(r.bottom, 10.0f);
 }
 
+// Verify second StretchToPoint expands to encompass both points
 TEST(CRect, StretchToPointExpandsBounds)
 {
     CRect r;
@@ -64,6 +68,7 @@ TEST(CRect, StretchToPointExpandsBounds)
     EXPECT_FLOAT_EQ(r.bottom, 20.0f);
 }
 
+// Verify StretchToPoint handles negative coordinates correctly
 TEST(CRect, StretchToPointNegativeCoords)
 {
     CRect r;
@@ -81,6 +86,7 @@ TEST(CRect, StretchToPointNegativeCoords)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify Restrict() widens the rect to fully contain a larger rect
 TEST(CRect, RestrictExpandsToContainOther)
 {
     CRect a(5.0f, 5.0f, 15.0f, 15.0f);
@@ -92,6 +98,7 @@ TEST(CRect, RestrictExpandsToContainOther)
     EXPECT_FLOAT_EQ(a.bottom, 20.0f);
 }
 
+// Verify Restrict() is a no-op when the rect already contains the other
 TEST(CRect, RestrictDoesNotShrink)
 {
     CRect a(0.0f, 0.0f, 20.0f, 20.0f);
@@ -110,6 +117,7 @@ TEST(CRect, RestrictDoesNotShrink)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify IsCircleInside returns true for a circle fully within the rect
 TEST(CRect, IsCircleInsideCentered)
 {
     CRect     r(0.0f, 0.0f, 10.0f, 10.0f);
@@ -117,6 +125,7 @@ TEST(CRect, IsCircleInsideCentered)
     EXPECT_TRUE(r.IsCircleInside(&center, 1.0f));
 }
 
+// Verify IsCircleInside returns true when the circle overlaps the rect edge
 TEST(CRect, IsCircleInsidePartiallyOverlapping)
 {
     CRect     r(0.0f, 0.0f, 10.0f, 10.0f);
@@ -125,6 +134,7 @@ TEST(CRect, IsCircleInsidePartiallyOverlapping)
     EXPECT_TRUE(r.IsCircleInside(&center, 2.0f));
 }
 
+// Verify IsCircleInside returns false for a circle entirely outside the rect
 TEST(CRect, IsCircleInsideCompletelyOutside)
 {
     CRect     r(0.0f, 0.0f, 10.0f, 10.0f);
@@ -138,6 +148,7 @@ TEST(CRect, IsCircleInsideCompletelyOutside)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify Reset() zeroes all four fields
 TEST(CRect, ResetZeroesAllFields)
 {
     CRect r(10.0f, 20.0f, 30.0f, 40.0f);
@@ -154,6 +165,7 @@ TEST(CRect, ResetZeroesAllFields)
 //
 ///////////////////////////////////////////////////////////////
 
+// Verify FixIncorrectTopLeft swaps left/right and top/bottom when inverted
 TEST(CRect, FixIncorrectTopLeftCorrectsBadValues)
 {
     // Simulate corrupted bounding box where left > right
@@ -169,6 +181,7 @@ TEST(CRect, FixIncorrectTopLeftCorrectsBadValues)
     EXPECT_FLOAT_EQ(r.top, 4.0f);   // bottom - 1.0
 }
 
+// Verify FixIncorrectTopLeft is a no-op when the rect is already correct
 TEST(CRect, FixIncorrectTopLeftNoOpWhenCorrect)
 {
     CRect r(0.0f, 0.0f, 10.0f, 10.0f);
