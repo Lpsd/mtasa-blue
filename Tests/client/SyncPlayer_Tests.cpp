@@ -79,8 +79,9 @@ TEST(SCameraRotationSync, RoundTrip)
     EXPECT_NEAR(-2.0f, out.data.fRotation, 0.01f);
 }
 
-// Keysync bundles both ped and camera rotation (16 + 12 = 28... but
-// actually uses 12-bit for both = 24 bits).
+// SKeysyncRotation bundles player and camera rotation together.
+// Both use 12-bit FloatAsBits (not the 16-bit SPedRotationSync),
+// so the total is 24 bits.
 TEST(SKeysyncRotation, RoundTrip)
 {
     MockBitStream    bs;
