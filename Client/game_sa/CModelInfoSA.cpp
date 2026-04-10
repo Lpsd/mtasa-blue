@@ -110,6 +110,7 @@ bool CModelInfoSA::IsBoat()
     DWORD dwFunction = FUNC_IsBoatModel;
     DWORD ModelID = m_dwModelID;
     bool  bReturn = false;
+    // clang-format off
     __asm
     {
         push    ModelID
@@ -117,6 +118,7 @@ bool CModelInfoSA::IsBoat()
         mov     bReturn, al
         add     esp, 4
     }
+    // clang-format on
     return bReturn;
 }
 
@@ -125,6 +127,7 @@ bool CModelInfoSA::IsCar()
     DWORD dwFunction = FUNC_IsCarModel;
     DWORD ModelID = m_dwModelID;
     bool  bReturn = false;
+    // clang-format off
     __asm
     {
         push    ModelID
@@ -132,6 +135,7 @@ bool CModelInfoSA::IsCar()
         mov     bReturn, al
         add     esp, 4
     }
+    // clang-format on
     return bReturn;
 }
 
@@ -140,6 +144,7 @@ bool CModelInfoSA::IsTrain()
     DWORD dwFunction = FUNC_IsTrainModel;
     DWORD ModelID = m_dwModelID;
     bool  bReturn = false;
+    // clang-format off
     __asm
     {
         push    ModelID
@@ -147,6 +152,7 @@ bool CModelInfoSA::IsTrain()
         mov     bReturn, al
         add     esp, 4
     }
+    // clang-format on
     return bReturn;
 }
 
@@ -155,6 +161,7 @@ bool CModelInfoSA::IsHeli()
     DWORD dwFunction = FUNC_IsHeliModel;
     DWORD ModelID = m_dwModelID;
     bool  bReturn = false;
+    // clang-format off
     __asm
     {
         push    ModelID
@@ -162,6 +169,7 @@ bool CModelInfoSA::IsHeli()
         mov     bReturn, al
         add     esp, 4
     }
+    // clang-format on
     return bReturn;
 }
 
@@ -170,6 +178,7 @@ bool CModelInfoSA::IsPlane()
     DWORD dwFunction = FUNC_IsPlaneModel;
     DWORD ModelID = m_dwModelID;
     bool  bReturn = false;
+    // clang-format off
     __asm
     {
         push    ModelID
@@ -177,6 +186,7 @@ bool CModelInfoSA::IsPlane()
         mov     bReturn, al
         add     esp, 4
     }
+    // clang-format on
     return bReturn;
 }
 
@@ -185,6 +195,7 @@ bool CModelInfoSA::IsBike()
     DWORD dwFunction = FUNC_IsBikeModel;
     DWORD ModelID = m_dwModelID;
     bool  bReturn = false;
+    // clang-format off
     __asm
     {
         push    ModelID
@@ -192,6 +203,7 @@ bool CModelInfoSA::IsBike()
         mov     bReturn, al
         add     esp, 4
     }
+    // clang-format on
     return bReturn;
 }
 
@@ -200,6 +212,7 @@ bool CModelInfoSA::IsFakePlane()
     DWORD dwFunction = FUNC_IsFakePlaneModel;
     DWORD ModelID = m_dwModelID;
     bool  bReturn = false;
+    // clang-format off
     __asm
     {
         push    ModelID
@@ -207,6 +220,7 @@ bool CModelInfoSA::IsFakePlane()
         mov     bReturn, al
         add     esp, 4
     }
+    // clang-format on
     return bReturn;
 }
 
@@ -215,6 +229,7 @@ bool CModelInfoSA::IsMonsterTruck()
     DWORD dwFunction = FUNC_IsMonsterTruckModel;
     DWORD ModelID = m_dwModelID;
     bool  bReturn = false;
+    // clang-format off
     __asm
     {
         push    ModelID
@@ -222,6 +237,7 @@ bool CModelInfoSA::IsMonsterTruck()
         mov     bReturn, al
         add     esp, 4
     }
+    // clang-format on
     return bReturn;
 }
 
@@ -230,6 +246,7 @@ bool CModelInfoSA::IsQuadBike()
     DWORD dwFunction = FUNC_IsQuadBikeModel;
     DWORD ModelID = m_dwModelID;
     bool  bReturn = false;
+    // clang-format off
     __asm
     {
         push    ModelID
@@ -237,6 +254,7 @@ bool CModelInfoSA::IsQuadBike()
         mov     bReturn, al
         add     esp, 4
     }
+    // clang-format on
     return bReturn;
 }
 
@@ -245,6 +263,7 @@ bool CModelInfoSA::IsBmx()
     DWORD dwFunction = FUNC_IsBmxModel;
     DWORD ModelID = m_dwModelID;
     bool  bReturn = false;
+    // clang-format off
     __asm
     {
         push    ModelID
@@ -252,6 +271,7 @@ bool CModelInfoSA::IsBmx()
         mov     bReturn, al
         add     esp, 4
     }
+    // clang-format on
     return bReturn;
 }
 
@@ -260,6 +280,7 @@ bool CModelInfoSA::IsTrailer()
     DWORD dwFunction = FUNC_IsTrailerModel;
     DWORD ModelID = m_dwModelID;
     bool  bReturn = false;
+    // clang-format off
     __asm
     {
         push    ModelID
@@ -267,6 +288,7 @@ bool CModelInfoSA::IsTrailer()
         mov     bReturn, al
         add     esp, 4
     }
+    // clang-format on
     return bReturn;
 }
 
@@ -317,6 +339,7 @@ char* CModelInfoSA::GetNameIfVehicle()
     DWORD ModelID = m_dwModelID;
     DWORD dwReturn = 0;
 
+        // clang-format off
         __asm
         {
             push    eax
@@ -339,6 +362,7 @@ char* CModelInfoSA::GetNameIfVehicle()
             pop     ebx
             pop     eax
         }
+        // clang-format on
     return (char*)dwReturn;
 }
 
@@ -349,12 +373,14 @@ uint CModelInfoSA::GetAnimFileIndex()
     uint  uiReturn = 0;
     if (dwFunc)
     {
+        // clang-format off
         __asm
         {
             mov     ecx, dwThis
             call    dwFunc
             mov     uiReturn, eax
         }
+        // clang-format on
     }
     return uiReturn;
 }
@@ -733,6 +759,7 @@ CBoundingBox* CModelInfoSA::GetBoundingBox()
     DWORD         dwFunc = FUNC_GetBoundingBox;
     DWORD         ModelID = m_dwModelID;
     CBoundingBox* dwReturn = 0;
+    // clang-format off
     __asm
     {
         push    ModelID
@@ -740,6 +767,7 @@ CBoundingBox* CModelInfoSA::GetBoundingBox()
         add     esp, 4
         mov     dwReturn, eax
     }
+    // clang-format on
     return dwReturn;
 }
 
@@ -767,6 +795,7 @@ float CModelInfoSA::GetDistanceFromCentreOfMassToBaseOfModel()
     DWORD dwModelInfo = 0;
     DWORD ModelID = m_dwModelID;
     float fReturn = 0;
+    // clang-format off
     __asm {
         mov     eax, ModelID
 
@@ -783,6 +812,7 @@ float CModelInfoSA::GetDistanceFromCentreOfMassToBaseOfModel()
         fstp    fReturn
 skip:
     }
+    // clang-format on
     return fReturn;
 }
 
@@ -1018,12 +1048,14 @@ void CModelInfoSA::StaticFlushPendingRestreamIPL()
             {
                 if (!pEntity->bStreamingDontDelete && !pEntity->bImBeingRendered)
                 {
+                    // clang-format off
                     __asm
                     {
                         mov ecx, pEntity
                         mov eax, [ecx]
                         call dword ptr [eax+20h]
                     }
+                    // clang-format on
                     removedModels.insert(pEntity->m_nModelIndex);
                 }
             }
@@ -1042,12 +1074,14 @@ void CModelInfoSA::StaticFlushPendingRestreamIPL()
             {
                 if (!pEntity->bStreamingDontDelete && !pEntity->bImBeingRendered)
                 {
+                    // clang-format off
                     __asm
                     {
                         mov ecx, pEntity
                         mov eax, [ecx]
                         call dword ptr [eax+20h]
                     }
+                    // clang-format on
                     removedModels.insert(pEntity->m_nModelIndex);
                 }
             }
@@ -1118,11 +1152,13 @@ void CModelInfoSA::RemoveRef(bool bRemoveExtraGTARef)
         {
             DWORD                      dwFunction = FUNC_RemoveRef;
             CBaseModelInfoSAInterface* pInterface = m_pInterface;
+            // clang-format off
             __asm
             {
                 mov     ecx, pInterface
                 call    dwFunction
             }
+            // clang-format on
         }
     }
 
@@ -1191,6 +1227,7 @@ short CModelInfoSA::GetAvailableVehicleMod(unsigned short usUpgrade)
     if (usUpgrade >= 1000 && usUpgrade <= 1193)
     {
         DWORD ModelID = m_dwModelID;
+        // clang-format off
         __asm
         {
             mov     eax, ModelID
@@ -1205,6 +1242,7 @@ short CModelInfoSA::GetAvailableVehicleMod(unsigned short usUpgrade)
             mov     ax, [eax+edx*2+0x2D6]
             mov     sreturn, ax
         }
+        // clang-format on
     }
     return sreturn;
 }
@@ -1213,6 +1251,7 @@ bool CModelInfoSA::IsUpgradeAvailable(eVehicleUpgradePosn posn)
 {
     bool  bRet = false;
     DWORD ModelID = m_dwModelID;
+    // clang-format off
     __asm
     {
         mov     eax, ModelID
@@ -1232,6 +1271,7 @@ bool CModelInfoSA::IsUpgradeAvailable(eVehicleUpgradePosn posn)
 
         mov     bRet, al
     }
+    // clang-format on
     return bRet;
 }
 
@@ -1239,6 +1279,7 @@ void CModelInfoSA::SetCustomCarPlateText(const char* szText)
 {
     char* szStoredText;
     DWORD ModelID = m_dwModelID;
+    // clang-format off
     __asm
     {
         push    ecx
@@ -1253,6 +1294,7 @@ void CModelInfoSA::SetCustomCarPlateText(const char* szText)
         mov     szStoredText, ecx
         pop     ecx
     }
+    // clang-format on
 
     if (szText) strncpy(szStoredText, szText, 8);
     else szStoredText[0] = 0;
@@ -1263,6 +1305,7 @@ unsigned int CModelInfoSA::GetNumRemaps()
     DWORD        dwFunc = FUNC_CVehicleModelInfo__GetNumRemaps;
     DWORD        ModelID = m_dwModelID;
     unsigned int uiReturn = 0;
+    // clang-format off
     __asm
     {
         mov     ecx, ModelID
@@ -1275,6 +1318,7 @@ unsigned int CModelInfoSA::GetNumRemaps()
         call    dwFunc
         mov     uiReturn, eax
     }
+    // clang-format on
     return uiReturn;
 }
 
@@ -1896,6 +1940,7 @@ static void __declspec(naked) HOOK_NodeNameStreamRead()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -1908,6 +1953,7 @@ static void __declspec(naked) HOOK_NodeNameStreamRead()
 
         jmp     RETURN_NodeNameStreamRead
     }
+    // clang-format on
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

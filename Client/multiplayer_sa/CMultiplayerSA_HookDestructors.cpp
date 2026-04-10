@@ -72,12 +72,14 @@ namespace
     void CPtrListSingleLink_Remove(SStreamSectorEntrySingle** ppStreamEntryList, CEntitySAInterface* pCheckEntity)
     {
         DWORD dwFunc = FUNC_CPtrListSingleLink_Remove;
+        // clang-format off
         __asm
         {
             mov     ecx, ppStreamEntryList
             push    pCheckEntity
             call    dwFunc
         }
+        // clang-format on
     }
 
     //
@@ -97,12 +99,14 @@ namespace
     void CPtrListDoubleLink_Remove(SStreamSectorEntryDouble** ppStreamEntryList, CEntitySAInterface* pCheckEntity)
     {
         DWORD dwFunc = FUNC_CPtrListDoubleLink_Remove;
+        // clang-format off
         __asm
         {
             mov     ecx, ppStreamEntryList
             push    pCheckEntity
             call    dwFunc
         }
+        // clang-format on
     }
 
     //
@@ -156,6 +160,7 @@ static void __declspec(naked) HOOK_CAnimBlendAssoc_destructor()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         push    ecx
@@ -171,6 +176,7 @@ static void __declspec(naked) HOOK_CAnimBlendAssoc_destructor()
         mov     eax, [esi + 10h]
         jmp     RETURN_CAnimBlendAssoc_destructor
     }
+    // clang-format on
 }
 
 void _cdecl OnCObjectDestructor(DWORD calledFrom, CObjectSAInterface* pObject)
@@ -188,6 +194,7 @@ static void __declspec(naked) HOOK_CObjectDestructor()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -200,6 +207,7 @@ static void __declspec(naked) HOOK_CObjectDestructor()
         mov     eax,dword ptr fs:[00000000h]
         jmp     RETURN_CObjectDestructor
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -219,6 +227,7 @@ static void __declspec(naked) HOOK_CVehicleDestructor()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -231,6 +240,7 @@ static void __declspec(naked) HOOK_CVehicleDestructor()
         push    0FFFFFFFFh
         jmp     RETURN_CVehicleDestructor
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -250,6 +260,7 @@ static void __declspec(naked) HOOK_CPlayerPedDestructor()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -262,6 +273,7 @@ static void __declspec(naked) HOOK_CPlayerPedDestructor()
         mov     eax,dword ptr fs:[00000000h]
         jmp     RETURN_CPlayerPedDestructor
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -281,6 +293,7 @@ static void __declspec(naked) HOOK_CProjectileDestructor()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -293,6 +306,7 @@ static void __declspec(naked) HOOK_CProjectileDestructor()
         mov     dword ptr [ecx], 867030h
         jmp     RETURN_CProjectileDestructor
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -304,11 +318,13 @@ void _cdecl OnCPhysicalDestructor(DWORD calledFrom, CPhysicalSAInterface* pEntit
     {
         AddReportLog(8640, SString("Removing CPhysical type %d from moving list", pEntity->nType));
         DWORD dwFunc = FUNC_CPhysical_RemoveFromMovingList;
+        // clang-format off
         __asm
         {
             mov     ecx, pEntity
             call    dwFunc
         }
+        // clang-format on
     }
 }
 
@@ -320,6 +336,7 @@ static void __declspec(naked) HOOK_CPhysicalDestructor()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -332,6 +349,7 @@ static void __declspec(naked) HOOK_CPhysicalDestructor()
         mov     eax,dword ptr fs:[00000000h]
         jmp     RETURN_CPhysicalDestructor
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -349,6 +367,7 @@ static void __declspec(naked) HOOK_CEntityDestructor()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -361,6 +380,7 @@ static void __declspec(naked) HOOK_CEntityDestructor()
         mov     eax, dword ptr fs:[00000000h]
         jmp     RETURN_CEntityDestructor
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -381,6 +401,7 @@ static void __declspec(naked) HOOK_CEntityAddMid1()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -394,6 +415,7 @@ static void __declspec(naked) HOOK_CEntityAddMid1()
         call    eax
         jmp     RETURN_CEntityAddMid1
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -414,6 +436,7 @@ static void __declspec(naked) HOOK_CEntityAddMid2()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -427,6 +450,7 @@ static void __declspec(naked) HOOK_CEntityAddMid2()
         call    eax
         jmp     RETURN_CEntityAddMid2
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -450,6 +474,7 @@ static void __declspec(naked) HOOK_CEntityAddMid3()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -463,6 +488,7 @@ static void __declspec(naked) HOOK_CEntityAddMid3()
         call    eax
         jmp     RETURN_CEntityAddMid3
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -481,6 +507,7 @@ static void __declspec(naked) HOOK_CEntityRemove()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         push    [esp+4*1]
@@ -501,6 +528,7 @@ inner:
         push    ebp
         jmp     RETURN_CEntityRemove
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -520,6 +548,7 @@ static void __declspec(naked) HOOK_CStreamingRemoveModel()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -533,6 +562,7 @@ static void __declspec(naked) HOOK_CStreamingRemoveModel()
         mov     esi, [esp+8]
         jmp     RETURN_CStreamingRemoveModel
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -551,6 +581,7 @@ static void __declspec(naked) HOOK_CTaskSimpleRunNamedAnimDestructor()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -568,6 +599,7 @@ static void __declspec(naked) HOOK_CTaskSimpleRunNamedAnimDestructor()
         call    eax
         jmp     RETURN_CTaskSimpleRunNamedAnim
     }
+    // clang-format on
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

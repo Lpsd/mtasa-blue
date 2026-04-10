@@ -30,6 +30,7 @@ static void __declspec(naked) CrashAverted()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushfd
@@ -41,6 +42,7 @@ static void __declspec(naked) CrashAverted()
         popfd
         retn    4
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -55,6 +57,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc1()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         mov     eax,dword ptr [esp+18h]
@@ -71,6 +74,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc1()
     cont:
         jmp     RETURN_CrashFix_Misc1
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -86,6 +90,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc2()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         test    eax,eax
@@ -108,6 +113,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc2()
         call    CrashAverted
         jmp     RETURN_CrashFix_Misc2B
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -123,6 +129,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc4()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         test    ecx,ecx
@@ -137,6 +144,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc4()
         call    CrashAverted
         jmp     RETURN_CrashFix_Misc4B
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -152,6 +160,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc5()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm {
         mov edi, dword ptr[ARRAY_ModelInfo]
         mov     edi, dword ptr [ecx*4+edi]
@@ -168,6 +177,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc5()
         pop edi
         jmp     RETURN_CrashFix_Misc5B
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -185,6 +195,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc6()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         test    ecx, ecx
@@ -198,6 +209,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc6()
         call    CrashAverted
         jmp     RETURN_CrashFix_Misc6B
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -215,6 +227,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc7()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         test    ecx, ecx
@@ -228,6 +241,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc7()
         call    CrashAverted
         jmp     RETURN_CrashFix_Misc7B
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -245,6 +259,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc8()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         test    ecx, ecx
@@ -258,6 +273,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc8()
         call    CrashAverted
         jmp     RETURN_CrashFix_Misc8B
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -275,6 +291,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc9()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         test    esi, esi
@@ -288,6 +305,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc9()
         call    CrashAverted
         jmp     RETURN_CrashFix_Misc9B
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -305,6 +323,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc10()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         cmp     ecx, 0x80
@@ -322,6 +341,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc10()
         mov     dword ptr [ecx+8],0
         jmp     RETURN_CrashFix_Misc10B
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -339,6 +359,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc11()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         test    ecx, ecx
@@ -352,6 +373,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc11()
         call    CrashAverted
         jmp     RETURN_CrashFix_Misc11B
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -369,6 +391,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc12()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         test    edi, edi
@@ -382,6 +405,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc12()
         call    CrashAverted
         jmp     RETURN_CrashFix_Misc12B
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -397,6 +421,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc13()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         cmp     eax, 0x2480
@@ -410,6 +435,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc13()
         call    CrashAverted
         jmp     RETURN_CrashFix_Misc13B
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -424,6 +450,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc14()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         mov     eax, dword ptr ds:[0BD00F8h]
@@ -438,6 +465,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc14()
         add     esp, 12
         retn    12
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -471,6 +499,7 @@ static void __declspec(naked) HOOK_FreezeFix_Misc15()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pop eax
@@ -484,6 +513,7 @@ static void __declspec(naked) HOOK_FreezeFix_Misc15()
         popad
         jmp     RETURN_FreezeFix_Misc15
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -498,6 +528,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc16()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         cmp     eax, 0
@@ -514,6 +545,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc16()
         add     esp, 96
         retn
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -529,6 +561,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc17()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         cmp     eax, 0
@@ -543,6 +576,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc17()
         call    CrashAverted
         jmp     RETURN_CrashFix_Misc17B
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -557,6 +591,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc18()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         cmp     ebp, 0
@@ -579,6 +614,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc18()
         pop         ebp
         ret         0Ch
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -594,6 +630,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc19()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         cmp     esi, 0
@@ -610,6 +647,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc19()
         test    edx,edx
         jmp     RETURN_CrashFix_Misc19B
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -624,6 +662,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc20()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         cmp     ecx, 0
@@ -639,6 +678,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc20()
         call    CrashAverted
         retn
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -677,6 +717,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc21()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -698,6 +739,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc21()
         call    CrashAverted
         retn
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -712,6 +754,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc22()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         mov         edx,dword ptr [edi+0Ch]
@@ -749,6 +792,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc22()
         jl          altcode
         jmp     RETURN_CrashFix_Misc22
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -763,6 +807,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc23()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         // Ensure door index is reasonable
@@ -782,6 +827,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc23()
         lea     eax, [edx+edx*2]
         jmp     RETURN_CrashFix_Misc23
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -796,6 +842,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc24()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         cmp     ebp, 0x480
@@ -812,6 +859,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc24()
         mov     eax, 0
         jmp     RETURN_CrashFix_Misc24
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -826,6 +874,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc25()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         // Check for zero pointer to vehicle
@@ -846,6 +895,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc25()
         pop     ecx
         retn
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -860,6 +910,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc26()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         // Check for incorrect pointer
@@ -881,6 +932,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc26()
         test    edi,edi
         jmp     RETURN_CrashFix_Misc26
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -895,6 +947,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc27()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         // Execute replaced code
@@ -912,6 +965,7 @@ cont:
         // Continue standard path
         jmp     RETURN_CrashFix_Misc27
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -927,6 +981,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc28()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         // Execute replaced code
@@ -945,6 +1000,7 @@ cont:
         // Continue standard path
         jmp     RETURN_CrashFix_Misc28
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -960,6 +1016,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc29()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         // Execute replaced code
@@ -978,6 +1035,7 @@ cont:
         // Skip much code
         jmp     RETURN_CrashFix_Misc29B
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -994,6 +1052,7 @@ static void __declspec(naked) HOOK_CrashFix_Misc30()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         // Check for incorrect pointer
@@ -1011,6 +1070,7 @@ cont:
         // Skip much code
         jmp     RETURN_CrashFix_Misc30B
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1060,6 +1120,7 @@ RwFrame* OnMY_CClumpModelInfo_GetFrameFromId_Post(RwFrame* pFrameResult, DWORD _
         RwFrame* pNewFrameResult = NULL;
         uint     uiNewId = id + (i / 2) * ((i & 1) ? -1 : 1);
         DWORD    dwFunc = 0x4C53C0;            // CClumpModelInfo::GetFrameFromId
+        // clang-format off
         __asm
         {
             push    uiNewId
@@ -1068,6 +1129,7 @@ RwFrame* OnMY_CClumpModelInfo_GetFrameFromId_Post(RwFrame* pFrameResult, DWORD _
             add     esp, 8
             mov     pNewFrameResult,eax
         }
+        // clang-format on
 
         if (pNewFrameResult)
         {
@@ -1094,6 +1156,7 @@ static void __declspec(naked) HOOK_CClumpModelInfo_GetFrameFromId()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         push    [esp+4*2]
@@ -1121,6 +1184,7 @@ inner:
         mov     eax,dword ptr [esp+10h]
         jmp     RETURN_CClumpModelInfo_GetFrameFromId
     }
+    // clang-format on
 }
 
 CStreamingInfo* GetStreamingInfo(uint id)
@@ -1175,6 +1239,7 @@ static void __declspec(naked) HOOK_CEntity_GetBoundRect()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -1188,6 +1253,7 @@ static void __declspec(naked) HOOK_CEntity_GetBoundRect()
         mov     edx, [eax]
         jmp     RETURN_CEntity_GetBoundRect
     }
+    // clang-format on
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1218,6 +1284,7 @@ static void __declspec(naked) HOOK_CVehicle_AddUpgrade()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -1242,6 +1309,7 @@ inner:
         mov     ebx, [esp+16]
         jmp     RETURN_CVehicle_AddUpgrade
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1268,6 +1336,7 @@ static void __declspec(naked) HOOK_TrainCrossingBarrierCrashFix()
     TrainCrossingFix_ReturnAddress = ReturnAddress;
     TrainCrossingFix_InvalidReturnAddress = InvalidReturnAddress;
 
+    // clang-format off
     __asm
     {
         test eax, eax // Check if pLinkedBarrierPost exists
@@ -1279,6 +1348,7 @@ static void __declspec(naked) HOOK_TrainCrossingBarrierCrashFix()
 jmp_invalid:
         jmp TrainCrossingFix_InvalidReturnAddress
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1295,12 +1365,14 @@ static void __declspec(naked) HOOK_ResetFurnitureObjectCounter()
 
     *(int*)0xBB3A18 = 0;            // InteriorManager_c::ms_objectCounter
 
+    // clang-format off
     __asm
     {
         // original instruction
         mov eax, fs:[0]
         jmp RETURN_ResetFurnitureObjectCounter
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1328,6 +1400,7 @@ static void __declspec(naked) HOOK_CVolumetricShadowMgr_Render()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -1347,6 +1420,7 @@ inner:
         mov     ecx, 0A9AE00h
         jmp     RETURN_CVolumetricShadowMgr_Render
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1374,6 +1448,7 @@ static void __declspec(naked) HOOK_CVolumetricShadowMgr_Update()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -1394,6 +1469,7 @@ inner:
         mov     ecx, 0A9AE00h
         jmp     RETURN_CVolumetricShadowMgr_Update
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1424,6 +1500,7 @@ static void __declspec(naked) HOOK_CAnimManager_CreateAnimAssocGroups()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -1440,6 +1517,7 @@ static void __declspec(naked) HOOK_CAnimManager_CreateAnimAssocGroups()
 
         jmp     RETURN_CAnimManager_CreateAnimAssocGroups
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1461,6 +1539,7 @@ static void __declspec(naked) HOOK_CTaskComplexCarSlowBeDraggedOut_CreateFirstSu
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         test eax, eax
@@ -1475,6 +1554,7 @@ static void __declspec(naked) HOOK_CTaskComplexCarSlowBeDraggedOut_CreateFirstSu
         popad
         jmp RETURN_CTaskComplexCarSlowBeDraggedOut_CreateFirstSubTask_Invalid
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1520,6 +1600,7 @@ static void __declspec(naked) HOOK_printf()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -1534,6 +1615,7 @@ static void __declspec(naked) HOOK_printf()
         push    887DC0h
         jmp     RETURN_printf
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1549,6 +1631,7 @@ static void __declspec(naked) HOOK_RwMatrixMultiply()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         mov     eax, [esp+0Ch]
@@ -1563,6 +1646,7 @@ cont:
         call    CrashAverted
         retn
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1622,6 +1706,7 @@ static void __declspec(naked) HOOK_CAnimBlendNode_GetCurrentTranslation()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
         {
             // if end key frame index is greater than 10,000 then return
@@ -1647,6 +1732,7 @@ static void __declspec(naked) HOOK_CAnimBlendNode_GetCurrentTranslation()
              // The function expects 8 bytes of parameters
         retn    8
         }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1679,6 +1765,7 @@ static void __declspec(naked) HOOK_CStreaming_AreAnimsUsedByRequestedModels()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         push    [esp + 4]
@@ -1686,6 +1773,7 @@ static void __declspec(naked) HOOK_CStreaming_AreAnimsUsedByRequestedModels()
         add     esp, 0x4
         retn
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1746,6 +1834,7 @@ static void __declspec(naked) HOOK_CTrain__ProcessControl()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -1755,6 +1844,7 @@ static void __declspec(naked) HOOK_CTrain__ProcessControl()
         popad
         jmp     CONTINUE_CTrain__ProcessControl
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1780,6 +1870,7 @@ static void __declspec(naked) HOOK_CTaskComplexCarSlowBeDraggedOutAndStandUp__Cr
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         test    eax, eax
@@ -1795,6 +1886,7 @@ static void __declspec(naked) HOOK_CTaskComplexCarSlowBeDraggedOutAndStandUp__Cr
         pop     esi
         retn    4
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1823,6 +1915,7 @@ static void __declspec(naked) HOOK_CVehicleModelInfo__LoadVehicleColours_1()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         test    eax, eax
@@ -1844,6 +1937,7 @@ static void __declspec(naked) HOOK_CVehicleModelInfo__LoadVehicleColours_1()
         lea     eax, [edi - 1]
         jmp     CONTINUE_CVehicleModelInfo__LoadVehicleColours_1
     }
+    // clang-format on
 }
 
 //     0x5B6CA5 | E8 96 EC F0 FF | call  CModelInfo::GetModelInfo
@@ -1859,6 +1953,7 @@ static void __declspec(naked) HOOK_CVehicleModelInfo__LoadVehicleColours_2()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         test    eax, eax
@@ -1880,6 +1975,7 @@ static void __declspec(naked) HOOK_CVehicleModelInfo__LoadVehicleColours_2()
         lea     eax, [edi - 1]
         jmp     CONTINUE_CVehicleModelInfo__LoadVehicleColours_2
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1900,6 +1996,7 @@ static void __declspec(naked) HOOK_CPlaceName__Process()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -1917,6 +2014,7 @@ static void __declspec(naked) HOOK_CPlaceName__Process()
         mov     ecx, [eax + 46Ch]
         jmp     CONTINUE_CPlaceName__Process
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1947,6 +2045,7 @@ static void __declspec(naked) HOOK_CWorld__FindObjectsKindaCollidingSectorList()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         mov eax, [edx*4+0xA9B0C8]   // CModelInfo::ms_modelInfoPtrs
@@ -1968,6 +2067,7 @@ static void __declspec(naked) HOOK_CWorld__FindObjectsKindaCollidingSectorList()
 
         jmp RETURN_CWorld__FindObjectsKindaCollidingSectorList_SKIP
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1988,6 +2088,7 @@ static void __declspec(naked) HOOK_RpClumpForAllAtomics()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         mov     eax, [esp+4]    // RpClump* clump
@@ -2000,6 +2101,7 @@ static void __declspec(naked) HOOK_RpClumpForAllAtomics()
         push    ebp
         jmp     CONTINUE_RpClumpForAllAtomics
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -2018,6 +2120,7 @@ static void __declspec(naked) HOOK_RpAnimBlendClumpGetFirstAssociation()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         mov     eax, [esp+4]            // RpClump* clump
@@ -2029,6 +2132,7 @@ static void __declspec(naked) HOOK_RpAnimBlendClumpGetFirstAssociation()
         mov     ecx, ds:[0xB5F878]
         jmp     CONTINUE_RpAnimBlendClumpGetFirstAssociation
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -2048,6 +2152,7 @@ static void __declspec(naked) HOOK_CAnimManager__BlendAnimation()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         mov     eax, [esp+4]            // RpClump* clump
@@ -2060,6 +2165,7 @@ static void __declspec(naked) HOOK_CAnimManager__BlendAnimation()
         mov     ecx, [esp+18h]
         jmp     CONTINUE_CAnimManager__BlendAnimation
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -2113,6 +2219,7 @@ static void __declspec(naked) HOOK_FxSystemBP_c__Load()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         pushad
@@ -2128,6 +2235,7 @@ static void __declspec(naked) HOOK_FxSystemBP_c__Load()
         add     esp, 5E8h
         retn    0Ch
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -2147,6 +2255,7 @@ static void __declspec(naked) HOOK_FxPrim_c__Enable()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         test    ecx, ecx
@@ -2157,6 +2266,7 @@ static void __declspec(naked) HOOK_FxPrim_c__Enable()
         returnFromFunction:
         retn    4
     }
+    // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -2174,6 +2284,7 @@ static void __declspec(naked) HOOK_CFire_ProcessFire()
 {
     MTA_VERIFY_HOOK_LOCAL_SIZE;
 
+    // clang-format off
     __asm
     {
         test byte ptr [esi], 1 // If the "active" flag has been set to 0, we skip processing attached entities
@@ -2187,6 +2298,7 @@ static void __declspec(naked) HOOK_CFire_ProcessFire()
         mov ecx, esi
         jmp SKIP_CFire_ProcessFire
     }
+    // clang-format on
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
