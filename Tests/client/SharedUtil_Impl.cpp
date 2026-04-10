@@ -4,12 +4,6 @@
  *  LICENSE:     See LICENSE in the top level directory
  *  FILE:        Tests/client/SharedUtil_impl.cpp
  *  PURPOSE:     Provide SharedUtil implementations for the test project
- *               without pulling in heavy vendor dependencies (CryptoPP, bcrypt).
- *
- *  This mirrors Shared/sdk/SharedUtil.cpp but deliberately skips
- *  SharedUtil.Hash.hpp (which requires bcrypt + SHA vendor sources).
- *  Tests that exercise crypto/hash functionality should be added once
- *  those vendors are linked into the test project.
  *
  *****************************************************************************/
 
@@ -28,7 +22,8 @@
 #include "../../Shared/sdk/SharedUtil.Time.hpp"
 #include "../../Shared/sdk/SharedUtil.Game.hpp"
 
-// Intentionally skipped: SharedUtil.Hash.hpp (needs bcrypt vendor)
+// Hash implementations (MD5, SHA family, TEA, hex conversion - requires bcrypt vendor)
+#include "../../Shared/sdk/SharedUtil.Hash.hpp"
 
 #include "../../Shared/sdk/SharedUtil.Profiling.hpp"
 #include "../../Shared/sdk/SharedUtil.Logging.hpp"

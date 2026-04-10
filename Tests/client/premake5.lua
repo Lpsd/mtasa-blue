@@ -18,7 +18,7 @@ project "Tests_Client"
 		"../../vendor",
 	}
 
-	links { "gtest" }
+	links { "gtest", "cryptopp", "blowfish_bcrypt", "zlib" }
 
 	files {
 		"premake5.lua",
