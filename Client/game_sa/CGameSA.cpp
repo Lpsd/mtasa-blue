@@ -250,6 +250,7 @@ CGameSA::CGameSA()
         CFireSA::StaticSetHooks();
         CPtrNodeSingleLinkPoolSA::StaticSetHooks();
         CVehicleAudioSettingsManagerSA::StaticSetHooks();
+        CPointLightsSA::StaticSetHooks();
     }
     catch (const std::bad_alloc& e)
     {
@@ -697,7 +698,7 @@ void CGameSA::SetCoronaZTestEnabled(bool isEnabled)
     m_isCoronaZTestEnabled = isEnabled;
 }
 
-void CGameSA::SetWaterCreaturesEnabled(bool isEnabled) 
+void CGameSA::SetWaterCreaturesEnabled(bool isEnabled)
 {
     if (isEnabled == m_areWaterCreaturesEnabled)
         return;
@@ -722,7 +723,7 @@ void CGameSA::SetTunnelWeatherBlendEnabled(bool isEnabled)
     if (isEnabled == m_isTunnelWeatherBlendEnabled)
         return;
     // CWeather::UpdateInTunnelness
-    DWORD functionAddress = 0x72B630; 
+    DWORD functionAddress = 0x72B630;
     if (isEnabled)
     {
         // Restore original bytes: 83 EC 20
