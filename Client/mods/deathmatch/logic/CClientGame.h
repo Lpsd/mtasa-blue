@@ -506,9 +506,8 @@ public:
     bool    IsHighFloatPrecision() const;
 
     bool TriggerBrowserRequestResultEvent(const std::unordered_set<SString>& newPages);
-    bool RestreamModel(std::uint16_t model);
+    void RestreamModel(unsigned short usModel);
     void RestreamWorld();
-    void Restream(std::optional<RestreamOption> option);
     void ReinitMarkers();
 
     void OnWindowFocusChange(bool state);
@@ -531,7 +530,6 @@ private:
     bool OnSize(CGUIElement* pElement);
     bool OnFocusGain(CGUIFocusEventArgs Args);
     bool OnFocusLoss(CGUIFocusEventArgs Args);
-    void TriggerGUIClickEvent(CGUIMouseEventArgs Args, const char* szState, const char* minClientVersion);
 
     // Network update functions
     void DoVehicleInKeyCheck();
