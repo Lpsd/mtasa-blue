@@ -2635,7 +2635,24 @@ namespace
             // Prevent infinite loops from cyclic parent chains
             const unsigned short usParent = pSlot->usParentIndex;
             if (usParent == kInvalidSlot || usParent == usSlot)
+            {
+                // If this is a known isolated TXD with a deferred parent link,
+                // look up the intended parent from our tracking and keep walking.
+                if (usParent == kInvalidSlot)
+                {
+                    auto itOwner = g_IsolatedModelByTxd.find(usSlot);
+                    if (itOwner != g_IsolatedModelByTxd.end())
+                    {
+                        auto itInfo = g_IsolatedTxdByModel.find(itOwner->second);
+                        if (itInfo != g_IsolatedTxdByModel.end() && itInfo->second.usParentTxdId != kInvalidSlot && itInfo->second.usParentTxdId != usSlot)
+                        {
+                            usSlot = itInfo->second.usParentTxdId;
+                            continue;
+                        }
+                    }
+                }
                 return false;
+            }
 
             usSlot = usParent;
         }
@@ -4190,7 +4207,9 @@ void CRenderWareSA::ProcessPendingIsolatedModels(bool bBlockingParentLoad)
             ClearPendingReplacementStateForModel(usModelId);
             g_PendingReplacementByModel.erase(usModelId);
             RemoveTxdFromReplacementTracking(childTxdId);
-            g_OrphanedIsolatedTxdSlots.insert(childTxdId);
+            const bool bInserted = g_OrphanedIsolatedTxdSlots.insert(childTxdId).second;
+            if (bInserted && ShouldLog(g_uiLastOrphanLogTime))
+                AddReportLog(9401, SString("ProcessPendingIsolatedModels: Timed out, orphaned isolated TXD %u for model %u", childTxdId, usModelId));
             continue;
         }
 
