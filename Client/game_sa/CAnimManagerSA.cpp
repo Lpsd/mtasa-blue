@@ -41,23 +41,19 @@ CAnimManagerSA::~CAnimManagerSA()
 void CAnimManagerSA::Initialize()
 {
     DWORD dwFunc = FUNC_CAnimManager_Initialize;
-    // clang-format off
     __asm
     {
         call    dwFunc
     }
-    // clang-format on
 }
 
 void CAnimManagerSA::Shutdown()
 {
     DWORD dwFunc = FUNC_CAnimManager_Shutdown;
-    // clang-format off
     __asm
     {
         call    dwFunc
     }
-    // clang-format on
 }
 
 int CAnimManagerSA::GetNumAnimations()
@@ -75,12 +71,10 @@ int CAnimManagerSA::GetNumAnimAssocDefinitions()
     return *(int*)(VAR_CAnimManager_NumAnimAssocDefinitions);
 }
 
-// Returns wrapper for animation hierarchy
 std::unique_ptr<CAnimBlendHierarchy> CAnimManagerSA::GetAnimation(int ID)
 {
     CAnimBlendHierarchySAInterface* pInterface = nullptr;
     DWORD                           dwFunc = FUNC_CAnimManager_GetAnimation_int;
-    // clang-format off
     __asm
     {
         push    ID
@@ -88,7 +82,6 @@ std::unique_ptr<CAnimBlendHierarchy> CAnimManagerSA::GetAnimation(int ID)
         mov     pInterface, eax
         add     esp, 0x4
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendHierarchySA>(pInterface);
@@ -101,7 +94,6 @@ std::unique_ptr<CAnimBlendHierarchy> CAnimManagerSA::GetAnimation(const char* sz
     CAnimBlendHierarchySAInterface* pInterface = nullptr;
     DWORD                           dwFunc = FUNC_CAnimManager_GetAnimation_str_block;
     CAnimBlockSAInterface*          pBlockInterface = pBlock->GetInterface();
-    // clang-format off
     __asm
     {
         push    pBlockInterface
@@ -110,7 +102,6 @@ std::unique_ptr<CAnimBlendHierarchy> CAnimManagerSA::GetAnimation(const char* sz
         mov     pInterface, eax
         add     esp, 0x8
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendHierarchySA>(pInterface);
@@ -124,7 +115,6 @@ std::unique_ptr<CAnimBlendHierarchy> CAnimManagerSA::GetAnimation(unsigned int u
     ;
     DWORD                  dwFunc = FUNC_CAnimManager_GetAnimation_int_block;
     CAnimBlockSAInterface* pBlockInterface = pBlock->GetInterface();
-    // clang-format off
     __asm
     {
         push    pBlockInterface
@@ -133,7 +123,6 @@ std::unique_ptr<CAnimBlendHierarchy> CAnimManagerSA::GetAnimation(unsigned int u
         mov     pInterface, eax
         add     esp, 0x8
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendHierarchySA>(pInterface);
@@ -145,7 +134,6 @@ std::unique_ptr<CAnimBlock> CAnimManagerSA::GetAnimationBlock(int ID)
 {
     CAnimBlockSAInterface* pInterface = nullptr;
     DWORD                  dwFunc = FUNC_CAnimManager_GetAnimationBlock_int;
-    // clang-format off
     __asm
     {
         push    ID
@@ -153,7 +141,6 @@ std::unique_ptr<CAnimBlock> CAnimManagerSA::GetAnimationBlock(int ID)
         mov     pInterface, eax
         add     esp, 0x4
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlockSA>(pInterface);
@@ -165,7 +152,6 @@ std::unique_ptr<CAnimBlock> CAnimManagerSA::GetAnimationBlock(const char* szName
 {
     CAnimBlockSAInterface* pInterface = nullptr;
     DWORD                  dwFunc = FUNC_CAnimManager_GetAnimationBlock_str;
-    // clang-format off
     __asm
     {
         push    szName
@@ -173,7 +159,6 @@ std::unique_ptr<CAnimBlock> CAnimManagerSA::GetAnimationBlock(const char* szName
         mov     pInterface, eax
         add     esp, 0x4
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlockSA>(pInterface);
@@ -185,7 +170,6 @@ int CAnimManagerSA::GetAnimationBlockIndex(const char* szName)
 {
     int   iReturn;
     DWORD dwFunc = FUNC_CAnimManager_GetAnimationBlockIndex;
-    // clang-format off
     __asm
     {
         push    szName
@@ -193,7 +177,6 @@ int CAnimManagerSA::GetAnimationBlockIndex(const char* szName)
         mov     iReturn, eax
         add     esp, 0x4
     }
-    // clang-format on
     return iReturn;
 }
 
@@ -201,7 +184,6 @@ int CAnimManagerSA::RegisterAnimBlock(const char* szName)
 {
     int   iReturn;
     DWORD dwFunc = FUNC_CAnimManager_RegisterAnimBlock;
-    // clang-format off
     __asm
     {
         push    szName
@@ -209,7 +191,6 @@ int CAnimManagerSA::RegisterAnimBlock(const char* szName)
         mov     iReturn, eax
         add     esp, 0x4
     }
-    // clang-format on
     return iReturn;
 }
 
@@ -217,7 +198,6 @@ std::unique_ptr<CAnimBlendAssocGroup> CAnimManagerSA::GetAnimBlendAssoc(AssocGro
 {
     CAnimBlendAssocGroupSAInterface* pInterface = nullptr;
     DWORD                            dwFunc = FUNC_CAnimManager_GetAnimBlendAssoc;
-    // clang-format off
     __asm
     {
         push    groupID
@@ -225,7 +205,6 @@ std::unique_ptr<CAnimBlendAssocGroup> CAnimManagerSA::GetAnimBlendAssoc(AssocGro
         mov     pInterface, eax
         add     esp, 0x4
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendAssocGroupSA>(pInterface);
@@ -237,7 +216,6 @@ AssocGroupId CAnimManagerSA::GetFirstAssocGroup(const char* szName)
 {
     AssocGroupId groupReturn;
     DWORD        dwFunc = FUNC_CAnimManager_GetFirstAssocGroup;
-    // clang-format off
     __asm
     {
         push    szName
@@ -245,7 +223,6 @@ AssocGroupId CAnimManagerSA::GetFirstAssocGroup(const char* szName)
         mov     groupReturn, eax
         add     esp, 0x4
     }
-    // clang-format on
     return groupReturn;
 }
 
@@ -253,7 +230,6 @@ const char* CAnimManagerSA::GetAnimGroupName(AssocGroupId groupID)
 {
     const char* szReturn;
     DWORD       dwFunc = FUNC_CAnimManager_GetAnimGroupName;
-    // clang-format off
     __asm
     {
         push    groupID
@@ -261,7 +237,6 @@ const char* CAnimManagerSA::GetAnimGroupName(AssocGroupId groupID)
         mov     szReturn, eax
         add     esp, 0x4
     }
-    // clang-format on
     return szReturn;
 }
 
@@ -269,7 +244,6 @@ const char* CAnimManagerSA::GetAnimBlockName(AssocGroupId groupID)
 {
     const char* szReturn;
     DWORD       dwFunc = FUNC_CAnimManager_GetAnimBlockName;
-    // clang-format off
     __asm
     {
         push    groupID
@@ -277,7 +251,6 @@ const char* CAnimManagerSA::GetAnimBlockName(AssocGroupId groupID)
         mov     szReturn, eax
         add     esp, 0x4
     }
-    // clang-format on
     return szReturn;
 }
 
@@ -285,7 +258,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::CreateAnimAssociation(Ass
 {
     CAnimBlendAssociationSAInterface* pInterface = nullptr;
     DWORD                             dwFunc = FUNC_CAnimManager_CreateAnimAssociation;
-    // clang-format off
     __asm
     {
         push    animID
@@ -294,7 +266,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::CreateAnimAssociation(Ass
         mov     pInterface, eax
         add     esp, 0x8
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendAssociationSA>(pInterface);
@@ -310,7 +281,6 @@ CAnimManagerSA::StaticAssocIntface_type CAnimManagerSA::GetAnimStaticAssociation
 
     CAnimBlendStaticAssociationSAInterface* pInterface = nullptr;
     DWORD                                   dwFunc = FUNC_CAnimManager_GetAnimAssociation;
-    // clang-format off
     __asm
     {
         push    animID
@@ -319,7 +289,6 @@ CAnimManagerSA::StaticAssocIntface_type CAnimManagerSA::GetAnimStaticAssociation
         mov     pInterface, eax
         add     esp, 0x8
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendStaticAssociationSA>(pInterface);
@@ -335,7 +304,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::GetAnimAssociation(AssocG
 
     CAnimBlendAssociationSAInterface* pInterface = nullptr;
     DWORD                             dwFunc = FUNC_CAnimManager_GetAnimAssociation_str;
-    // clang-format off
     __asm
     {
         push    szAnimName
@@ -344,7 +312,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::GetAnimAssociation(AssocG
         mov     pInterface, eax
         add     esp, 0x8
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendAssociationSA>(pInterface);
@@ -359,7 +326,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::AddAnimation(RpClump* pCl
 
     CAnimBlendAssociationSAInterface* pInterface = nullptr;
     DWORD                             dwFunc = FUNC_CAnimManager_AddAnimation;
-    // clang-format off
     __asm
     {
         push    animID
@@ -369,7 +335,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::AddAnimation(RpClump* pCl
         mov     pInterface, eax
         add     esp, 0xC
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendAssociationSA>(pInterface);
@@ -385,7 +350,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::AddAnimation(RpClump* pCl
     CAnimBlendAssociationSAInterface* pInterface = nullptr;
     DWORD                             dwFunc = FUNC_CAnimManager_AddAnimation_hier;
     CAnimBlendHierarchySAInterface*   pHierarchyInterface = pHierarchy->GetInterface();
-    // clang-format off
     __asm
     {
         push    ID
@@ -395,7 +359,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::AddAnimation(RpClump* pCl
         mov     pInterface, eax
         add     esp, 0xC
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendAssociationSA>(pInterface);
@@ -412,7 +375,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::AddAnimationAndSync(RpClu
     CAnimBlendAssociationSAInterface* pInterface = nullptr;
     DWORD                             dwFunc = FUNC_CAnimManager_AddAnimationAndSync;
     CAnimBlendAssociationSAInterface* pAssociationInterface = pAssociation->GetInterface();
-    // clang-format off
     __asm
     {
         push    animID
@@ -423,7 +385,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::AddAnimationAndSync(RpClu
         mov     pInterface, eax
         add     esp, 0x10
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendAssociationSA>(pInterface);
@@ -438,7 +399,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::BlendAnimation(RpClump* p
 
     CAnimBlendAssociationSAInterface* pInterface = nullptr;
     DWORD                             dwFunc = FUNC_CAnimManager_BlendAnimation;
-    // clang-format off
     __asm
     {
         push    fBlendDelta
@@ -449,7 +409,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::BlendAnimation(RpClump* p
         mov     pInterface, eax
         add     esp, 0x10
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendAssociationSA>(pInterface);
@@ -465,7 +424,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::BlendAnimation(RpClump* p
     CAnimBlendAssociationSAInterface* pInterface = nullptr;
     DWORD                             dwFunc = FUNC_CAnimManager_BlendAnimation_hier;
     CAnimBlendHierarchySAInterface*   pHierarchyInterface = pHierarchy->GetInterface();
-    // clang-format off
     __asm
     {
         push    fBlendDelta
@@ -476,7 +434,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::BlendAnimation(RpClump* p
         mov     pInterface, eax
         add     esp, 0x10
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendAssociationSA>(pInterface);
@@ -487,47 +444,40 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::BlendAnimation(RpClump* p
 void CAnimManagerSA::AddAnimBlockRef(int ID)
 {
     DWORD dwFunc = FUNC_CAnimManager_AddAnimBlockRef;
-    // clang-format off
     __asm
     {
         push    ID
         call    dwFunc
         add     esp, 0x4
     }
-    // clang-format on
 }
 
 void CAnimManagerSA::RemoveAnimBlockRef(int ID)
 {
     DWORD dwFunc = FUNC_CAnimManager_RemoveAnimBlockRef;
-    // clang-format off
     __asm
     {
         push    ID
         call    dwFunc
         add     esp, 0x4
     }
-    // clang-format on
 }
 
 void CAnimManagerSA::RemoveAnimBlockRefWithoutDelete(int ID)
 {
     DWORD dwFunc = FUNC_CAnimManager_RemoveAnimBlockRefWithoutDelete;
-    // clang-format off
     __asm
     {
         push    ID
         call    dwFunc
         add     esp, 0x4
     }
-    // clang-format on
 }
 
 int CAnimManagerSA::GetNumRefsToAnimBlock(int ID)
 {
     int   iReturn;
     DWORD dwFunc = FUNC_CAnimManager_GetNumRefsToAnimBlock;
-    // clang-format off
     __asm
     {
         push    ID
@@ -535,24 +485,20 @@ int CAnimManagerSA::GetNumRefsToAnimBlock(int ID)
         mov     iReturn, eax
         add     esp, 0x4
     }
-    // clang-format on
     return iReturn;
 }
 
 void CAnimManagerSA::RemoveAnimBlock(int ID)
 {
     DWORD dwFunc = FUNC_CAnimManager_RemoveAnimBlock;
-    // clang-format off
     __asm
     {
         push    ID
         call    dwFunc
         add     esp, 0x4
     }
-    // clang-format on
 }
 
-// Returns a pointer to GTA SA's internal animation association definition
 AnimAssocDefinition* CAnimManagerSA::AddAnimAssocDefinition(const char* szBlockName, const char* szAnimName, AssocGroupId animGroup, AnimationId animID,
                                                             AnimDescriptor* pDescriptor)
 {
@@ -561,7 +507,6 @@ AnimAssocDefinition* CAnimManagerSA::AddAnimAssocDefinition(const char* szBlockN
 
     AnimAssocDefinition* pReturn{};
     DWORD                dwFunc = FUNC_CAnimManager_AddAnimAssocDefinition;
-    // clang-format off
     __asm
     {
         push    pDescriptor
@@ -573,90 +518,76 @@ AnimAssocDefinition* CAnimManagerSA::AddAnimAssocDefinition(const char* szBlockN
         mov     pReturn, eax
         add     esp, 0x14
     }
-    // clang-format on
     return pReturn;
 }
 
 void CAnimManagerSA::ReadAnimAssociationDefinitions()
 {
     DWORD dwFunc = FUNC_CAnimManager_ReadAnimAssociationDefinitions;
-    // clang-format off
     __asm
     {
         call    dwFunc
     }
-    // clang-format on
 }
 
 void CAnimManagerSA::CreateAnimAssocGroups()
 {
     DWORD dwFunc = FUNC_CAnimManager_CreateAnimAssocGroups;
-    // clang-format off
     __asm
     {
         call    dwFunc
     }
-    // clang-format on
 }
 
 void CAnimManagerSA::UncompressAnimation(CAnimBlendHierarchy* pHierarchy)
 {
     DWORD                           dwFunc = FUNC_CAnimManager_UncompressAnimation;
     CAnimBlendHierarchySAInterface* pHierarchyInterface = pHierarchy->GetInterface();
-    // clang-format off
     __asm
     {
         push    pHierarchyInterface
         call    dwFunc
         add     esp, 0x4
     }
-    // clang-format on
 }
 
 void CAnimManagerSA::RemoveFromUncompressedCache(CAnimBlendHierarchy* pHierarchy)
 {
     DWORD                           dwFunc = FUNC_CAnimManager_RemoveFromUncompressedCache;
     CAnimBlendHierarchySAInterface* pHierarchyInterface = pHierarchy->GetInterface();
-    // clang-format off
     __asm
     {
         push    pHierarchyInterface
         call    dwFunc
         add     esp, 0x4
     }
-    // clang-format on
 }
 
 void CAnimManagerSA::RemoveFromUncompressedCache(CAnimBlendHierarchySAInterface* pHierarchyInterface)
 {
     DWORD dwFunc = FUNC_CAnimManager_RemoveFromUncompressedCache;
-    // clang-format off
     __asm
     {
         push    pHierarchyInterface
         call    dwFunc
         add     esp, 0x4
     }
-    // clang-format on
 }
 
 void CAnimManagerSA::LoadAnimFile(const char* szFile)
 {
     DWORD dwFunc = FUNC_CAnimManager_LoadAnimFile;
-    // clang-format off
     __asm
     {
         push    szFile
         call    dwFunc
         add     esp, 0x4
     }
-    // clang-format on
 }
 
 void CAnimManagerSA::LoadAnimFile(RwStream* pStream, bool b1, const char* sz1)
 {
     DWORD dwFunc = FUNC_CAnimManager_LoadAnimFile_stream;
-    // clang-format off
     __asm
     {
         push    sz1
@@ -665,36 +596,30 @@ void CAnimManagerSA::LoadAnimFile(RwStream* pStream, bool b1, const char* sz1)
         call    dwFunc
         add     esp, 0xC
     }
-    // clang-format on
 }
 
 void CAnimManagerSA::LoadAnimFiles()
 {
     DWORD dwFunc = FUNC_CAnimManager_LoadAnimFiles;
-    // clang-format off
     __asm
     {
         call    dwFunc
     }
-    // clang-format on
 }
 
 void CAnimManagerSA::RemoveLastAnimFile()
 {
     DWORD dwFunc = FUNC_CAnimManager_RemoveLastAnimFile;
-    // clang-format off
     __asm
     {
         call    dwFunc
     }
-    // clang-format on
 }
 
 BYTE* CAnimManagerSA::AllocateKeyFramesMemory(uint32_t u32BytesToAllocate)
 {
     BYTE* pKeyFrames = nullptr;
     DWORD dwFunc = FUNC_CAnimManager_AllocateKeyFramesMemory;
-    // clang-format off
     __asm
     {
         push    u32BytesToAllocate
@@ -702,28 +627,24 @@ BYTE* CAnimManagerSA::AllocateKeyFramesMemory(uint32_t u32BytesToAllocate)
         add     esp, 0x4
         mov     pKeyFrames, eax
     }
-    // clang-format on
     return pKeyFrames;
 }
 
 void CAnimManagerSA::FreeKeyFramesMemory(void* pKeyFrames)
 {
     DWORD dwFunc = FUNC_CAnimManager_FreeKeyFramesMemory;
-    // clang-format off
     __asm
     {
         push    pKeyFrames
         call    dwFunc
         add     esp, 0x4
     }
-    // clang-format on
 }
 
 bool CAnimManagerSA::HasAnimGroupLoaded(AssocGroupId groupID)
 {
     bool  bReturn;
     DWORD dwFunc = FUNC_HasAnimGroupLoaded;
-    // clang-format off
     __asm
     {
         push    groupID
@@ -731,7 +652,6 @@ bool CAnimManagerSA::HasAnimGroupLoaded(AssocGroupId groupID)
         mov     bReturn, al
         add     esp, 0x4
     }
-    // clang-format on
     return bReturn;
 }
 
@@ -742,7 +662,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::RpAnimBlendClumpGetFirstA
 
     CAnimBlendAssociationSAInterface* pInterface = nullptr;
     DWORD                             dwFunc = FUNC_RpAnimBlendClumpGetFirstAssociation;
-    // clang-format off
     __asm
     {
         push    pClump
@@ -750,7 +669,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::RpAnimBlendClumpGetFirstA
         mov     pInterface, eax
         add     esp, 0x4
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendAssociationSA>(pInterface);
@@ -765,7 +683,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::RpAnimBlendClumpGetAssoci
 
     CAnimBlendAssociationSAInterface* pInterface = nullptr;
     DWORD                             dwFunc = FUNC_RpAnimBlendClumpGetAssociation_str;
-    // clang-format off
     __asm
     {
         push    szAnimName
@@ -774,7 +691,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::RpAnimBlendClumpGetAssoci
         mov     pInterface, eax
         add     esp, 0x8
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendAssociationSA>(pInterface);
@@ -789,7 +705,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::RpAnimBlendClumpGetAssoci
 
     CAnimBlendAssociationSAInterface* pInterface = nullptr;
     DWORD                             dwFunc = FUNC_RpAnimBlendClumpGetAssociation_int;
-    // clang-format off
     __asm
     {
         push    animID
@@ -798,7 +713,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::RpAnimBlendClumpGetAssoci
         mov     pInterface, eax
         add     esp, 0x8
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendAssociationSA>(pInterface);
@@ -811,7 +725,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::RpAnimBlendGetNextAssocia
     CAnimBlendAssociationSAInterface* pInterface = nullptr;
     DWORD                             dwFunc = FUNC_RpAnimBlendGetNextAssociation;
     CAnimBlendAssociationSAInterface* pAssociationInterface = pAssociation->GetInterface();
-    // clang-format off
     __asm
     {
         push    pAssociationInterface
@@ -819,7 +732,6 @@ std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::RpAnimBlendGetNextAssocia
         mov     pInterface, eax
         add     esp, 0x4
     }
-    // clang-format on
     if (pInterface)
     {
         return std::make_unique<CAnimBlendAssociationSA>(pInterface);
@@ -834,7 +746,6 @@ int CAnimManagerSA::RpAnimBlendClumpGetNumAssociations(RpClump* pClump)
 
     int   iReturn;
     DWORD dwFunc = FUNC_RpAnimBlendClumpGetNumAssociations;
-    // clang-format off
     __asm
     {
         push    pClump
@@ -842,7 +753,6 @@ int CAnimManagerSA::RpAnimBlendClumpGetNumAssociations(RpClump* pClump)
         mov     iReturn, eax
         add     esp, 0x4
     }
-    // clang-format on
     return iReturn;
 }
 
@@ -852,7 +762,6 @@ void CAnimManagerSA::RpAnimBlendClumpUpdateAnimations(RpClump* pClump, float f1,
         return;
 
     DWORD dwFunc = FUNC_RpAnimBlendClumpUpdateAnimations;
-    // clang-format off
     __asm
     {
         push    b1
@@ -861,7 +770,6 @@ void CAnimManagerSA::RpAnimBlendClumpUpdateAnimations(RpClump* pClump, float f1,
         call    dwFunc
         add     esp, 0xC
     }
-    // clang-format on
 }
 
 std::unique_ptr<CAnimBlendAssociation> CAnimManagerSA::GetAnimBlendAssociation(CAnimBlendAssociationSAInterface* pInterface)
