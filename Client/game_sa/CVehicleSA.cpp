@@ -200,6 +200,41 @@ namespace
 
     // Get all atomics for this frame (even if they are invisible)
     void GetAllAtomicObjects(RwFrame* frame, std::vector<RwObject*>& result) { RwFrameForAllObjects(frame, (void*)GetAllAtomicObjectCB, &result); }
+
+    int GetComponentIDFromName(const SString& name)
+    {
+        if (name == "bonnet_dummy")
+            return eDoors::BONNET;
+        else if (name == "boot_dummy")
+            return eDoors::BOOT;
+        else if (name == "door_lf_dummy")
+            return eDoors::FRONT_LEFT_DOOR;
+        else if (name == "door_rf_dummy")
+            return eDoors::FRONT_RIGHT_DOOR;
+        else if (name == "door_lb_dummy")
+            return eDoors::REAR_LEFT_DOOR;
+        else if (name == "door_rb_dummy")
+            return eDoors::REAR_RIGHT_DOOR;
+        else if (name == "bump_front_dummy")
+            return ePanels::FRONT_BUMPER;
+        else if (name == "bump_rear_dummy")
+            return ePanels::REAR_BUMPER;
+        else if (name == "windscreen_dummy")
+            return ePanels::WINDSCREEN_PANEL;
+    }
+
+    VehicleComponentType GetComponentTypeFromName(const SString& name)
+    {
+        if (name == "bonnet_dummy" || name == "boot_dummy" || name == "door_lf_dummy" || name == "door_rf_dummy" || name == "door_lb_dummy" ||
+            name == "door_rb_dummy")
+            return VehicleComponentType::DOOR;
+        else if (name == "bump_front_dummy" || name == "bump_rear_dummy" || name == "windscreen_dummy")
+            return VehicleComponentType::PANEL;
+        else if (name == "wheel_lb_dummy" || name == "wheel_rb_dummy" || name == "wheel_lf_dummy" || name == "wheel_rf_dummy")
+            return VehicleComponentType::WHEEL;
+
+        return VehicleComponentType::NONE;
+    }
 }            // namespace
 
 void CVehicleSA::Init()
@@ -611,7 +646,7 @@ void CVehicleSA::SetPlaneRotorSpeed(float fSpeed)
 }
 
 bool CVehicleSA::SetVehicleWheelRotation(float fWheelRot1, float fWheelRot2, float fWheelRot3, float fWheelRot4) noexcept
-{ 
+{
     VehicleClass m_eVehicleType = static_cast<VehicleClass>(GetVehicleInterface()->m_vehicleSubClass);
     switch (m_eVehicleType)
     {
@@ -641,7 +676,7 @@ bool CVehicleSA::SetVehicleWheelRotation(float fWheelRot1, float fWheelRot2, flo
     return false;
 }
 
-float CVehicleSA::GetPlaneRotorSpeed() 
+float CVehicleSA::GetPlaneRotorSpeed()
 {
     auto pInterface = static_cast<CPlaneSAInterface*>(GetInterface());
     return pInterface->m_fPropSpeed;
@@ -2178,15 +2213,46 @@ bool CVehicleSA::SetComponentVisible(const SString& vehicleComponent, bool bRequ
 
         if (bRequestVisible && uiNumAtomicsCurrentlyVisible == 0)
         {
-            // Make atomic (undamaged version) visible. TODO - Check if damaged version should be made visible instead
+            bool isComponentDamaged = false;
+            bool isComponentFallenOff = false;
+            int  componentID = GetComponentIDFromName(vehicleComponent);
+            auto damageManager = GetDamageManager();
+
+            switch (GetComponentTypeFromName(vehicleComponent))
+            {
+                case VehicleComponentType::DOOR:
+                {
+                    std::uint8_t doorStatus = damageManager->GetDoorStatus(static_cast<eDoors>(componentID));
+
+                    isComponentDamaged = (doorStatus > 1);
+                    isComponentFallenOff = (doorStatus == 4);
+                    break;
+                }
+                case VehicleComponentType::PANEL:
+                {
+                    std::uint8_t panelStatus = damageManager->GetPanelStatus(static_cast<std::uint8_t>(componentID));
+
+                    isComponentDamaged = (panelStatus > 0);
+                    isComponentFallenOff = (panelStatus == 3);
+                    break;
+                }
+                default:
+                    break;
+            }
+
+            // We don't want to show the component that fell off
+            if (isComponentFallenOff)
+                return false;
+
+            // Make atomic visible.
             for (uint i = 0; i < atomicList.size(); i++)
             {
                 RwObject* pAtomic = atomicList[i];
                 int       AtomicId = pGame->GetVisibilityPlugins()->GetAtomicId(pAtomic);
 
-                if (!(AtomicId & ATOMIC_ID_FLAG_TWO_VERSIONS_DAMAGED))
+                if ((isComponentDamaged && (AtomicId & ATOMIC_ID_FLAG_TWO_VERSIONS_DAMAGED)) ||
+                    (!isComponentDamaged && (AtomicId & ATOMIC_ID_FLAG_TWO_VERSIONS_UNDAMAGED)))
                 {
-                    // Either only one version, or two versions and this is the undamaged one
                     pAtomic->flags |= 0x04;
                 }
             }
