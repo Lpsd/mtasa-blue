@@ -211,7 +211,7 @@ void CCameraSA::TakeControl(CVector* position, int CamSwitchStyle)
             push    position
             call    dwFunc
         }*/
-        // clang-format on
+    // clang-format on
 
     DWORD CCamera__TakeControlNoEntity = FUNC_TakeControlNoEntity;
     // clang-format off

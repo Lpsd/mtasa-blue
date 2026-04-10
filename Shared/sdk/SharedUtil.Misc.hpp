@@ -2773,7 +2773,7 @@ namespace SharedUtil
             shr ebx, 24
             mov eax, ebx
         }
-        // clang-format on
+            // clang-format on
     #endif
     }
 
