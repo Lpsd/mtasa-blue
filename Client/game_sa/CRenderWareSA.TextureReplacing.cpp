@@ -2459,6 +2459,14 @@ namespace
             return;
 
         RwRaster* pRaster = pTexture->raster;
+
+        // If raster is shared with an orphaned copy, don't release it
+        if (pRaster && g_OrphanedCopyRasters.count(pRaster))
+        {
+            SafeDestroyTexture(pTexture);
+            return;
+        }
+
         if (pRaster)
         {
             // Release D3D texture before destroying to prevent double-free on shared rasters
@@ -2779,7 +2787,11 @@ namespace
             {
                 bool bIsActuallyCopy = perTxdInfo.bTexturesAreCopies;
                 if (!bIsActuallyCopy && pReplacementTextures && pMasterTextures)
+                {
                     bIsActuallyCopy = pMasterTextures->find(pTexture) == pMasterTextures->end();
+                    if (bIsActuallyCopy && g_LeakedMasterTextures.count(pTexture))
+                        bIsActuallyCopy = false;
+                }
 
                 if (bIsActuallyCopy)
                     outCopiesToDestroy.insert(pTexture);
