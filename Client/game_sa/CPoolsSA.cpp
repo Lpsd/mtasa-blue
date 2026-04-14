@@ -221,7 +221,12 @@ SClientEntity<CVehicleSA>* CPoolsSA::GetVehicle(DWORD* pGameInterface)
 
             if (dwElementIndexInPool < MAX_VEHICLES)
             {
-                return &m_vehiclePool.arrayOfClientEntities[dwElementIndexInPool];
+                // Return only if MTA has an entity for this slot
+                SClientEntity<CVehicleSA>* pSlot = &m_vehiclePool.arrayOfClientEntities[dwElementIndexInPool];
+                if (!pSlot->pEntity)
+                    return nullptr;
+
+                return pSlot;
             }
         }
     }
@@ -338,7 +343,12 @@ SClientEntity<CObjectSA>* CPoolsSA::GetObject(DWORD* pGameInterface)
 
         if (dwElementIndexInPool < MAX_OBJECTS)
         {
-            return &m_objectPool.arrayOfClientEntities[dwElementIndexInPool];
+            // Return only if MTA has an entity for this slot
+            SClientEntity<CObjectSA>* pSlot = &m_objectPool.arrayOfClientEntities[dwElementIndexInPool];
+            if (!pSlot->pEntity)
+                return nullptr;
+
+            return pSlot;
         }
     }
     return nullptr;
@@ -507,7 +517,12 @@ SClientEntity<CPedSA>* CPoolsSA::GetPed(DWORD* pGameInterface)
 
         if (dwElementIndexInPool < MAX_PEDS)
         {
-            return &m_pedPool.arrayOfClientEntities[dwElementIndexInPool];
+            // Return only if MTA has an entity for this slot
+            SClientEntity<CPedSA>* pSlot = &m_pedPool.arrayOfClientEntities[dwElementIndexInPool];
+            if (!pSlot->pEntity)
+                return nullptr;
+
+            return pSlot;
         }
     }
     return nullptr;
