@@ -1879,6 +1879,17 @@ void CModelInfoSA::DeallocateModel(void)
 {
     Remove();
 
+    // Clean up stored defaults so stale entries don't leak to a model that reuses this ID.
+    // Without this, a freed model ID could retain alpha transparency / flag overrides
+    // that get incorrectly restored later, causing wrong draw-order or z-buffer behavior.
+    ms_DefaultTxdIDMap.erase(static_cast<unsigned short>(m_dwModelID));
+    ms_ModelDefaultFlagsMap.erase(m_dwModelID);
+    ms_ModelDefaultLodDistanceMap.erase(m_dwModelID);
+    ms_ModelDefaultAlphaTransparencyMap.erase(m_dwModelID);
+    ms_OriginalObjectPropertiesGroups.erase(m_dwModelID);
+    ms_ModelDefaultDummiesPosition.erase(m_dwModelID);
+    ms_VehicleModelDefaultWheelSizes.erase(m_dwModelID);
+
     switch (GetModelType())
     {
         case eModelInfoType::VEHICLE:

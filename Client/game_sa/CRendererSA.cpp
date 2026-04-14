@@ -32,9 +32,24 @@ void CRendererSA::RenderModel(CModelInfo* pModelInfo, const CMatrix& matrix, flo
     if (!pModelInfoSAInterface)
         return;
 
+    // Prevent GC from freeing RwObject during rendering, which can cause
+    // invisible or corrupt draws (manifesting as alpha/transparency glitches).
+    pModelInfo->ModelAddRef(NON_BLOCKING, "CRendererSA::RenderModel");
+
+    // Revalidate interface after AddRef (the request may have triggered streaming)
+    pModelInfoSAInterface = pModelInfo->GetInterface();
+    if (!pModelInfoSAInterface)
+    {
+        pModelInfo->RemoveRef();
+        return;
+    }
+
     RwObject* pRwObject = pModelInfoSAInterface->pRwObject;
     if (!pRwObject)
+    {
+        pModelInfo->RemoveRef();
         return;
+    }
 
     RwFrame* pFrame = RpGetFrame(pRwObject);
 
@@ -61,4 +76,7 @@ void CRendererSA::RenderModel(CModelInfo* pModelInfo, const CMatrix& matrix, flo
 
     // Restore ambient light
     SetAmbientColours();
+
+    // Release reference - allow GC to reclaim if no longer needed
+    pModelInfo->RemoveRef();
 }

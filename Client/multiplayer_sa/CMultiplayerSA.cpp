@@ -1572,8 +1572,15 @@ void CMultiplayerSA::InitHooks()
     MemCpy((void*)0x53A00A, "\x33\xC0\x90\x90\x90", 5);
 
     // Fix objects with alpha below 141 are invisible (#425)
-    MemPut<BYTE>(0x553AD9, 0);
-    MemPut<BYTE>(0x732C2F, 0);
+    // Original values: 0x553AD9=140, 0x732C2F=100. These are passed to
+    // RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, value).
+    // When value=0, RenderWare DISABLES alpha testing entirely, causing
+    // fully transparent pixels to write to the z-buffer and block objects
+    // behind transparent surfaces (fences, vegetation, etc).
+    // Using value=1 keeps alpha testing enabled (rejecting only alpha=0
+    // pixels) while preserving the fix for low-alpha entity visibility.
+    MemPut<BYTE>(0x553AD9, 1);
+    MemPut<BYTE>(0x732C2F, 1);
 
     InitHooks_CrashFixHacks();
     InitHooks_DeviceSelection();
@@ -4161,7 +4168,7 @@ static void __declspec(naked) HOOK_ComputeDamageResponse_StartChoking()
         // Get weapon type before pushad to avoid stack offset corruption
         mov     al, [esp+0x8]
         mov     ucChokingWeaponType, al
-        
+
         pushad
 
         mov     ebx, [m_pChokingHandler]
@@ -4178,7 +4185,7 @@ static void __declspec(naked) HOOK_ComputeDamageResponse_StartChoking()
         jnz     continueWithOriginalCode
         popad
         jmp     dwChokingDontchoke
-    
+
         continueWithOriginalCode:
         popad
         mov     ecx, [edi]
