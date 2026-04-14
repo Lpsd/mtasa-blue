@@ -9,10 +9,24 @@
  *  NetBitStreamInterface contract. This lets us test SyncStructure
  *  serialization round-trips without the real network dependencies.
  *
- *  NormVector compression uses a simplified algorithm that preserves
- *  direction and magnitude to within 1/32767.5 accuracy (matching the
- *  documented spec). The exact wire format is NOT compatible with RakNet -
- *  only the round-trip correctness matters for testing sync structures.
+ *  IMPORTANT: This mock diverges from RakNet in several ways:
+ *
+ *  1. Bit ordering: WriteBits/ReadBits use LSB-first ordering within each
+ *     byte, while RakNet uses MSB-first. Round-trip tests are self-consistent
+ *     (write and read use the same ordering), but do NOT feed real captured
+ *     RakNet data into this mock — it will silently produce wrong results.
+ *
+ *  2. WriteCompressed/ReadCompressed: The mock uses a simplified 1-flag-bit
+ *     approach ("is upper half zero?"), while RakNet iterates byte-by-byte
+ *     with multiple flag bits. Wire sizes differ between the two, but
+ *     round-trip correctness is preserved for testing purposes.
+ *
+ *  3. NormVector compression uses a simplified algorithm that preserves
+ *     direction and magnitude to within 1/32767.5 accuracy (matching the
+ *     documented spec). The exact wire format is NOT compatible with RakNet.
+ *
+ *  These differences are acceptable because we only test round-trip
+ *  serialization correctness, not wire-format compatibility.
  *
  *****************************************************************************/
 
@@ -56,7 +70,8 @@ public:
     void Write(const ISyncStructure* syncStruct) override { syncStruct->Write(*this); }
 
     // ------- WriteCompressed -------
-    // Simplified: leading-zero compression for integer types.
+    // Simplified compression: differs from RakNet's byte-by-byte algorithm.
+    // See file header for details. Only valid for round-trip testing.
     // Writes a 1 bit if the upper half is all zeros (and skips it), else writes 0 + full value.
     void WriteCompressed(const unsigned char& input) override { WriteCompressedT(input); }
     void WriteCompressed(const char& input) override { WriteCompressedT(reinterpret_cast<const unsigned char&>(input)); }
@@ -230,18 +245,17 @@ public:
     int GetNumberOfUnreadBits() const override { return m_iWriteBit - m_iReadBit; }
 
     // ------- Alignment -------
+    // m_iWriteBit and m_iReadBit are mutable because the interface declares
+    // these methods const (design quirk inherited from RakNet).
     void AlignWriteToByteBoundary() const override
     {
-        // const_cast because the interface declares this const (design quirk)
-        auto* self = const_cast<MockBitStream*>(this);
-        if (self->m_iWriteBit % 8 != 0)
-            self->m_iWriteBit = ((self->m_iWriteBit / 8) + 1) * 8;
+        if (m_iWriteBit % 8 != 0)
+            m_iWriteBit = ((m_iWriteBit / 8) + 1) * 8;
     }
     void AlignReadToByteBoundary() const override
     {
-        auto* self = const_cast<MockBitStream*>(this);
-        if (self->m_iReadBit % 8 != 0)
-            self->m_iReadBit = ((self->m_iReadBit / 8) + 1) * 8;
+        if (m_iReadBit % 8 != 0)
+            m_iReadBit = ((m_iReadBit / 8) + 1) * 8;
     }
 
     // ------- Data access -------
@@ -341,7 +355,7 @@ private:
     }
 
     std::vector<unsigned char> m_data;
-    int                        m_iWriteBit = 0;
-    int                        m_iReadBit = 0;
+    mutable int                m_iWriteBit = 0;
+    mutable int                m_iReadBit = 0;
     unsigned short             m_usVersion;
 };

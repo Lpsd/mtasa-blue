@@ -333,6 +333,40 @@ TEST(SUnoccupiedVehicleSync, RoundTrip_PositionAndHealth)
     EXPECT_NEAR(1000.0f, out.data.fHealth, 0.6f);
 }
 
+// SUnoccupiedVehicleSync with velocity enabled: exercises the SVelocitySync
+// sub-structure which uses NormVector encoding for the direction component.
+// The simpler PositionAndHealth test above doesn't cover this path.
+TEST(SUnoccupiedVehicleSync, RoundTrip_WithVelocity)
+{
+    MockBitStream          bs;
+    SUnoccupiedVehicleSync sync;
+    std::memset(&sync.data, 0, sizeof(sync.data));
+    sync.data.vehicleID = ElementID(200);
+    sync.data.ucTimeContext = 7;
+    sync.data.bSyncPosition = true;
+    sync.data.bSyncVelocity = true;
+    sync.data.bSyncHealth = true;
+    sync.data.vecPosition = CVector(500.0f, -300.0f, 25.0f);
+    sync.data.vecVelocity = CVector(5.0f, 10.0f, -2.0f);
+    sync.data.fHealth = 800.0f;
+    sync.Write(bs);
+    bs.ResetReadPointer();
+    SUnoccupiedVehicleSync out;
+    EXPECT_TRUE(out.Read(bs));
+    EXPECT_EQ(7, out.data.ucTimeContext);
+    EXPECT_TRUE(out.data.bSyncPosition);
+    EXPECT_TRUE(out.data.bSyncVelocity);
+    EXPECT_TRUE(out.data.bSyncHealth);
+    EXPECT_FALSE(out.data.bSyncRotation);
+    EXPECT_NEAR(500.0f, out.data.vecPosition.fX, 0.01f);
+    EXPECT_NEAR(-300.0f, out.data.vecPosition.fY, 0.01f);
+    // Velocity uses NormVector direction encoding, so allow some tolerance
+    EXPECT_NEAR(5.0f, out.data.vecVelocity.fX, 0.05f);
+    EXPECT_NEAR(10.0f, out.data.vecVelocity.fY, 0.05f);
+    EXPECT_NEAR(-2.0f, out.data.vecVelocity.fZ, 0.05f);
+    EXPECT_NEAR(800.0f, out.data.fHealth, 0.6f);
+}
+
 // ============================================================================
 // Unoccupied push sync
 // ============================================================================

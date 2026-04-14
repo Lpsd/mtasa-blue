@@ -327,8 +327,12 @@ TEST(SMouseButtonSync, RoundTrip)
 // Heat haze
 // ============================================================================
 
-// Heat haze settings: a mix of 8-bit, 16-bit, and boolean fields.
-// All are raw scalar types, so they should round-trip exactly.
+// Heat haze settings: ucIntensity and ucRandomShift are raw 8-bit values,
+// but the speed, scan size, and render size fields use bit-truncated
+// ReadRange/WriteRange (10-bit or 11-bit). bInsideBuilding is a single bit.
+// Test values are chosen to fit within the truncated ranges so they
+// round-trip exactly.
+// Total: 2×8 + 4×10 + 2×11 + 1 = 79 bits.
 TEST(SHeatHazeSync, RoundTrip)
 {
     MockBitStream bs;
@@ -343,6 +347,7 @@ TEST(SHeatHazeSync, RoundTrip)
     sync.data.settings.usRenderSizeY = 600;
     sync.data.settings.bInsideBuilding = true;
     sync.Write(bs);
+    EXPECT_EQ(79, bs.GetNumberOfBitsUsed());
     bs.ResetReadPointer();
     SHeatHazeSync out;
     EXPECT_TRUE(out.Read(bs));
@@ -363,6 +368,7 @@ TEST(SHeatHazeSync, RoundTrip)
 
 // sWeaponPropertySync: the full weapon stats configuration. All fields are
 // raw floats/ints, so they should survive the round-trip exactly.
+// Total: 2×int(32) + 2×short(16) + 9×float(32) = 384 bits.
 TEST(sWeaponPropertySync, RoundTrip)
 {
     MockBitStream       bs;
@@ -384,6 +390,9 @@ TEST(sWeaponPropertySync, RoundTrip)
     sync.data.anim2_loop_bullet_fire = 0.0f;
     sync.data.anim_breakout_time = 0.3f;
     sync.Write(bs);
+    // int + float + float + int + short + short + float + float + 7×float
+    // = 32 + 32 + 32 + 32 + 16 + 16 + 32 + 32 + 7×32 = 448 bits
+    EXPECT_EQ(448, bs.GetNumberOfBitsUsed());
     bs.ResetReadPointer();
     sWeaponPropertySync out;
     EXPECT_TRUE(out.Read(bs));

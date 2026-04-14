@@ -217,6 +217,62 @@ TEST(SFullKeysyncSync, RoundTrip_WithAnalogButtons)
 }
 
 // ============================================================================
+// Small keysync (tests the subtle field-ordering difference vs SFullKeysyncSync)
+// ============================================================================
+
+// SSmallKeysyncSync has ucButtonCross before ucButtonSquare in its data
+// struct (opposite of SFullKeysyncSync), but the serialization order is
+// the same: Square first, then Cross. This test verifies the two analog
+// buttons don't get swapped during round-trip.
+TEST(SSmallKeysyncSync, RoundTrip_NoAnalogButtons)
+{
+    MockBitStream     bs;
+    SSmallKeysyncSync sync;
+    std::memset(&sync.data, 0, sizeof(sync.data));
+    sync.data.bLeftShoulder1 = true;
+    sync.data.bButtonCircle = true;
+    sync.data.ucButtonSquare = 0;
+    sync.data.ucButtonCross = 0;
+    sync.data.sLeftStickX = 64;
+    sync.data.sLeftStickY = -64;
+    sync.Write(bs);
+    bs.ResetReadPointer();
+    SSmallKeysyncSync out;
+    std::memset(&out.data, 0, sizeof(out.data));
+    EXPECT_TRUE(out.Read(bs));
+    EXPECT_TRUE(out.data.bLeftShoulder1);
+    EXPECT_FALSE(out.data.bRightShoulder1);
+    EXPECT_TRUE(out.data.bButtonCircle);
+    EXPECT_EQ(0, out.data.ucButtonSquare);
+    EXPECT_EQ(0, out.data.ucButtonCross);
+    EXPECT_NEAR(64, out.data.sLeftStickX, 2);
+    EXPECT_NEAR(-64, out.data.sLeftStickY, 2);
+}
+
+// When analog button values are in range [1, 254], they are written with
+// full precision. This exercises the ucButtonSquare/ucButtonCross ordering
+// which differs from SFullKeysyncSync's data layout.
+TEST(SSmallKeysyncSync, RoundTrip_WithAnalogButtons)
+{
+    MockBitStream     bs;
+    SSmallKeysyncSync sync;
+    std::memset(&sync.data, 0, sizeof(sync.data));
+    sync.data.ucButtonSquare = 100;
+    sync.data.ucButtonCross = 200;
+    sync.data.sLeftStickX = 0;
+    sync.data.sLeftStickY = 0;
+    sync.Write(bs);
+    bs.ResetReadPointer();
+    SSmallKeysyncSync out;
+    std::memset(&out.data, 0, sizeof(out.data));
+    EXPECT_TRUE(out.Read(bs));
+    // Verify that Square and Cross don't get swapped despite the
+    // different field order in the data struct vs SFullKeysyncSync.
+    EXPECT_EQ(100, out.data.ucButtonSquare);
+    EXPECT_EQ(200, out.data.ucButtonCross);
+}
+
+// ============================================================================
 // Weapon syncs
 // ============================================================================
 
@@ -314,6 +370,38 @@ TEST(SWeaponAimSync, RoundTrip_Full)
     EXPECT_NEAR(100.0f + range, out.data.vecTarget.fX, 0.1f);
     EXPECT_NEAR(200.0f, out.data.vecTarget.fY, 0.1f);
     EXPECT_NEAR(10.0f, out.data.vecTarget.fZ, 0.1f);
+}
+
+// Weapon aim (full, diagonal): uses a diagonal aim direction to exercise
+// the Y/Z swap in WriteNormVector/ReadNormVector calls. SWeaponAimSync
+// writes NormVector(fX, fZ, fY) and reads NormVector(fX, fZ, fY), so a
+// test with Y=Z=0 wouldn't catch component ordering bugs.
+TEST(SWeaponAimSync, RoundTrip_FullDiagonal)
+{
+    MockBitStream  bs;
+    float          range = 100.0f;
+    SWeaponAimSync sync(range, true);
+    sync.data.fArm = 0.1f;
+    sync.data.vecOrigin = CVector(0.0f, 0.0f, 0.0f);
+    // Diagonal target: direction has non-trivial X, Y, and Z components
+    sync.data.vecTarget = CVector(50.0f, 70.0f, 30.0f);
+    sync.Write(bs);
+    bs.ResetReadPointer();
+    SWeaponAimSync out(range, true);
+    EXPECT_TRUE(out.Read(bs));
+    EXPECT_NEAR(0.1f, out.data.fArm, 0.01f);
+    // The target is reconstructed as origin + normalized(direction) * range.
+    // NormVector quantization (16-bit per component, ~1/32767 error) gets
+    // amplified by the weapon range. With range=100 the per-component error
+    // can reach ~100/32767 ≈ 0.003, but the Y/Z swap and re-normalization
+    // in the sync structure can amplify this further. Use 10% of range as
+    // a generous tolerance that still catches gross component-swap bugs.
+    const float kTol = range * 0.1f;
+    EXPECT_NEAR(sync.data.vecTarget.fX, out.data.vecTarget.fX, kTol);
+    EXPECT_NEAR(sync.data.vecTarget.fY, out.data.vecTarget.fY, kTol);
+    EXPECT_NEAR(sync.data.vecTarget.fZ, out.data.vecTarget.fZ, kTol);
+    // Verify Y and Z didn't get swapped: Y should be larger than Z
+    EXPECT_GT(out.data.vecTarget.fY, out.data.vecTarget.fZ);
 }
 
 // ============================================================================

@@ -127,6 +127,28 @@ TEST(SRotationDegreesSync, RoundTrip_Quantized)
     EXPECT_NEAR(270.0f, out.data.vecRotation.fZ, 0.01f);
 }
 
+// Negative rotation: SRotationDegreesSync casts to unsigned short, so
+// negative inputs wrap around. For example, -10 degrees → unsigned short
+// wraps to a large value, which reads back as ~360 + (-10 * 65536/360)
+// mapped to [0, 360). This is the expected behavior for the sync struct.
+TEST(SRotationDegreesSync, RoundTrip_NegativeInput)
+{
+    MockBitStream        bs;
+    SRotationDegreesSync sync(false);
+    sync.data.vecRotation.fX = -10.0f;
+    sync.data.vecRotation.fY = -90.0f;
+    sync.data.vecRotation.fZ = -180.0f;
+    sync.Write(bs);
+    bs.ResetReadPointer();
+    SRotationDegreesSync out(false);
+    EXPECT_TRUE(out.Read(bs));
+    // Negative values wrap into [0, 360) range due to unsigned short cast.
+    // -10° → cast to unsigned short → wraps → reads back as ~350°
+    EXPECT_NEAR(350.0f, out.data.vecRotation.fX, 0.01f);
+    EXPECT_NEAR(270.0f, out.data.vecRotation.fY, 0.01f);
+    EXPECT_NEAR(180.0f, out.data.vecRotation.fZ, 0.01f);
+}
+
 // Degrees (float): raw 32-bit floats, no precision loss.
 TEST(SRotationDegreesSync, RoundTrip_Floats)
 {
