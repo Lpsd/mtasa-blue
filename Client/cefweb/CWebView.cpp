@@ -127,9 +127,10 @@ void CWebView::QueueBrowserEvent(const char* name, std::function<void(CWebBrowse
 
 void CWebView::Initialise()
 {
-    // Lazy browser creation: We don't create the CEF browser here.
-    // The browser will be created on first LoadURL() call via EnsureBrowserCreated().
-    // This saves memory and CPU for browsers that are created but never used.
+    // Create the CEF browser eagerly so onClientBrowserCreated fires
+    // even if loadBrowserURL hasn't been called yet.
+    // Scripts rely on this event to know when the browser is ready.
+    EnsureBrowserCreated();
 }
 
 bool CWebView::EnsureBrowserCreated()
