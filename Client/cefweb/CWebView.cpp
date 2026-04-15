@@ -334,8 +334,8 @@ void CWebView::ClearTexture()
     {
         // Check for integer overflow in size calculation: height * pitch must fit in size_t
         // Ensure both are positive and that multiplication won't overflow
-        if (SurfaceDesc.Height > 0 && LockedRect.Pitch > 0 &&
-            static_cast<size_t>(SurfaceDesc.Height) <= SIZE_MAX / static_cast<size_t>(LockedRect.Pitch)) [[likely]]
+        if (SurfaceDesc.Height > 0 && LockedRect.Pitch > 0 && static_cast<size_t>(SurfaceDesc.Height) <= SIZE_MAX / static_cast<size_t>(LockedRect.Pitch))
+            [[likely]]
         {
             const auto memsetSize = static_cast<size_t>(SurfaceDesc.Height) * static_cast<size_t>(LockedRect.Pitch);
             std::memset(LockedRect.pBits, 0xFF, memsetSize);
@@ -375,8 +375,7 @@ void CWebView::UpdateTexture()
         m_pWebBrowserRenderItem->m_bTextureWasRecreated = false;
 
         // If we have valid buffer data matching texture size, trigger full update
-        if (m_RenderData.buffer && m_RenderData.bufferSize > 0 &&
-            m_RenderData.width == static_cast<int>(m_pWebBrowserRenderItem->m_uiSizeX) &&
+        if (m_RenderData.buffer && m_RenderData.bufferSize > 0 && m_RenderData.width == static_cast<int>(m_pWebBrowserRenderItem->m_uiSizeX) &&
             m_RenderData.height == static_cast<int>(m_pWebBrowserRenderItem->m_uiSizeY))
         {
             m_RenderData.changed = true;
@@ -390,9 +389,9 @@ void CWebView::UpdateTexture()
         D3DLOCKED_RECT LockedRect;
         if (SUCCEEDED(pSurface->LockRect(&LockedRect, nullptr, D3DLOCK_DISCARD)))
         {
-            auto* const destData = static_cast<byte*>(LockedRect.pBits);
+            auto* const       destData = static_cast<byte*>(LockedRect.pBits);
             const auto* const sourceData = m_RenderData.buffer.get();
-            const auto destPitch = LockedRect.Pitch;
+            const auto        destPitch = LockedRect.Pitch;
 
             // Validate destination pitch
             if (destPitch <= 0) [[unlikely]]
@@ -432,8 +431,7 @@ void CWebView::UpdateTexture()
                 // Our buffer contains the complete frame from OnPaint's full memcpy
                 if (destPitch == sourcePitch) [[likely]]
                 {
-                    if (m_RenderData.height > 0 &&
-                        static_cast<size_t>(m_RenderData.height) > SIZE_MAX / static_cast<size_t>(destPitch)) [[unlikely]]
+                    if (m_RenderData.height > 0 && static_cast<size_t>(m_RenderData.height) > SIZE_MAX / static_cast<size_t>(destPitch)) [[unlikely]]
                     {
                         pSurface->UnlockRect();
                         m_RenderData.changed = false;
@@ -453,9 +451,8 @@ void CWebView::UpdateTexture()
                         return;
                     }
 
-                    if (m_RenderData.height > 0 &&
-                        (static_cast<size_t>(m_RenderData.height) > SIZE_MAX / static_cast<size_t>(destPitch) ||
-                         static_cast<size_t>(m_RenderData.height) > SIZE_MAX / static_cast<size_t>(sourcePitch))) [[unlikely]]
+                    if (m_RenderData.height > 0 && (static_cast<size_t>(m_RenderData.height) > SIZE_MAX / static_cast<size_t>(destPitch) ||
+                                                    static_cast<size_t>(m_RenderData.height) > SIZE_MAX / static_cast<size_t>(sourcePitch))) [[unlikely]]
                     {
                         pSurface->UnlockRect();
                         m_RenderData.changed = false;
@@ -476,15 +473,12 @@ void CWebView::UpdateTexture()
 
             // Update popup area
             const auto& popupRect = m_RenderData.popupRect;
-            const auto renderWidth = static_cast<int>(m_pWebBrowserRenderItem->m_uiSizeX);
-            const auto renderHeight = static_cast<int>(m_pWebBrowserRenderItem->m_uiSizeY);
-            const auto popupSizeMismatches =
-                popupRect.x < 0 || popupRect.y < 0 ||
-                popupRect.width <= 0 || popupRect.height <= 0 ||
-                popupRect.x >= renderWidth || popupRect.y >= renderHeight ||
-                popupRect.width > renderWidth || popupRect.height > renderHeight ||
-                popupRect.x > renderWidth - popupRect.width ||
-                popupRect.y > renderHeight - popupRect.height;
+            const auto  renderWidth = static_cast<int>(m_pWebBrowserRenderItem->m_uiSizeX);
+            const auto  renderHeight = static_cast<int>(m_pWebBrowserRenderItem->m_uiSizeY);
+            const auto  popupSizeMismatches = popupRect.x < 0 || popupRect.y < 0 || popupRect.width <= 0 || popupRect.height <= 0 ||
+                                             popupRect.x >= renderWidth || popupRect.y >= renderHeight || popupRect.width > renderWidth ||
+                                             popupRect.height > renderHeight || popupRect.x > renderWidth - popupRect.width ||
+                                             popupRect.y > renderHeight - popupRect.height;
 
             if (m_RenderData.popupShown && !popupSizeMismatches && m_RenderData.popupBuffer) [[likely]]
             {
@@ -508,8 +502,7 @@ void CWebView::UpdateTexture()
                 {
                     const auto sourceIndex = static_cast<size_t>(y) * static_cast<size_t>(popupPitch);
                     const auto destY = static_cast<size_t>(popupRect.y) + static_cast<size_t>(y);
-                    const auto destIndex = destY * static_cast<size_t>(destPitch) +
-                                            static_cast<size_t>(popupRect.x) * CEF_PIXEL_STRIDE;
+                    const auto destIndex = destY * static_cast<size_t>(destPitch) + static_cast<size_t>(popupRect.x) * CEF_PIXEL_STRIDE;
 
                     std::memcpy(&destData[destIndex], &m_RenderData.popupBuffer[sourceIndex], static_cast<size_t>(popupPitch));
                 }
@@ -562,7 +555,7 @@ void CWebView::InjectMouseMove(int iPosX, int iPosY)
     // Throttle mouse move events to reduce excessive CEF repaints
     // Allow ~60 mouse updates per second (16ms interval)
     constexpr auto MOUSE_THROTTLE_INTERVAL = std::chrono::milliseconds(16);
-    auto now = std::chrono::steady_clock::now();
+    auto           now = std::chrono::steady_clock::now();
 
     // Always update the pending position
     m_vecPendingMousePosition.x = iPosX;
@@ -1007,8 +1000,7 @@ void CWebView::OnPaint(CefRefPtr<CefBrowser> browser, CefRenderHandler::PaintEle
         if (popupRect.width > 0 && popupRect.height > 0 && popupRect.width <= maxDimension && popupRect.height <= maxDimension &&
             static_cast<size_t>(popupRect.width) <= SIZE_MAX / (static_cast<size_t>(popupRect.height) * CEF_PIXEL_STRIDE)) [[likely]]
         {
-            currentSize = static_cast<size_t>(popupRect.width) *
-                         static_cast<size_t>(popupRect.height) * CEF_PIXEL_STRIDE;
+            currentSize = static_cast<size_t>(popupRect.width) * static_cast<size_t>(popupRect.height) * CEF_PIXEL_STRIDE;
         }
 
         // Reallocate if size changed or buffer doesn't exist
@@ -1334,9 +1326,9 @@ void CWebView::OnAfterCreated(CefRefPtr<CefBrowser> browser)
     if (!m_strPendingURL.empty())
     {
         SString pendingURL = m_strPendingURL;
-        bool filterEnabled = m_bPendingURLFilterEnabled;
+        bool    filterEnabled = m_bPendingURLFilterEnabled;
         SString postData = m_strPendingPostData;
-        bool urlEncoded = m_bPendingURLEncoded;
+        bool    urlEncoded = m_bPendingURLEncoded;
 
         // Clear pending state before loading to prevent recursion
         m_strPendingURL.clear();
@@ -1465,4 +1457,3 @@ void CWebView::OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefF
     // Show no context menu
     model->Clear();
 }
-

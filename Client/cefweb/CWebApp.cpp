@@ -115,10 +115,7 @@ namespace
 
 [[nodiscard]] CefRefPtr<CefResourceHandler> CWebApp::HandleError(const SString& strError, unsigned int uiError)
 {
-    auto stream = CefStreamReader::CreateForData(
-        (void*)strError.c_str(),
-        strError.length()
-    );
+    auto stream = CefStreamReader::CreateForData((void*)strError.c_str(), strError.length());
     if (!stream)
         return nullptr;
     return CefRefPtr<CefResourceHandler>(new CefStreamResourceHandler(uiError, strError, "text/plain", CefResponse::HeaderMap(), stream));

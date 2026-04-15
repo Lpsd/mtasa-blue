@@ -95,7 +95,8 @@ void CWebBrowserItem::CreateUnderlyingData()
     // - D3DLOCK_DISCARD can be used effectively to avoid stalls
     // - No system memory copy (unlike D3DPOOL_MANAGED), reducing memory usage
     // Note: Must handle device lost/reset as DEFAULT pool textures don't survive resets
-    if (FAILED(m_pDevice->CreateTexture(m_uiSizeX, m_uiSizeY, 1, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, (IDirect3DTexture9**)&m_pD3DTexture, nullptr)) ||
+    if (FAILED(m_pDevice->CreateTexture(m_uiSizeX, m_uiSizeY, 1, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, (IDirect3DTexture9**)&m_pD3DTexture,
+                                        nullptr)) ||
         !m_pD3DTexture)
         return;
 

@@ -30,8 +30,8 @@
 #include <mutex>
 #include <cstdint>
 #include <chrono>
-#define GetNextSibling(hwnd) GetWindow(hwnd, GW_HWNDNEXT) // Re-define the conflicting macro
-#define GetFirstChild(hwnd) GetTopWindow(hwnd)
+#define GetNextSibling(hwnd) GetWindow(hwnd, GW_HWNDNEXT)  // Re-define the conflicting macro
+#define GetFirstChild(hwnd)  GetTopWindow(hwnd)
 
 #define MTA_CEF_USERAGENT "Multi Theft Auto: San Andreas Client " MTA_DM_BUILDTAG_LONG
 
@@ -264,31 +264,31 @@ private:
     CefRefPtr<CefBrowser> m_pWebView;
     CWebBrowserItem*      m_pWebBrowserRenderItem;
 
-    std::atomic_bool           m_bBeingDestroyed;
-    bool                       m_bIsLocal;
-    bool                       m_bIsRenderingPaused;
-    bool                       m_bIsTransparent;
-    bool                       m_bBrowserCreated = false;  // Lazy creation: tracks if CEF browser has been created
-    SString                    m_strPendingURL;            // Lazy creation: URL to load when browser is ready
-    bool                       m_bPendingURLFilterEnabled = true;
-    SString                    m_strPendingPostData;
-    bool                       m_bPendingURLEncoded = true;
-    POINT                      m_vecMousePosition;
-    POINT                      m_vecPendingMousePosition;      // Pending position for throttled mouse move
-    bool                       m_bHasPendingMouseMove = false; // Whether there's a pending throttled mouse move
-    std::chrono::steady_clock::time_point m_lastMouseMoveTime; // For mouse move throttling
-    bool                       m_mouseButtonStates[3];
-    SString                    m_CurrentTitle;
-    float                      m_fVolume;
-    std::map<SString, SString> m_Properties;
-    bool                       m_bHasInputFocus;
-    std::set<std::string>      m_AjaxHandlers;
-    std::shared_ptr<FEventTarget> m_pEventTarget;
+    std::atomic_bool                      m_bBeingDestroyed;
+    bool                                  m_bIsLocal;
+    bool                                  m_bIsRenderingPaused;
+    bool                                  m_bIsTransparent;
+    bool                                  m_bBrowserCreated = false;  // Lazy creation: tracks if CEF browser has been created
+    SString                               m_strPendingURL;            // Lazy creation: URL to load when browser is ready
+    bool                                  m_bPendingURLFilterEnabled = true;
+    SString                               m_strPendingPostData;
+    bool                                  m_bPendingURLEncoded = true;
+    POINT                                 m_vecMousePosition;
+    POINT                                 m_vecPendingMousePosition;       // Pending position for throttled mouse move
+    bool                                  m_bHasPendingMouseMove = false;  // Whether there's a pending throttled mouse move
+    std::chrono::steady_clock::time_point m_lastMouseMoveTime;             // For mouse move throttling
+    bool                                  m_mouseButtonStates[3];
+    SString                               m_CurrentTitle;
+    float                                 m_fVolume;
+    std::map<SString, SString>            m_Properties;
+    bool                                  m_bHasInputFocus;
+    std::set<std::string>                 m_AjaxHandlers;
+    std::shared_ptr<FEventTarget>         m_pEventTarget;
 
     struct
     {
-        bool                    changed = false;
-        std::mutex              dataMutex;
+        bool       changed = false;
+        std::mutex dataMutex;
 
         // Main frame buffer - we now own this buffer (copied in OnPaint)
         std::unique_ptr<byte[]> buffer;

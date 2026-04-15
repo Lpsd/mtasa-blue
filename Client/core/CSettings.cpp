@@ -4746,7 +4746,8 @@ void CSettings::SaveData()
     gameSettings->Save();
 
     // Ask to restart?
-    if (bIsVideoModeChanged || bIsAntiAliasingChanged || bIsCustomizedSAFilesChanged || processsDPIAwareChanged || bBrowserGPUSettingChanged || bBrowserVideoAccelSettingChanged)
+    if (bIsVideoModeChanged || bIsAntiAliasingChanged || bIsCustomizedSAFilesChanged || processsDPIAwareChanged || bBrowserGPUSettingChanged ||
+        bBrowserVideoAccelSettingChanged)
         ShowRestartQuestion();
     else if (CModManager::GetSingleton().IsLoaded() && bBrowserSettingChanged)
         ShowDisconnectQuestion();
