@@ -32,19 +32,9 @@ void CRendererSA::RenderModel(CModelInfo* pModelInfo, const CMatrix& matrix, flo
     if (!pModelInfoSAInterface)
         return;
 
-    // Use GTA's native CBaseModelInfoSAInterface::AddRef/RemoveRef to hold the
-    // model during rendering. This increments GTA's usNumberOfRefs without going
-    // through MTA's ModelAddRef/RemoveRef, which triggers Remove() and model
-    // unloading when m_dwReferences drops to 0 — causing dxDrawModel3D to flicker
-    // every other frame for models with no persistent MTA-side reference.
-    pModelInfoSAInterface->AddRef();
-
     RwObject* pRwObject = pModelInfoSAInterface->pRwObject;
     if (!pRwObject)
-    {
-        pModelInfoSAInterface->RemoveRef();
         return;
-    }
 
     RwFrame* pFrame = RpGetFrame(pRwObject);
 
@@ -71,7 +61,4 @@ void CRendererSA::RenderModel(CModelInfo* pModelInfo, const CMatrix& matrix, flo
 
     // Restore ambient light
     SetAmbientColours();
-
-    // Release GTA-native reference
-    pModelInfoSAInterface->RemoveRef();
 }
