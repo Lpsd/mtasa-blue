@@ -276,6 +276,7 @@ CGame::CGame() : m_FloodProtect(4, 30000, 30000)  // Max of 4 connections per 30
     m_JetpackWeapons[WEAPONTYPE_MICRO_UZI] = true;
     m_JetpackWeapons[WEAPONTYPE_TEC9] = true;
     m_JetpackWeapons[WEAPONTYPE_PISTOL] = true;
+    m_JetpackWeapons[WEAPONTYPE_SAWNOFF_SHOTGUN] = true;
     // Glitch names (for Lua interface)
     m_GlitchNames["quickreload"] = GLITCH_QUICKRELOAD;
     m_GlitchNames["fastfire"] = GLITCH_FASTFIRE;
@@ -2570,6 +2571,10 @@ void CGame::Packet_Bulletsync(CBulletsyncPacket& packet)
     args.PushNumber(packet.m_start.fZ);
 
     player->CallEvent("onPlayerWeaponFire", args);
+
+    // Sim sync only relays bullet packets to zone-0 viewers. Relay to the rest of the
+    // near list here so zone-1/2 observers still receive long-range bullet sync.
+    RelayNearbyPacket(packet);
 }
 
 void CGame::Packet_WeaponBulletsync(CCustomWeaponBulletSyncPacket& packet)

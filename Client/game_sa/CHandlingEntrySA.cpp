@@ -59,7 +59,7 @@ void CHandlingEntrySA::Recalculate() noexcept
 
 void CHandlingEntrySA::SetSuspensionForceLevel(float fForce) noexcept
 {
-    if (!std::isfinite(fForce) || fForce < 0.0f) [[unlikely]]
+    if (!std::isfinite(fForce)) [[unlikely]]
         return;
     CheckSuspensionChanges();
     m_Handling.fSuspensionForceLevel = fForce;
@@ -67,7 +67,7 @@ void CHandlingEntrySA::SetSuspensionForceLevel(float fForce) noexcept
 
 void CHandlingEntrySA::SetSuspensionDamping(float fDamping) noexcept
 {
-    if (!std::isfinite(fDamping) || fDamping < 0.0f) [[unlikely]]
+    if (!std::isfinite(fDamping)) [[unlikely]]
         return;
     CheckSuspensionChanges();
     m_Handling.fSuspensionDamping = fDamping;
@@ -75,7 +75,7 @@ void CHandlingEntrySA::SetSuspensionDamping(float fDamping) noexcept
 
 void CHandlingEntrySA::SetSuspensionHighSpeedDamping(float fDamping) noexcept
 {
-    if (!std::isfinite(fDamping) || fDamping < 0.0f) [[unlikely]]
+    if (!std::isfinite(fDamping)) [[unlikely]]
         return;
     CheckSuspensionChanges();
     m_Handling.fSuspensionHighSpdDamping = fDamping;
@@ -83,32 +83,24 @@ void CHandlingEntrySA::SetSuspensionHighSpeedDamping(float fDamping) noexcept
 
 void CHandlingEntrySA::SetSuspensionUpperLimit(float fUpperLimit) noexcept
 {
-    if (!std::isfinite(fUpperLimit)) [[unlikely]]
-        return;
     CheckSuspensionChanges();
     m_Handling.fSuspensionUpperLimit = fUpperLimit;
 }
 
 void CHandlingEntrySA::SetSuspensionLowerLimit(float fLowerLimit) noexcept
 {
-    if (!std::isfinite(fLowerLimit)) [[unlikely]]
-        return;
     CheckSuspensionChanges();
     m_Handling.fSuspensionLowerLimit = fLowerLimit;
 }
 
 void CHandlingEntrySA::SetSuspensionFrontRearBias(float fBias) noexcept
 {
-    if (!std::isfinite(fBias)) [[unlikely]]
-        return;
     CheckSuspensionChanges();
     m_Handling.fSuspensionFrontRearBias = fBias;
 }
 
 void CHandlingEntrySA::SetSuspensionAntiDiveMultiplier(float fAntidive) noexcept
 {
-    if (!std::isfinite(fAntidive)) [[unlikely]]
-        return;
     CheckSuspensionChanges();
     m_Handling.fSuspensionAntiDiveMultiplier = fAntidive;
 }
