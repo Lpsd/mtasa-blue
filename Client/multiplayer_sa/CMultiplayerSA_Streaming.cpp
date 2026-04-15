@@ -63,9 +63,9 @@ static void __declspec(naked) HOOK_CStreaming__ConvertBufferToObject()
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 #define HOOKPOS_CStreaming__RetryLoadFileTimeout  0x40776B
-#define HOOKSIZE_CStreaming__RetryLoadFileTimeout 9            // cmp (7 bytes) + jnz (2 bytes)
-static DWORD RETURN_CStreaming__RetryLoadFileTimeout_Exit     = 0x407774;    // pop edi; pop esi; jmp CLoadingScreen::Continue
-static DWORD RETURN_CStreaming__RetryLoadFileTimeout_LoopBack = 0x4076F4;    // Loop head (mov eax, ms_channel[esi].LoadStatus)
+#define HOOKSIZE_CStreaming__RetryLoadFileTimeout 9                        // cmp (7 bytes) + jnz (2 bytes)
+static DWORD RETURN_CStreaming__RetryLoadFileTimeout_Exit = 0x407774;      // pop edi; pop esi; jmp CLoadingScreen::Continue
+static DWORD RETURN_CStreaming__RetryLoadFileTimeout_LoopBack = 0x4076F4;  // Loop head (mov eax, ms_channel[esi].LoadStatus)
 
 static DWORD s_retryLoopStartTick = 0;
 static DWORD s_retryLoopLastCallTick = 0;
@@ -88,7 +88,7 @@ static bool ShouldTimeoutRetryLoop()
     if (elapsed > timeoutMs)
     {
         s_retryLoopStartTick = 0;
-        *(int*)0x8E4B90 = -1;            // CStreaming::ms_channelError = -1 (force clear)
+        *(int*)0x8E4B90 = -1;  // CStreaming::ms_channelError = -1 (force clear)
         AddReportLog(8650, SString("RetryLoadFile spin loop timed out after %ums", elapsed));
         return true;
     }
