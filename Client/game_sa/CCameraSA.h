@@ -404,6 +404,7 @@ public:
     RwMatrix*    GetLTM() override;
     CEntity*     GetTargetEntity() override;
     void         SetCameraClip(bool bObjects, bool bVehicles) override;
+    void         ResetCameraClip() override;
     void         GetCameraClip(bool& bObjects, bool& bVehicles) override;
     BYTE         GetCameraVehicleViewMode() override;
     BYTE         GetCameraPedViewMode() override;
