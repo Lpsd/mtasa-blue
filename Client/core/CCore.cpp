@@ -40,7 +40,7 @@ namespace fs = std::filesystem;
 
 // Set to true to enable the freeze watchdog (monitors main thread responsiveness)
 // Do NOT enable it unless you run a QA testing cycle (see commit desc: 3e54dcb2742bccf0319b9552b2ed5a2c0a012425)
-constexpr bool bFreezeWatchdogEnabled = false;
+constexpr bool  bFreezeWatchdogEnabled = false;
 constexpr DWORD uiFreezeWatchdogTimeoutSeconds = 30;  // Player won't be patient beyond this; we get no info
 
 static float fTest = 1;
