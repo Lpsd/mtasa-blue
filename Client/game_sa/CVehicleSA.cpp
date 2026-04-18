@@ -1928,10 +1928,7 @@ void CVehicleSA::RecalculateSuspensionLines()
     if (!pModelInfo)
         return;
 
-    // Parenthesise the precedence to match the original intent: only proceed
-    // for monster trucks or cars. The bareword `pModelInfo && X || Y` parsed
-    // as `(pModelInfo && X) || Y`, which let a null pModelInfo fall through
-    // to the IsCar() deref below on pure-car paths.
+    // Only cars and monster trucks use this suspension setup path.
     if ((pModelInfo->IsMonsterTruck() || pModelInfo->IsCar()))
     {
         // Trains (Their trailers do as well!)
