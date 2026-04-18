@@ -16,7 +16,6 @@
 #include <game/CPedDamageResponse.h>
 #include <game/CEventList.h>
 #include <game/CEventDamage.h>
-#include "../game_sa/CCamSA.h"
 #include <cmath>
 
 class CEventDamageSAInterface;
