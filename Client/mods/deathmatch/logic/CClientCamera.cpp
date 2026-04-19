@@ -792,6 +792,12 @@ void CClientCamera::SetTargetEntity(CClientEntity* pEntity)
 
 CClientEntity* CClientCamera::GetTargetEntity()
 {
+    // Honor the API contract: if the camera was focused through a player, report that player.
+    // The follow camera may internally attach to the player's vehicle, but getCameraTarget()
+    // should still return the logical target selected by scripts.
+    if (m_pFocusedPlayer && !m_pFocusedPlayer->IsBeingDeleted())
+        return m_pFocusedPlayer;
+
     CClientEntity* pReturn = NULL;
     if (m_pCamera)
     {
@@ -810,15 +816,6 @@ CClientEntity* CClientCamera::GetTargetEntity()
                     pReturn = pPools->GetClientEntity(reinterpret_cast<DWORD*>(pInterface));
             }
         }
-    }
-
-    // Compatibility: preserve player identity when camera focus tracks the player's vehicle.
-    // Older scripts often expect getCameraTarget() to stay as the player they selected.
-    if (m_pFocusedPlayer && !m_pFocusedPlayer->IsBeingDeleted())
-    {
-        CClientVehicle* pFocusedVehicle = m_pFocusedPlayer->GetOccupiedVehicle();
-        if (!pReturn || (pFocusedVehicle && pReturn == pFocusedVehicle))
-            return m_pFocusedPlayer;
     }
 
     return pReturn;
