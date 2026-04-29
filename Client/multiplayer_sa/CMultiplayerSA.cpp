@@ -5003,6 +5003,16 @@ static void __declspec(naked) HOOK_VehicleCamLookDir1()
         call VehicleCamLookDir1
         add esp, 8
 
+        // Clear x87 tag bits so vanilla Process_FollowCar_SA's depth-8 sqrt sequence has full headroom and cannot trigger a masked stack overflow into nan(ind) (which would propagate via beta/betaSpd through NaN-blind parity-flag clamps).
+        ffree st(0)
+        ffree st(1)
+        ffree st(2)
+        ffree st(3)
+        ffree st(4)
+        ffree st(5)
+        ffree st(6)
+        ffree st(7)
+
         jmp RETURN_VehicleCamLookDir1
     }
     // clang-format on
