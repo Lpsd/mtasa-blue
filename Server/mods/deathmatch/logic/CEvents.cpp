@@ -123,68 +123,38 @@ void CEvents::RemoveAllEvents()
     m_EventHashMap.clear();
 }
 
-void CEvents::PreEventPulse(CEventContext* pContext)
+void CEvents::PreEventPulse()
 {
-    assert(pContext);
-
     m_CancelledList.push_back(m_bEventCancelled);
-    m_ContextStack.push_back(pContext);
-
-    pContext->Reset();
-
     m_bEventCancelled = false;
     m_bWasEventCancelled = false;
     m_strLastError = "";
 }
 
-void CEvents::PostEventPulse(CEventContext* pContext)
+void CEvents::PostEventPulse()
 {
-    assert(pContext);
-    assert(!m_ContextStack.empty());
-    assert(m_ContextStack.back() == pContext);
-
-    m_bWasEventCancelled = pContext->IsCancelled();
+    m_bWasEventCancelled = m_bEventCancelled;
     m_bEventCancelled = m_CancelledList.back() ? true : false;
     m_CancelledList.pop_back();
-    m_ContextStack.pop_back();
 }
 
 void CEvents::CancelEvent(bool bCancelled)
 {
-    CancelEvent(bCancelled, nullptr);
+    m_bEventCancelled = bCancelled;
 }
 
 void CEvents::CancelEvent(bool bCancelled, const char* szReason)
 {
-    // ALWAYS set the old global variable for backward compatibility
     m_bEventCancelled = bCancelled;
-
-    // Also update context if it exists
-    if (!m_ContextStack.empty())
-    {
-        CEventContext* pCurrentContext = m_ContextStack.back();
-        if (bCancelled)
-            pCurrentContext->Cancel(szReason);
-        else
-            pCurrentContext->Reset();
-    }
-
-    if (szReason)
-        m_strLastError = szReason;
+    m_strLastError = SStringX(szReason);
 }
 
 bool CEvents::WasEventCancelled()
 {
-    if (!m_ContextStack.empty())
-        return m_ContextStack.back()->IsCancelled();
-
-    return m_bEventCancelled || m_bWasEventCancelled;
+    return m_bWasEventCancelled;
 }
 
 const char* CEvents::GetLastError()
 {
-    if (!m_ContextStack.empty())
-        return m_ContextStack.back()->GetCancelReason().c_str();
-
     return m_strLastError;
 }
