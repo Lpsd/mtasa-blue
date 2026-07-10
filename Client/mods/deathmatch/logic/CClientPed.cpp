@@ -1778,6 +1778,12 @@ void CClientPed::InternalSetHealth(float fHealth)
             if (m_bIsLocalPlayer)
             {
                 Respawn(NULL, false, true);
+
+                // Also clear the network-dead flag. It's only normally cleared by a
+                // PLAYER_SPAWN packet, so in respawn=none gamemodes it stays true
+                // forever, which makes isPedDead() return true indefinitely and
+                // breaks any script that keys off that to freeze the camera.
+                static_cast<CClientPlayer*>(this)->SetDeadOnNetwork(false);
             }
             else
             {
