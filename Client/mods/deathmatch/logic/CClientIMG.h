@@ -12,21 +12,13 @@
 #pragma once
 
 #include "CClientEntity.h"
+#include "headless/CIMGArchive.h"
 #include <vector>
-#include <fstream>
 #include <optional>
 #include <variant>
 #include <string_view>
 #include <filesystem>
 namespace fs = std::filesystem;
-
-struct tImgFileInfo
-{
-    unsigned int   uiOffset;
-    unsigned short usSize;
-    unsigned short usUnpackedSize;
-    char           szFileName[24];
-};
 
 struct tLinkedModelRestoreInfo
 {
@@ -56,8 +48,8 @@ public:
 
     eClientEntityType GetType() const { return CCLIENTIMG; }
     unsigned char     GetArchiveID() const { return m_ucArchiveID; }
-    unsigned int      GetFilesCount() const { return m_fileInfos.size(); }
-    const auto&       GetFileInfos() const noexcept { return m_fileInfos; }
+    unsigned int      GetFilesCount() const { return m_archive.GetFileInfos().size(); }
+    const auto&       GetFileInfos() const noexcept { return m_archive.GetFileInfos(); }
     auto              GetLargestFileSizeBlocks() const { return m_LargestFileSizeBlocks; }
 
     bool Load(fs::path filePath);
@@ -77,11 +69,9 @@ public:
 private:
     class CClientIMGManager* m_pImgManager;
 
-    std::ifstream             m_ifs;
-    fs::path                  m_filePath;
-    unsigned char             m_ucArchiveID;
-    std::vector<tImgFileInfo> m_fileInfos;
-    size_t                    m_LargestFileSizeBlocks;  // The size of the largest file [in streaming blocks/sectors]
+    CIMGArchive   m_archive;
+    unsigned char m_ucArchiveID;
+    size_t        m_LargestFileSizeBlocks;  // The size of the largest file [in streaming blocks/sectors]
 
     std::vector<tLinkedModelRestoreInfo> m_restoreInfo;
 };

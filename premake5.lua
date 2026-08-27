@@ -171,6 +171,7 @@ workspace "MTASA"
 		include "Client/loader"
 		include "Client/loader-proxy"
 		include "Client/multiplayer_sa"
+		include "Client/mods/deathmatch/logic/headless"
 		include "Client/mods/deathmatch"
 
 		group "Client/CEGUI"
@@ -199,6 +200,7 @@ workspace "MTASA"
 
 		group "Tests"
 		include "Tests/client"
+		include "Tests/client/deathmatch"
 	end
 
 	filter {}

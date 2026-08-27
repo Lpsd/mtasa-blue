@@ -26,6 +26,8 @@ project "Tests_Client"
 		"**.cpp"
 	}
 
+	removefiles { "deathmatch/**" }
+
 	defines {
 		"GTEST_HAS_PTHREAD=0",
 		"MTA_CLIENT",
