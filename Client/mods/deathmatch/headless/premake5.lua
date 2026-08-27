@@ -1,7 +1,7 @@
-project "Client Deathmatch Logic"
+project "Client Deathmatch Headless"
 	language "C++"
 	kind "StaticLib"
-	targetname "client-deathmatch-logic"
+	targetname "client-deathmatch-headless"
 	clangtidy "On"
 
 	vpaths {

@@ -12,7 +12,7 @@
 #pragma once
 
 #include "CClientEntity.h"
-#include "headless/CIMGArchive.h"
+#include "../headless/CIMGArchive.h"
 #include <vector>
 #include <optional>
 #include <variant>

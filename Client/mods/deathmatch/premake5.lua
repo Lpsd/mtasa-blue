@@ -10,7 +10,7 @@ project "Client Deathmatch"
 
 	defines { "LUNASVG_BUILD", "LUA_USE_APICHECK", "SDK_WITH_BCRYPT" }
 	links {
-		"Client Deathmatch Logic", "Lua_Client", "pcre2", "json-c", "ws2_32", "portaudio", "zlib", "cryptopp", "libspeex", "blowfish_bcrypt", "lunasvg",
+		"Client Deathmatch Headless", "Lua_Client", "pcre2", "json-c", "ws2_32", "portaudio", "zlib", "cryptopp", "libspeex", "blowfish_bcrypt", "lunasvg",
 		"../../../vendor/bass/lib/bass",
 		"../../../vendor/bass/lib/bass_fx",
 		"../../../vendor/bass/lib/bassmix",
@@ -61,7 +61,7 @@ project "Client Deathmatch"
 		"../../../vendor/bochs/bochs_internal/bochs_crc32.cpp"
 	}
 
-	removefiles { "logic/headless/**" }
+	removefiles { "headless/**" }
 
 	filter "system:windows"
 		buildoptions { "-Zm180" }

@@ -10,11 +10,11 @@ project "Tests_ClientDeathmatch"
 	}
 
 	includedirs {
-		"../../../Client/mods/deathmatch/logic/headless",
+		"../../../Client/mods/deathmatch/headless",
 		"../../../vendor/googletest/include"
 	}
 
-	links { "Client Deathmatch Logic", "gtest" }
+	links { "Client Deathmatch Headless", "gtest" }
 
 	files {
 		"premake5.lua",

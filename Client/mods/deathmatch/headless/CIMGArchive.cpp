@@ -2,7 +2,7 @@
  *
  *  PROJECT:     Multi Theft Auto
  *  LICENSE:     See LICENSE in the top level directory
- *  FILE:        Client/mods/deathmatch/logic/headless/CIMGArchive.cpp
+ *  FILE:        Client/mods/deathmatch/headless/CIMGArchive.cpp
  *  PURPOSE:     Headless IMG container file access
  *
  *  Multi Theft Auto is available from https://multitheftauto.com/
